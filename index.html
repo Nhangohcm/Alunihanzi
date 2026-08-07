@@ -295,6 +295,34 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
 @media(max-width:360px){
   #shadowPlayerCard .video-frame{width:240px!important;max-width:calc(100% - 24px)!important}
 }
+
+/* v30: larger mobile player; transcript scrolls inside its own viewport. */
+@media(max-width:780px){
+  #shadowPlayerCard .video-frame{
+    width:94%!important;
+    max-width:560px!important;
+    min-width:0!important;
+  }
+  #shadowTranscript{
+    display:grid!important;
+    gap:8px!important;
+    height:clamp(300px,44vh,480px)!important;
+    max-height:clamp(300px,44vh,480px)!important;
+    margin-top:14px!important;
+    padding:2px 4px 12px!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    overscroll-behavior:contain;
+    scroll-behavior:smooth;
+    align-content:start;
+  }
+}
+@media(max-width:360px){
+  #shadowPlayerCard .video-frame{
+    width:94%!important;
+    max-width:94%!important;
+  }
+}
 </style>
 </head>
 <body>
@@ -831,7 +859,20 @@ function highlightShadowLine(index){
     el.classList.toggle('active', i===index);
   });
   const active = document.querySelector(`#shadowTranscript .transcript-line[data-index="${index}"]`);
-  if(active) active.scrollIntoView({block:'nearest', behavior:'smooth'});
+  const box = document.getElementById('shadowTranscript');
+  if(active && box){
+    const lineTop = active.offsetTop;
+    const lineBottom = lineTop + active.offsetHeight;
+    const visibleTop = box.scrollTop;
+    const visibleBottom = visibleTop + box.clientHeight;
+    const safeGap = 18;
+
+    if(lineTop < visibleTop + safeGap){
+      box.scrollTo({top:Math.max(0, lineTop - safeGap), behavior:'smooth'});
+    }else if(lineBottom > visibleBottom - safeGap){
+      box.scrollTo({top:lineBottom - box.clientHeight + safeGap, behavior:'smooth'});
+    }
+  }
 }
 
 function syncShadow(){
