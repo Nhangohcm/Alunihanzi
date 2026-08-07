@@ -87,6 +87,13 @@
     #writerTarget{touch-action:none}
     .actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
     .status{text-align:center;min-height:24px;color:var(--muted);margin-top:10px;font-weight:650}
+    .radical-legend{
+      text-align:center;margin:10px 0 0;font-size:.88rem;color:var(--muted)
+    }
+    .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 5px 0 10px;vertical-align:middle}
+    .dot.rad{background:#6f9b78}
+    .dot.rest{background:#2e3a34}
+
     .admin-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;background:transparent;border:0;padding:0;color:var(--ink)}
     .admin{display:none;margin-top:16px;border-top:1px solid var(--line);padding-top:16px}
     .admin.show{display:block}
@@ -113,6 +120,7 @@
     <div class="brand">TIẾNG TRUNG ALUNI</div>
     <h1>Luyện viết chữ Hán</h1>
     <p class="subtitle">Tìm từ trong khóa học, nghe phát âm và luyện viết từng chữ.</p>
+    <p class="hint" style="text-align:center;margin-top:8px">Trên điện thoại, bấm 🔊 để nghe. Nếu máy chưa có giọng Trung, web sẽ hướng dẫn bật giọng phù hợp.</p>
   </header>
 
   <section class="card">
@@ -171,6 +179,11 @@
       <button class="btn primary" id="quizBtn">✍ Tập viết</button>
       <button class="btn ghost" id="resetBtn">↻ Viết lại</button>
       <button class="btn ghost" id="nextCharBtn">Chữ tiếp →</button>
+      <button class="btn soft" id="radicalBtn">🎨 Tách bộ thủ: BẬT</button>
+    </div>
+    <div class="radical-legend" id="radicalLegend">
+      <span class="dot rad"></span>Bộ thủ
+      <span class="dot rest"></span>Phần còn lại
     </div>
     <div class="status" id="status"></div>
   </section>
@@ -221,6 +234,7 @@ let writer = null;
 let currentItem = null;
 let currentChars = [];
 let currentCharIndex = 0;
+let radicalMode = true;
 
 function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
 
@@ -295,18 +309,102 @@ function escapeHtml(s){
   return String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 }
 
+let cachedVoices = [];
+let voicesReady = false;
+
+function loadVoices(){
+  if(!('speechSynthesis' in window)) return [];
+  cachedVoices = window.speechSynthesis.getVoices() || [];
+  voicesReady = cachedVoices.length > 0;
+  return cachedVoices;
+}
+
+if('speechSynthesis' in window){
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = function(){
+    loadVoices();
+  };
+}
+
+function pickChineseVoice(){
+  const voices = cachedVoices.length ? cachedVoices : loadVoices();
+
+  // Ưu tiên tiếng Trung phổ thông Trung Quốc đại lục.
+  return (
+    voices.find(v => /^zh-CN$/i.test(v.lang)) ||
+    voices.find(v => /^zh-Hans/i.test(v.lang)) ||
+    voices.find(v => /^cmn/i.test(v.lang)) ||
+    voices.find(v => /^zh/i.test(v.lang)) ||
+    null
+  );
+}
+
 function speak(text){
   if(!('speechSynthesis' in window)){
-    alert('Trình duyệt này chưa hỗ trợ đọc văn bản.');
+    alert('Thiết bị này chưa hỗ trợ chức năng đọc văn bản.');
     return;
   }
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang='zh-CN'; u.rate=0.78; u.pitch=1;
-  const voices = speechSynthesis.getVoices();
-  const zh = voices.find(v => /^zh(-|_)/i.test(v.lang));
-  if(zh) u.voice=zh;
-  speechSynthesis.speak(u);
+
+  const synth = window.speechSynthesis;
+  synth.cancel();
+
+  const trySpeak = (attempt = 0) => {
+    loadVoices();
+    const voice = pickChineseVoice();
+    const u = new SpeechSynthesisUtterance(String(text || ''));
+
+    u.lang = voice?.lang || 'zh-CN';
+    if(voice) u.voice = voice;
+    u.rate = 0.78;
+    u.pitch = 1;
+    u.volume = 1;
+
+    let started = false;
+
+    u.onstart = () => {
+      started = true;
+    };
+
+    u.onerror = (e) => {
+      // Một số điện thoại tải voice chậm. Thử lại vài lần trước khi báo lỗi.
+      if(attempt < 2){
+        setTimeout(() => trySpeak(attempt + 1), 450);
+        return;
+      }
+
+      const code = e && e.error ? e.error : '';
+      if(!voice){
+        alert(
+          'Điện thoại chưa có giọng đọc tiếng Trung phù hợp. ' +
+          'Hãy bật/cài giọng Tiếng Trung trong phần Ngôn ngữ / Chuyển văn bản thành giọng nói của máy, rồi mở lại trang.'
+        );
+      }else{
+        alert('Chưa phát được âm thanh trên thiết bị này. Hãy thử tăng âm lượng hoặc mở lại trình duyệt.');
+      }
+    };
+
+    try{
+      synth.speak(u);
+
+      // Trên một số mobile, lần gọi đầu có thể không phát nếu voice chưa sẵn sàng.
+      if(!started && !voice && attempt < 2){
+        setTimeout(() => {
+          if(!synth.speaking && !synth.pending){
+            trySpeak(attempt + 1);
+          }
+        }, 500);
+      }
+    }catch(err){
+      if(attempt < 2){
+        setTimeout(() => trySpeak(attempt + 1), 450);
+      }else{
+        alert('Không thể phát âm thanh trên thiết bị này.');
+      }
+    }
+  };
+
+  // Bảo đảm thao tác phát xuất phát trực tiếp từ cú chạm của người dùng.
+  trySpeak(0);
 }
 
 function extractHanzi(text){
@@ -357,6 +455,8 @@ function buildWriter(ch, startQuiz=false){
       delayBetweenStrokes:180,
       showHintAfterMisses:2,
       highlightOnComplete:true,
+      strokeColor:'#2e3a34',
+      radicalColor: radicalMode ? '#6f9b78' : null,
       onLoadCharDataError:function(){
         el('status').textContent='Không tải được dữ liệu nét cho chữ này.';
       }
@@ -410,41 +510,78 @@ document.querySelectorAll('.tab').forEach(btn=>{
 courseSelect.addEventListener('change', fillLessons);
 lessonSelect.addEventListener('change', renderSelectedLesson);
 
+function normalizeLatin(s){
+  return String(s || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .replace(/ü/gi,'u')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g,'');
+}
+
+function isHanziQuery(s){
+  return /\p{Script=Han}/u.test(String(s || ''));
+}
+
 function doSearch(){
   const raw = el('searchInput').value.trim();
-  const q = raw.toLowerCase();
-  if(!q) return renderItems([], 'Kết quả tìm kiếm');
+  if(!raw) return renderItems([], 'Kết quả tìm kiếm');
 
-  const exact = [];
-  const contains = [];
+  const qLower = raw.toLowerCase();
+  const qNorm = normalizeLatin(raw);
+  const hanziInput = isHanziQuery(raw);
+
+  const exactHanzi = [];
+  const ranked = [];
 
   data.forEach(course => (course.lessons || []).forEach(lesson => (lesson.items || []).forEach(item => {
     const hanzi = String(item.hanzi || '').trim();
     const pinyin = String(item.pinyin || '').trim();
     const vi = String(item.vi || '').trim();
 
-    // Ưu tiên tuyệt đối kết quả khớp chính xác.
-    if(
-      hanzi.toLowerCase() === q ||
-      pinyin.toLowerCase() === q ||
-      vi.toLowerCase() === q
-    ){
-      exact.push({...item, _course:course.name, _lesson:lesson.title});
+    // Nếu người học gõ chữ Hán và có mục khớp chính xác,
+    // chỉ hiện mục chính xác để tránh kéo theo hàng loạt câu dài.
+    if(hanziInput && hanzi === raw){
+      exactHanzi.push({...item, _course:course.name, _lesson:lesson.title});
       return;
     }
 
-    // Chỉ dùng kết quả chứa từ khi không tìm được kết quả chính xác.
-    const hay = [hanzi, pinyin, vi].join(' ').toLowerCase();
-    if(hay.includes(q)){
-      contains.push({...item, _course:course.name, _lesson:lesson.title});
+    let score = 0;
+
+    if(hanziInput){
+      if(hanzi.includes(raw)) score = Math.max(score, 70);
+    }else{
+      const pyNorm = normalizeLatin(pinyin);
+      const viNorm = normalizeLatin(vi);
+
+      // Pinyin không cần dấu: zìxíngchē -> zixingche
+      if(pyNorm === qNorm) score = Math.max(score, 100);
+      else if(pyNorm.startsWith(qNorm)) score = Math.max(score, 90);
+      else if(qNorm.length >= 2 && pyNorm.includes(qNorm)) score = Math.max(score, 80);
+
+      // Nghĩa Việt cũng có thể tra không dấu.
+      if(viNorm === qNorm) score = Math.max(score, 95);
+      else if(viNorm.startsWith(qNorm)) score = Math.max(score, 75);
+      else if(qNorm.length >= 2 && viNorm.includes(qNorm)) score = Math.max(score, 60);
+    }
+
+    if(score > 0){
+      ranked.push({...item, _course:course.name, _lesson:lesson.title, _score:score});
     }
   })));
 
-  if(exact.length){
-    renderItems(exact, `Kết quả chính xác: ${raw}`);
-  }else{
-    renderItems(contains, `Kết quả gần đúng: ${raw}`);
+  if(exactHanzi.length){
+    renderItems(exactHanzi, `Kết quả chính xác: ${raw}`);
+    return;
   }
+
+  ranked.sort((a,b)=>{
+    if(b._score !== a._score) return b._score - a._score;
+    // Ưu tiên từ/cụm ngắn hơn câu dài khi cùng điểm.
+    return String(a.hanzi || '').length - String(b.hanzi || '').length;
+  });
+
+  renderItems(ranked, `Kết quả: ${raw}`);
 }
 el('searchBtn').addEventListener('click',doSearch);
 el('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter') doSearch()});
@@ -506,6 +643,22 @@ el('resetDataBtn').addEventListener('click',()=>{
   localStorage.removeItem(STORAGE_KEY);
   data=deepClone(window.ALUNI_DEFAULT_DATA || []);
   fillCourses();
+});
+
+
+el('radicalBtn').addEventListener('click',()=>{
+  radicalMode = !radicalMode;
+  el('radicalBtn').textContent = radicalMode
+    ? '🎨 Tách bộ thủ: BẬT'
+    : '🎨 Tách bộ thủ: TẮT';
+  el('radicalLegend').style.display = radicalMode ? 'block' : 'none';
+
+  if(currentChars.length){
+    buildWriter(currentChars[currentCharIndex], false);
+    el('status').textContent = radicalMode
+      ? 'Bộ thủ đang được tô màu riêng.'
+      : 'Đã trở về hiển thị một màu.';
+  }
 });
 
 window.addEventListener('resize',()=>{
