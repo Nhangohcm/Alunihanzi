@@ -391,6 +391,70 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
     outline-offset:1px;
   }
 }
+
+/* Mobile picker v2: a true two-pane screen. The player never scrolls away. */
+@media(max-width:780px){
+  body.transcript-picker-open{overflow:hidden!important}
+  #shadowPlayerCard.transcript-mode{
+    position:fixed!important;
+    inset:0!important;
+    z-index:1000!important;
+    display:grid!important;
+    grid-template-rows:auto minmax(0,1fr)!important;
+    width:100%!important;
+    height:100dvh!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:8px!important;
+    border:0!important;
+    border-radius:0!important;
+    background:var(--paper)!important;
+    overflow:hidden!important;
+  }
+  #shadowPlayerCard.transcript-mode>.shadow-main{
+    position:relative!important;
+    top:auto!important;
+    z-index:2!important;
+    width:100%!important;
+    padding:4px 6px 7px!important;
+    border:0!important;
+    border-radius:0!important;
+    background:var(--paper)!important;
+    box-shadow:0 8px 18px rgba(38,56,47,.14)!important;
+  }
+  #shadowPlayerCard.transcript-mode .video-frame{
+    width:min(100%,430px)!important;
+    max-height:34dvh!important;
+    margin:0 auto!important;
+  }
+  #shadowPlayerCard.transcript-mode #shadowTranscript:not([hidden]){
+    display:grid!important;
+    min-height:0!important;
+    height:100%!important;
+    max-height:none!important;
+    margin:8px 0 0!important;
+    padding:2px 4px 24px!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    overscroll-behavior:contain!important;
+    align-content:start!important;
+  }
+}
+
+.zh-token{cursor:pointer;border-radius:6px;padding:0 1px}
+.zh-token:hover,.zh-token:active{background:#dce9d9;color:#26382f}
+.word-popup{
+  position:fixed;z-index:2000;left:50%;bottom:18px;transform:translateX(-50%);
+  width:min(calc(100% - 24px),390px);padding:14px 42px 14px 16px;
+  border:1px solid #a9b8a7;border-radius:16px;background:#fffdf8;
+  box-shadow:0 12px 34px rgba(25,40,32,.24);line-height:1.45
+}
+.word-popup[hidden]{display:none!important}
+.word-popup-zh{font-size:1.45rem;font-weight:900}
+.word-popup-py{color:var(--green);font-weight:750;margin-top:2px}
+.word-popup-vi{font-size:1.05rem;margin-top:5px}
+.word-popup-status{color:var(--muted);font-size:.84rem;margin-top:4px}
+.word-popup-close{position:absolute;right:8px;top:8px;border:0;background:transparent;font-size:1.35rem;cursor:pointer}
 </style>
 </head>
 <body>
@@ -709,6 +773,14 @@ if(demoCheck){
   </div>
 </section>
 
+<div class="word-popup" id="wordPopup" hidden role="dialog" aria-live="polite">
+  <button class="word-popup-close" id="wordPopupClose" aria-label="Đóng">✕</button>
+  <div class="word-popup-zh" id="wordPopupZh"></div>
+  <div class="word-popup-py" id="wordPopupPy"></div>
+  <div class="word-popup-vi" id="wordPopupVi"></div>
+  <div class="word-popup-status" id="wordPopupStatus"></div>
+</div>
+
 <section class="aluni-section" id="grammarSection">
   <div class="wrap">
     <div class="module-header">
@@ -911,6 +983,60 @@ function shadowEsc(value){
   }[ch]));
 }
 
+const shadowWordCache = new Map();
+const shadowSegmenter = ('Segmenter' in Intl)
+  ? new Intl.Segmenter('zh-CN', {granularity:'word'})
+  : null;
+
+function shadowHanziHtml(value){
+  const text = String(value ?? '');
+  const parts = shadowSegmenter
+    ? Array.from(shadowSegmenter.segment(text), x=>x.segment)
+    : Array.from(text);
+  return parts.map(part=>{
+    const safe = shadowEsc(part);
+    return /[\u3400-\u9fff]/u.test(part)
+      ? `<span class="zh-token" data-word="${shadowEsc(part)}" title="Chạm để xem nghĩa">${safe}</span>`
+      : safe;
+  }).join('');
+}
+
+function closeWordPopup(){
+  const popup = document.getElementById('wordPopup');
+  if(popup) popup.hidden = true;
+}
+
+async function showWordMeaning(word){
+  const popup = document.getElementById('wordPopup');
+  if(!popup || !word) return;
+  document.getElementById('wordPopupZh').textContent = word;
+  document.getElementById('wordPopupPy').textContent = '';
+  document.getElementById('wordPopupVi').textContent = '';
+  document.getElementById('wordPopupStatus').textContent = 'Đang tra nghĩa…';
+  popup.hidden = false;
+
+  if(shadowWordCache.has(word)){
+    document.getElementById('wordPopupVi').textContent = shadowWordCache.get(word);
+    document.getElementById('wordPopupStatus').textContent = 'Chạm ra ngoài để đóng';
+    return;
+  }
+  try{
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=zh-CN&tl=vi&dt=t&q=${encodeURIComponent(word)}`;
+    const response = await fetch(url);
+    if(!response.ok) throw new Error('lookup failed');
+    const data = await response.json();
+    const meaning = Array.isArray(data?.[0])
+      ? data[0].map(row=>row?.[0] || '').join('').trim()
+      : '';
+    if(!meaning) throw new Error('empty meaning');
+    shadowWordCache.set(word, meaning);
+    document.getElementById('wordPopupVi').textContent = meaning;
+    document.getElementById('wordPopupStatus').textContent = 'Nghĩa dịch nhanh · chạm ra ngoài để đóng';
+  }catch(e){
+    document.getElementById('wordPopupStatus').textContent = 'Chưa tra được từ này. Hãy kiểm tra kết nối Internet.';
+  }
+}
+
 function renderShadowTranscript(){
   const box = document.getElementById('shadowTranscript');
   box.innerHTML = '';
@@ -920,7 +1046,7 @@ function renderShadowTranscript(){
     line.className = 'transcript-line';
     line.dataset.index = i;
     line.innerHTML = `
-      <div class="transcript-zh">${shadowEsc(s.hanzi)}</div>
+      <div class="transcript-zh">${shadowHanziHtml(s.hanzi)}</div>
       <div class="transcript-py" style="${showShadowPinyin?'':'display:none'}">${s.pinyin || ''}</div>
       <div class="transcript-vi" style="${showShadowVi?'':'display:none'}">${s.vi || ''}</div>
     `;
@@ -931,9 +1057,6 @@ function renderShadowTranscript(){
         shadowPlayer.playVideo();
       }
       highlightShadowLine(i);
-      if(window.matchMedia('(max-width: 780px)').matches){
-        closeShadowTranscript(true);
-      }
     });
     box.appendChild(line);
   });
@@ -946,7 +1069,9 @@ function setShadowTranscriptOpen(open){
   if(!card || !btn || !box) return;
   box.hidden = !open;
   card.classList.toggle('transcript-mode', open);
+  document.body.classList.toggle('transcript-picker-open', open && window.matchMedia('(max-width: 780px)').matches);
   btn.textContent = open ? '✕ Đóng danh sách' : '☰ Xem danh sách toàn bài';
+  if(open) closeWordPopup();
 }
 
 function closeShadowTranscript(returnToVideo=false){
@@ -966,7 +1091,7 @@ function renderShadowLive(index){
   if(counter) counter.textContent = s ? `${index + 1} / ${shadowSegments.length}` : `0 / ${shadowSegments.length}`;
   if(!live || !s) return;
   live.innerHTML = `
-    <div class="transcript-zh">${shadowEsc(s.hanzi)}</div>
+    <div class="transcript-zh">${shadowHanziHtml(s.hanzi)}</div>
     <div class="transcript-py" style="${showShadowPinyin?'':'display:none'}">${shadowEsc(s.pinyin || '')}</div>
     <div class="transcript-vi" style="${showShadowVi?'':'display:none'}">${shadowEsc(s.vi || '')}</div>
     <div class="shadow-live-hint">Chạm vào ô để nghe lại câu này</div>
@@ -1060,6 +1185,24 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   const liveBox = document.getElementById('shadowLive');
   if(liveBox) liveBox.addEventListener('click', ()=>goToShadowLine(shadowCurrentIndex < 0 ? 0 : shadowCurrentIndex));
+
+  document.getElementById('shadowPlayerCard')?.addEventListener('click', event=>{
+    const token = event.target.closest('.zh-token');
+    if(!token) return;
+    event.preventDefault();
+    event.stopPropagation();
+    showWordMeaning(token.dataset.word || token.textContent.trim());
+  });
+
+  document.getElementById('wordPopupClose')?.addEventListener('click', event=>{
+    event.stopPropagation();
+    closeWordPopup();
+  });
+  document.addEventListener('click', event=>{
+    const popup = document.getElementById('wordPopup');
+    if(!popup || popup.hidden || event.target.closest('#wordPopup') || event.target.closest('.zh-token')) return;
+    closeWordPopup();
+  });
 
   const transcriptBtn = document.getElementById('toggleTranscriptBtn');
   const transcriptBox = document.getElementById('shadowTranscript');
