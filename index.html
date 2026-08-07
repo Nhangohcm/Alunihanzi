@@ -67,12 +67,155 @@ input,select{width:100%;border:1px solid var(--line);border-radius:13px;backgrou
 }
 .contact-link:hover{transform:translateY(-1px)}
 
+
+.app-topbar{
+  width:min(1080px,calc(100% - 20px));
+  margin:10px auto 0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.app-mini-brand{
+  font-size:.76rem;
+  font-weight:900;
+  letter-spacing:.12em;
+  color:var(--green);
+  white-space:nowrap;
+}
+.app-nav{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  overflow:auto;
+  padding:3px;
+  scrollbar-width:none;
+}
+.app-nav::-webkit-scrollbar{display:none}
+.app-nav-btn{
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.78);
+  color:var(--muted);
+  border-radius:999px;
+  padding:8px 12px;
+  font-weight:850;
+  white-space:nowrap;
+  cursor:pointer;
+}
+.app-nav-btn.active{
+  background:var(--green);
+  color:white;
+  border-color:var(--green);
+}
+.aluni-section{display:none}
+.aluni-section.active{display:block}
+.module-header{text-align:center;padding:16px 4px 20px}
+.module-header h1{font-size:clamp(1.9rem,5vw,2.8rem);margin:6px 0}
+.module-header p{color:var(--muted);margin:5px 0;line-height:1.5}
+.module-card{
+  background:rgba(255,253,248,.98);
+  border:1px solid var(--line);
+  border-radius:22px;
+  box-shadow:var(--shadow);
+  padding:18px;
+  margin-bottom:16px;
+}
+.module-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.shadow-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+.video-demo{
+  aspect-ratio:16/9;
+  background:#202522;
+  color:white;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:850;
+  font-size:1.1rem;
+}
+.shadow-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.transcript-list{display:grid;gap:8px;max-height:430px;overflow:auto}
+.transcript-line{
+  border:1px solid var(--line);
+  background:white;
+  border-radius:14px;
+  padding:11px;
+  cursor:pointer;
+}
+.transcript-line.active{
+  background:var(--green2);
+  border-color:#a9b8a7;
+}
+.transcript-zh{font-size:1.15rem;font-weight:850}
+.transcript-py{color:var(--green);font-weight:700;margin-top:2px}
+.transcript-vi{color:var(--muted);font-size:.92rem;margin-top:2px}
+.grammar-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grammar-box,.exercise-box{
+  border:1px solid var(--line);
+  background:white;
+  border-radius:17px;
+  padding:16px;
+}
+.grammar-tag{
+  display:inline-block;
+  background:var(--green2);
+  color:var(--ink);
+  border-radius:999px;
+  padding:5px 9px;
+  font-size:.8rem;
+  font-weight:850;
+}
+.grammar-formula{
+  font-size:1.15rem;
+  font-weight:900;
+  background:#f1f5ef;
+  border-radius:12px;
+  padding:10px 12px;
+  margin:10px 0;
+}
+.grammar-example{padding:8px 0;border-bottom:1px dashed var(--line)}
+.exercise-option{
+  display:block;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:10px;
+  margin:8px 0;
+  background:white;
+}
+.exercise-result{min-height:22px;margin-top:8px;font-weight:800}
+.module-note{
+  background:#f7f3eb;
+  border:1px dashed var(--line);
+  border-radius:14px;
+  padding:12px;
+  color:var(--muted);
+  line-height:1.5;
+  margin-top:12px;
+}
+@media(max-width:780px){
+  .app-topbar{align-items:flex-start;flex-direction:column}
+  .app-nav{width:100%}
+  .module-grid,.shadow-grid,.grammar-grid{grid-template-columns:1fr}
+  .app-nav-btn{padding:7px 10px;font-size:.86rem}
+}
+
 footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
 @media(max-width:760px){.words{grid-template-columns:repeat(2,1fr)}.row,.hero-demo{grid-template-columns:1fr}.hero-demo{text-align:center}}
 @media(max-width:480px){.wrap{width:min(100% - 12px,1080px);padding-top:12px}.card{padding:14px;border-radius:18px}.searchrow{grid-template-columns:1fr}.words{gap:8px}.word{min-height:120px}.ri{grid-template-columns:86px 1fr}}
 </style>
 </head>
 <body>
+<div class="app-topbar">
+  <div class="app-mini-brand">TIẾNG TRUNG ALUNI</div>
+  <nav class="app-nav">
+    <button class="app-nav-btn active" data-section="writingSection">✍ Viết chữ</button>
+    <button class="app-nav-btn" data-section="shadowSection">🎥 Shadowing</button>
+    <button class="app-nav-btn" data-section="grammarSection">📚 Ngữ pháp & Bài tập</button>
+  </nav>
+</div>
+
+<section class="aluni-section active" id="writingSection">
+
 <div class="wrap">
 <header>
   <div class="brand">TIẾNG TRUNG ALUNI</div>
@@ -280,6 +423,167 @@ $('searchBtn').onclick=doSearch;$('searchInput').onkeydown=e=>{if(e.key==='Enter
 $('accessActivateBtn').onclick=activate;$('accessCancelBtn').onclick=closeAccess;$('accessCloseBtn').onclick=closeAccess;$('accessModal').onclick=e=>{if(e.target===$('accessModal'))closeAccess()};
 $('animateBtn').onclick=()=>writer&&writer.animateCharacter();$('quizBtn').onclick=()=>currentChars.length&&buildWriter(currentChars[currentCharIndex],true);$('resetBtn').onclick=()=>currentChars.length&&buildWriter(currentChars[currentCharIndex],true);$('nextCharBtn').onclick=()=>{if(!currentChars.length)return;currentCharIndex=(currentCharIndex+1)%currentChars.length;renderPills();buildWriter(currentChars[currentCharIndex],false)};$('radicalBtn').onclick=()=>{radicalMode=!radicalMode;$('radicalBtn').textContent=`🎨 Tách bộ thủ: ${radicalMode?'BẬT':'TẮT'}`;if(currentChars.length)buildWriter(currentChars[currentCharIndex],false)};$('speakPractice').onclick=()=>currentItem&&speak(currentItem.hanzi);
 loadRemoteContent();
+
+document.querySelectorAll('.app-nav-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.app-nav-btn').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.aluni-section').forEach(x=>x.classList.remove('active'));
+    btn.classList.add('active');
+    const section=document.getElementById(btn.dataset.section);
+    if(section) section.classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+
+document.querySelectorAll('.transcript-line').forEach(line=>{
+  line.addEventListener('click',()=>{
+    document.querySelectorAll('.transcript-line').forEach(x=>x.classList.remove('active'));
+    line.classList.add('active');
+  });
+});
+
+const demoCheck=document.getElementById('checkDemoExercise');
+if(demoCheck){
+  demoCheck.addEventListener('click',()=>{
+    const chosen=document.querySelector('input[name="demoQ"]:checked');
+    const out=document.getElementById('demoExerciseResult');
+    if(!chosen){
+      out.textContent='Hãy chọn một đáp án.';
+      return;
+    }
+    if(chosen.value==='b'){
+      out.textContent='✓ Chính xác.';
+      out.style.color='#39734d';
+    }else{
+      out.textContent='Chưa đúng. Đáp án đúng là: 我吃饭了。';
+      out.style.color='#a24d46';
+    }
+  });
+}
+
 </script>
+
+</section>
+
+<section class="aluni-section" id="shadowSection">
+  <div class="wrap">
+    <div class="module-header">
+      <div class="brand">TIẾNG TRUNG ALUNI</div>
+      <h1>Shadowing tiếng Trung</h1>
+      <p>Xem tình huống · nghe từng câu · lặp lại · nói theo đúng nhịp.</p>
+    </div>
+
+    <div class="module-card">
+      <div class="module-grid">
+        <div>
+          <label>Khóa học</label>
+          <select id="shadowCourse">
+            <option>50+ Phản xạ</option>
+          </select>
+        </div>
+        <div>
+          <label>Bài / Video</label>
+          <select id="shadowVideo">
+            <option>Bài mẫu · Chào hỏi</option>
+          </select>
+        </div>
+      </div>
+      <div class="module-note">
+        Đây là khung Shadowing đã sẵn sàng. Khi anh thêm link YouTube + SRT trong Admin, video và transcript sẽ được nạp tại đây.
+      </div>
+    </div>
+
+    <div class="module-card shadow-grid">
+      <div>
+        <div class="video-demo">▶ VIDEO YOUTUBE</div>
+        <div class="shadow-controls">
+          <button class="btn ghost">0.75×</button>
+          <button class="btn ghost">1×</button>
+          <button class="btn primary">🔁 Lặp câu</button>
+          <button class="btn ghost">Ẩn Pinyin</button>
+          <button class="btn ghost">Ẩn nghĩa Việt</button>
+        </div>
+      </div>
+      <div class="transcript-list">
+        <div class="transcript-line active">
+          <div class="transcript-zh">你今天去哪儿？</div>
+          <div class="transcript-py">Nǐ jīntiān qù nǎr?</div>
+          <div class="transcript-vi">Hôm nay bạn đi đâu?</div>
+        </div>
+        <div class="transcript-line">
+          <div class="transcript-zh">我去公司上班。</div>
+          <div class="transcript-py">Wǒ qù gōngsī shàngbān.</div>
+          <div class="transcript-vi">Tôi đến công ty làm việc.</div>
+        </div>
+        <div class="transcript-line">
+          <div class="transcript-zh">你几点上班？</div>
+          <div class="transcript-py">Nǐ jǐ diǎn shàngbān?</div>
+          <div class="transcript-vi">Bạn mấy giờ đi làm?</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="aluni-section" id="grammarSection">
+  <div class="wrap">
+    <div class="module-header">
+      <div class="brand">TIẾNG TRUNG ALUNI</div>
+      <h1>Ngữ pháp & Bài tập</h1>
+      <p>Học ngắn gọn · xem ví dụ · làm bài ngay trong cùng một bài học.</p>
+    </div>
+
+    <div class="module-card">
+      <div class="module-grid">
+        <div>
+          <label>Khóa học</label>
+          <select id="grammarCourse">
+            <option>HSK 1</option>
+            <option>50+ Phản xạ</option>
+          </select>
+        </div>
+        <div>
+          <label>Bài học</label>
+          <select id="grammarLesson">
+            <option>Bài mẫu · Sinh hoạt hằng ngày</option>
+          </select>
+        </div>
+      </div>
+      <div class="module-note">
+        Đây là khung Ngữ pháp & Bài tập. Sau này dữ liệu sẽ được nhập từ Admin giống cách anh đang nhập từ vựng.
+      </div>
+    </div>
+
+    <div class="module-card grammar-grid">
+      <div class="grammar-box">
+        <span class="grammar-tag">NGỮ PHÁP MẪU</span>
+        <h2>了 · le</h2>
+        <p>Dùng để biểu thị hành động đã hoàn thành hoặc tình huống đã thay đổi.</p>
+        <div class="grammar-formula">S + V + 了</div>
+        <div class="grammar-example">
+          <strong>我吃饭了。</strong><br>
+          <span class="pinyin">Wǒ chīfàn le.</span><br>
+          <span class="meaning">Tôi ăn cơm rồi.</span>
+        </div>
+        <div class="grammar-example">
+          <strong>他回家了。</strong><br>
+          <span class="pinyin">Tā huí jiā le.</span><br>
+          <span class="meaning">Anh ấy về nhà rồi.</span>
+        </div>
+      </div>
+
+      <div class="exercise-box">
+        <span class="grammar-tag">BÀI TẬP MẪU</span>
+        <h2>Câu 1</h2>
+        <p>“Tôi ăn cơm rồi.” nói thế nào?</p>
+        <label class="exercise-option"><input type="radio" name="demoQ" value="a"> 我吃饭。</label>
+        <label class="exercise-option"><input type="radio" name="demoQ" value="b"> 我吃饭了。</label>
+        <label class="exercise-option"><input type="radio" name="demoQ" value="c"> 我了吃饭。</label>
+        <button class="btn primary" id="checkDemoExercise">Kiểm tra đáp án</button>
+        <div class="exercise-result" id="demoExerciseResult"></div>
+      </div>
+    </div>
+  </div>
+</section>
 </body>
 </html>
