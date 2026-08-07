@@ -143,9 +143,28 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
       </div>
       <div class="grid2" style="margin-top:10px">
         <div><label>Link YouTube</label><input id="shadowYoutube" placeholder="https://www.youtube.com/watch?v=..."></div>
-        <div><label>Miễn phí?</label>
-          <select id="shadowFree"><option value="1">Có - xem miễn phí</option><option value="0">Không - cần quyền khóa học</option></select>
+        <div>
+          <label>Quyền xem Shadowing</label>
+          <select id="shadowAccessMode">
+            <option value="free_first">Miễn phí X bài đầu</option>
+            <option value="paid_all">Toàn bộ thu phí</option>
+          </select>
         </div>
+      </div>
+      <div class="grid2" style="margin-top:10px">
+        <div>
+          <label>Số bài miễn phí Shadowing</label>
+          <input id="shadowFreeLessons" type="number" min="0" value="10">
+        </div>
+        <div>
+          <label>Ghi chú</label>
+          <div class="muted" style="padding-top:12px">
+            Nếu chọn “Toàn bộ thu phí”, số bài miễn phí sẽ tự tính là 0.
+          </div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="ghost" id="saveShadowRule">Lưu quy tắc Shadowing</button>
       </div>
       <div class="status" id="shadowStatus"></div>
     </div>
@@ -170,7 +189,7 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
       <h2>Danh sách video</h2>
       <div class="tablewrap">
         <table>
-          <thead><tr><th>Khóa</th><th>Bài</th><th>Tiêu đề</th><th>YouTube</th><th>Free</th><th>Số câu</th></tr></thead>
+          <thead><tr><th>Khóa</th><th>Bài</th><th>Tiêu đề</th><th>YouTube</th><th>Số câu</th></tr></thead>
           <tbody id="shadowVideoBody"></tbody>
         </table>
       </div>
@@ -231,7 +250,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   b.classList.add('active');
   $(b.dataset.pane).classList.add('active');
   if(b.dataset.pane==='contentPane') loadCourses();
-  if(b.dataset.pane==='shadowPane'){ loadCourses(); loadShadowAdminVideos(); }
+  if(b.dataset.pane==='shadowPane'){ loadCourses().then(()=>{loadShadowRule();loadShadowAdminVideos();}); }
 });
 
 async function refreshCodes(){
@@ -341,7 +360,10 @@ $('loadCourses').onclick=loadCourses;
 $('importBtn').onclick=doImport;
 $('templateBtn').onclick=template;
 $('saveShadowVideo').onclick=saveShadowVideo;
+$('saveShadowRule').onclick=saveShadowRule;
 $('shadowTemplateBtn').onclick=downloadShadowTemplate;
+$('shadowAdminCourse').onchange=()=>{loadShadowRule();loadShadowAdminVideos();};
+$('shadowAccessMode').onchange=()=>{$('shadowFreeLessons').disabled=$('shadowAccessMode').value==='paid_all';};
 
 async function parseSrtFile(file){
   const text = await file.text();
@@ -381,9 +403,43 @@ async function loadShadowAdminVideos(){
       const tr=document.createElement('tr');
       tr.innerHTML=`<td>${v.course_id}</td><td>${v.lesson_number}</td><td>${v.title}</td>
         <td><a href="${v.youtube_url}" target="_blank">Mở</a></td>
-        <td>${v.is_free?'Có':'Không'}</td><td>${v.segment_count||0}</td>`;
+        <td>${v.segment_count||0}</td>`;
       $('shadowVideoBody').appendChild(tr);
     });
+  }catch(e){
+    $('shadowStatus').textContent=e.message;
+  }
+}
+
+
+async function loadShadowRule(){
+  const courseId=$('shadowAdminCourse').value;
+  if(!courseId) return;
+  try{
+    const j=await api('/admin/shadowing/rule?course_id='+encodeURIComponent(courseId));
+    const rule=j.rule || {access_mode:'free_first',free_lessons:0};
+    $('shadowAccessMode').value=rule.access_mode || 'free_first';
+    $('shadowFreeLessons').value=Number(rule.free_lessons||0);
+  }catch(e){
+    $('shadowStatus').textContent=e.message;
+  }
+}
+
+async function saveShadowRule(){
+  try{
+    const mode=$('shadowAccessMode').value;
+    const freeLessons=mode==='paid_all' ? 0 : Number($('shadowFreeLessons').value||0);
+    await api('/admin/shadowing/rule',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        course_id:$('shadowAdminCourse').value,
+        access_mode:mode,
+        free_lessons:freeLessons
+      })
+    });
+    $('shadowStatus').textContent='Đã lưu quy tắc quyền xem Shadowing.';
+    await loadShadowAdminVideos();
   }catch(e){
     $('shadowStatus').textContent=e.message;
   }
@@ -423,7 +479,6 @@ async function saveShadowVideo(){
         lesson_number:Number($('shadowLessonNumber').value||1),
         title:$('shadowTitle').value.trim(),
         youtube_url:$('shadowYoutube').value.trim(),
-        is_free:Number($('shadowFree').value||0),
         segments
       })
     });
