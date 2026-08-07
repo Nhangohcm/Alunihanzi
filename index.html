@@ -299,9 +299,11 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
 /* v30: larger mobile player; transcript scrolls inside its own viewport. */
 @media(max-width:780px){
   #shadowPlayerCard .video-frame{
-    width:94%!important;
-    max-width:560px!important;
+    width:100%!important;
+    max-width:none!important;
     min-width:0!important;
+    margin:0!important;
+    border-radius:12px!important;
   }
   #shadowTranscript{
     display:grid!important;
@@ -319,8 +321,8 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
 }
 @media(max-width:360px){
   #shadowPlayerCard .video-frame{
-    width:94%!important;
-    max-width:94%!important;
+    width:100%!important;
+    max-width:none!important;
   }
 }
 </style>
