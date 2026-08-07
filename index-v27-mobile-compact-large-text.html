@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f5f0e7">
+<title>Tiếng Trung Aluni - Luyện viết chữ Hán</title>
+<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+<script src="https://www.youtube.com/iframe_api"></script>
+<script src="data.js"></script>
+<script src="tts-config.js"></script>
+<script src="access-config.js"></script>
+<style>
+:root{--bg:#f5f0e7;--paper:#fffdf8;--ink:#26382f;--muted:#747a73;--green:#718875;--green2:#e2eadf;--line:#ded7cb;--warm:#f0e8d9;--lock:#8b6423;--shadow:0 12px 32px rgba(46,58,50,.09)}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#f9f5ed,#f3eee4);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans",Arial,sans-serif}
+button,input,select{font:inherit}button{cursor:pointer}.wrap{width:min(1080px,calc(100% - 20px));margin:auto;padding:24px 0 50px}
+header{text-align:center;padding:10px 6px 20px}.brand{font-size:.82rem;font-weight:900;letter-spacing:.12em;color:var(--green)}
+h1{font-size:clamp(1.9rem,5vw,2.9rem);margin:7px 0}.sub{color:var(--muted);margin:5px 0;line-height:1.55}
+.card{background:rgba(255,253,248,.98);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}.tab{border:1px solid var(--line);background:white;color:var(--muted);padding:13px;border-radius:14px;font-weight:850}.tab.active{background:var(--green);color:white;border-color:var(--green)}
+.mode{display:none}.mode.active{display:block}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}label{font-weight:800;display:block;margin-bottom:7px}
+input,select{width:100%;border:1px solid var(--line);border-radius:13px;background:white;color:var(--ink);padding:13px 14px;outline:none}
+.searchrow{display:grid;grid-template-columns:1fr auto;gap:8px}.btn{border:1px solid transparent;border-radius:13px;padding:12px 15px;font-weight:850}.primary{background:var(--green);color:white}.ghost{background:white;border-color:var(--line);color:var(--ink)}.soft{background:var(--green2);color:var(--ink)}
+.hint{font-size:.88rem;color:var(--muted);line-height:1.5}.hero-demo{display:grid;grid-template-columns:1.4fr .6fr;gap:14px;align-items:center;background:linear-gradient(135deg,#eef2e9,#fffaf2);border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:16px}
+.hero-demo h2{margin:4px 0 6px}.demo-words{font-size:1.35rem;font-weight:850;letter-spacing:.08em;margin:8px 0}.free-chip{display:inline-block;background:#e7f0e4;color:#45604c;border-radius:999px;padding:5px 9px;font-size:.8rem;font-weight:850}
+.course-strip{display:flex;gap:7px;overflow:auto;padding-bottom:4px}.lesson-chip{white-space:nowrap;border:1px solid var(--line);background:white;border-radius:999px;padding:8px 11px;font-size:.86rem;font-weight:800}.lesson-chip.locked{background:#f3ead9;color:var(--lock)}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.section-head h2{margin:0;font-size:1.25rem}.count{font-size:.84rem;background:var(--warm);padding:6px 9px;border-radius:999px;color:var(--muted)}
+.words{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.word{border:1px solid var(--line);background:white;border-radius:17px;padding:14px;text-align:center;min-height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}.hanzi{font-size:clamp(1.7rem,5vw,2.4rem);font-weight:800}.pinyin{margin-top:6px;color:var(--green);font-weight:750}.meaning{margin-top:4px;color:var(--muted);font-size:.94rem}.speak{position:absolute;right:8px;top:8px;border:0;background:var(--green2);border-radius:999px;width:34px;height:34px}.empty{text-align:center;color:var(--muted);padding:28px 10px;grid-column:1/-1}
+.practice{display:none}.practice.show{display:block}.practice-top{text-align:center}.word-big{font-size:clamp(2.2rem,8vw,4.5rem);font-weight:850}.char-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:12px 0}.char-pill{border:1px solid var(--line);background:white;border-radius:12px;padding:8px 13px;font-size:1.35rem}.char-pill.active{background:var(--green);color:white;border-color:var(--green)}
+.writerbox{width:min(340px,86vw);height:min(340px,86vw);margin:16px auto;background:white;border:1px solid var(--line);border-radius:20px;overflow:hidden;display:flex;align-items:center;justify-content:center}.actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}.status{text-align:center;min-height:24px;color:var(--muted);margin-top:10px;font-weight:700}
+.radical-legend{text-align:center;margin-top:9px;color:var(--muted);font-size:.88rem}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 5px 0 10px}.dot.rad{background:#789976}.dot.rest{background:#2e3a34}.radical-info{width:min(620px,94%);margin:14px auto 0;padding:14px 16px;border:1px solid var(--line);background:#faf7f0;border-radius:16px;text-align:left}.ri{display:grid;grid-template-columns:100px 1fr;gap:8px;margin:4px 0}.rk{color:var(--muted);font-weight:800}.rv{font-weight:650}
+.access-modal{position:fixed;inset:0;background:rgba(25,35,30,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:9999}.access-modal.show{display:flex}.access-box{position:relative;width:min(470px,100%);background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.22)}.access-close{position:absolute;right:12px;top:10px;width:36px;height:36px;border-radius:999px;border:1px solid var(--line);background:white;font-size:1.2rem}.access-msg{min-height:22px;margin-top:10px;font-weight:750}.access-msg.err{color:#a24d46}.access-msg.ok{color:#39734d}.access-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
+
+.contact-card{
+  margin-top:16px;
+  background:linear-gradient(135deg,#eef2e9,#fffaf2);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:18px;
+  text-align:center;
+}
+.contact-card h3{margin:4px 0 6px;font-size:1.18rem}
+.contact-card p{margin:4px 0 12px;color:var(--muted);line-height:1.5}
+.contact-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  justify-content:center;
+}
+.contact-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  text-decoration:none;
+  border:1px solid var(--line);
+  background:white;
+  color:var(--ink);
+  padding:10px 14px;
+  border-radius:13px;
+  font-weight:850;
+  min-width:165px;
+}
+.contact-link.primary{
+  background:var(--green);
+  color:white;
+  border-color:var(--green);
+}
+.contact-link:hover{transform:translateY(-1px)}
+
+
+.app-topbar{
+  width:min(1080px,calc(100% - 20px));
+  margin:10px auto 0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.app-mini-brand{
+  font-size:.76rem;
+  font-weight:900;
+  letter-spacing:.12em;
+  color:var(--green);
+  white-space:nowrap;
+}
+.app-nav{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  overflow:auto;
+  padding:3px;
+  scrollbar-width:none;
+}
+.app-nav::-webkit-scrollbar{display:none}
+.app-nav-btn{
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.78);
+  color:var(--muted);
+  border-radius:999px;
+  padding:8px 12px;
+  font-weight:850;
+  white-space:nowrap;
+  cursor:pointer;
+}
+.app-nav-btn.active{
+  background:var(--green);
+  color:white;
+  border-color:var(--green);
+}
+.aluni-section{display:none}
+.aluni-section.active{display:block}
+.module-header{text-align:center;padding:16px 4px 20px}
+.module-header h1{font-size:clamp(1.9rem,5vw,2.8rem);margin:6px 0}
+.module-header p{color:var(--muted);margin:5px 0;line-height:1.5}
+.module-card{
+  background:rgba(255,253,248,.98);
+  border:1px solid var(--line);
+  border-radius:22px;
+  box-shadow:var(--shadow);
+  padding:18px;
+  margin-bottom:16px;
+}
+.module-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.shadow-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:14px;max-width:100%;overflow:hidden}
+.shadow-grid>div{min-width:0;max-width:100%}
+.video-frame{
+  position:relative;
+  width:100%;
+  max-width:100%;
+  aspect-ratio:16/9;
+  overflow:hidden;
+  border-radius:18px;
+  background:#202522;
+}
+.video-demo{
+  position:absolute;
+  inset:0;
+  width:100%!important;
+  height:100%!important;
+  background:#202522;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:850;
+  font-size:1.1rem;
+}
+.video-frame iframe{position:absolute;inset:0;width:100%!important;height:100%!important;border:0}
+.shadow-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;max-width:100%}
+.shadow-controls .btn{min-width:0;white-space:normal}
+.transcript-list{display:grid;gap:8px;max-height:430px;max-width:100%;min-width:0;overflow:auto;overflow-x:hidden}
+.transcript-line{
+  border:1px solid var(--line);
+  background:white;
+  border-radius:14px;
+  padding:11px;
+  cursor:pointer;
+}
+.transcript-line.active{
+  background:var(--green2);
+  border-color:#a9b8a7;
+}
+.transcript-zh{font-size:1.15rem;font-weight:850}
+.transcript-py{color:var(--green);font-weight:700;margin-top:2px}
+.transcript-vi{color:var(--muted);font-size:.92rem;margin-top:2px}
+.grammar-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grammar-box,.exercise-box{
+  border:1px solid var(--line);
+  background:white;
+  border-radius:17px;
+  padding:16px;
+}
+.grammar-tag{
+  display:inline-block;
+  background:var(--green2);
+  color:var(--ink);
+  border-radius:999px;
+  padding:5px 9px;
+  font-size:.8rem;
+  font-weight:850;
+}
+.grammar-formula{
+  font-size:1.15rem;
+  font-weight:900;
+  background:#f1f5ef;
+  border-radius:12px;
+  padding:10px 12px;
+  margin:10px 0;
+}
+.grammar-example{padding:8px 0;border-bottom:1px dashed var(--line)}
+.exercise-option{
+  display:block;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:10px;
+  margin:8px 0;
+  background:white;
+}
+.exercise-result{min-height:22px;margin-top:8px;font-weight:800}
+.module-note{
+  background:#f7f3eb;
+  border:1px dashed var(--line);
+  border-radius:14px;
+  padding:12px;
+  color:var(--muted);
+  line-height:1.5;
+  margin-top:12px;
+}
+@media(max-width:780px){
+  .app-topbar{align-items:flex-start;flex-direction:column}
+  .app-nav{width:100%}
+  .module-grid,.shadow-grid,.grammar-grid{grid-template-columns:1fr}
+  .app-nav-btn{padding:7px 10px;font-size:.86rem}
+  #shadowSection{width:100%;max-width:100%;overflow-x:hidden}
+  #shadowSection .wrap{width:calc(100% - 16px);max-width:100%;overflow-x:hidden}
+  #shadowPlayerCard{width:100%;max-width:100%;overflow:hidden;padding:12px 10px}
+  #shadowPlayerCard>div{width:100%;max-width:100%;min-width:0}
+  #shadowPlayerCard .video-frame{
+    width:calc(100% - 20px);
+    max-width:520px;
+    margin:0 auto;
+    border-radius:14px;
+    contain:layout paint;
+  }
+  #shadowPlayerCard .video-frame iframe,
+  #shadowPlayerCard #youtubePlayer{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+  }
+  .shadow-controls{width:calc(100% - 12px);margin:12px auto 0}
+  .shadow-controls .btn{flex:1 1 calc(33.333% - 8px);padding:11px 8px;font-size:.96rem;line-height:1.25}
+  .transcript-list{max-height:none;margin-top:14px}
+  .transcript-line{padding:14px 13px;line-height:1.45}
+  .transcript-zh{font-size:1.38rem;line-height:1.4}
+  .transcript-py{font-size:1.08rem;line-height:1.45;margin-top:4px}
+  .transcript-vi{font-size:1.05rem;line-height:1.45;margin-top:4px}
+}
+
+footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
+@media(max-width:760px){.words{grid-template-columns:repeat(2,1fr)}.row,.hero-demo{grid-template-columns:1fr}.hero-demo{text-align:center}}
+@media(max-width:480px){.wrap{width:min(100% - 12px,1080px);padding-top:12px}.card{padding:14px;border-radius:18px}.module-card{padding:12px;border-radius:18px}.searchrow{grid-template-columns:1fr}.words{gap:8px}.word{min-height:120px}.ri{grid-template-columns:86px 1fr}#shadowSection .wrap{width:calc(100% - 12px)}#shadowPlayerCard{padding:10px 6px}#shadowPlayerCard .video-frame{width:calc(100% - 24px);border-radius:12px}.shadow-controls{width:calc(100% - 16px)}.shadow-controls .btn{flex:1 1 calc(50% - 8px);font-size:1rem;padding:12px 8px}.shadow-controls .btn#repeatLineBtn{flex-basis:100%}.transcript-list{padding:0 2px}.transcript-zh{font-size:1.42rem}.transcript-py{font-size:1.1rem}.transcript-vi{font-size:1.08rem}}
+</style>
+</head>
+<body>
+<div class="app-topbar">
+  <div class="app-mini-brand">TIẾNG TRUNG ALUNI</div>
+  <nav class="app-nav">
+    <button class="app-nav-btn active" data-section="writingSection">✍ Viết chữ</button>
+    <button class="app-nav-btn" data-section="shadowSection">🎥 Shadowing</button>
+    <button class="app-nav-btn" data-section="grammarSection">📚 Ngữ pháp & Bài tập</button>
+  </nav>
+</div>
+
+<section class="aluni-section active" id="writingSection">
+
+<div class="wrap">
+<header>
+  <div class="brand">TIẾNG TRUNG ALUNI</div>
+  <h1>Luyện viết chữ Hán</h1>
+  <p class="sub">Tra chữ miễn phí · nghe phát âm · xem bộ thủ · luyện viết từng nét.</p>
+  <p class="sub">Khóa 50+ mở miễn phí 10 bài đầu để học thử.</p>
+</header>
+
+<section class="hero-demo">
+  <div>
+    <span class="free-chip">🎁 HỌC THỬ MIỄN PHÍ</span>
+    <h2>50+ Phản xạ · Bài 01. Giới thiệu</h2>
+    <div class="demo-words">你好 · 我 · 你 · 他 · 她</div>
+    <p class="hint">Bấm vào để xem ngay bài mẫu. Không cần đăng ký.</p>
+  </div>
+  <button class="btn primary" id="demoBtn">Học thử Bài 01 →</button>
+</section>
+
+<section class="card">
+  <div class="tabs">
+    <button class="tab active" data-mode="courseMode">Khóa học → Bài</button>
+    <button class="tab" data-mode="searchMode">Gõ chữ để tìm</button>
+  </div>
+  <div id="courseMode" class="mode active">
+    <div class="row">
+      <div><label>Khóa học</label><select id="courseSelect"><option>Đang tải...</option></select></div>
+      <div><label>Bài học</label><select id="lessonSelect"><option>Chọn bài học</option></select></div>
+    </div>
+    <div class="course-strip" id="lessonStrip" style="margin-top:12px"></div>
+  </div>
+  <div id="searchMode" class="mode">
+    <label>Nhập chữ, từ, pinyin hoặc nghĩa Việt</label>
+    <div class="searchrow"><input id="searchInput" placeholder="Ví dụ: 自, zixingche, xe dap, 吃饭"><button class="btn primary" id="searchBtn">Tìm</button></div>
+    <p class="hint">Có thể gõ pinyin không dấu. Một chữ Hán bất kỳ vẫn luyện viết được dù không có trong khóa.</p>
+  </div>
+</section>
+
+<section class="card">
+  <div class="section-head"><h2 id="resultsTitle">Từ vựng</h2><span class="count" id="resultCount">0 mục</span></div>
+  <div id="words" class="words"></div>
+</section>
+
+<section class="card practice" id="practiceCard">
+  <div class="practice-top">
+    <div class="brand">LUYỆN VIẾT</div>
+    <div class="word-big" id="practiceWord"></div>
+    <div class="pinyin" id="practicePinyin"></div>
+    <div class="meaning" id="practiceMeaning"></div>
+    <div class="char-pills" id="charPills"></div>
+    <button class="btn soft" id="speakPractice">🔊 Nghe từ</button>
+  </div>
+  <div class="writerbox"><div id="writerTarget"></div></div>
+  <div class="actions">
+    <button class="btn soft" id="animateBtn">▶ Xem thứ tự nét</button>
+    <button class="btn primary" id="quizBtn">✍ Tập viết</button>
+    <button class="btn ghost" id="resetBtn">↻ Viết lại</button>
+    <button class="btn ghost" id="nextCharBtn">Chữ tiếp →</button>
+    <button class="btn soft" id="radicalBtn">🎨 Tách bộ thủ: BẬT</button>
+  </div>
+  <div class="radical-legend" id="radicalLegend"><span class="dot rad"></span>Bộ thủ <span class="dot rest"></span>Phần còn lại</div>
+  <div class="radical-info"><strong>Giải thích bộ thủ</strong><div id="radicalInfo">Chọn một chữ để xem.</div></div>
+  <div class="status" id="status"></div>
+</section>
+
+
+<section class="contact-card">
+  <div class="brand">LIÊN HỆ TIẾNG TRUNG ALUNI</div>
+  <h3>Thầy Ngô Thanh Nhã</h3>
+  <p>Cần tư vấn khóa học hoặc hỗ trợ sử dụng, bạn có thể liên hệ trực tiếp:</p>
+  <div class="contact-actions">
+    <a class="contact-link primary" href="https://zalo.me/0931444083" target="_blank" rel="noopener noreferrer">
+      💬 Zalo: 0931 444 083
+    </a>
+    <a class="contact-link" href="tel:0931444083">
+      📞 Gọi: 0931 444 083
+    </a>
+    <a class="contact-link" href="https://www.facebook.com/bi.ngo.988926" target="_blank" rel="noopener noreferrer">
+      🔵 Facebook: Ngô Thanh Nhã
+    </a>
+  </div>
+</section>
+
+<footer>Tiếng Trung Aluni · Công cụ luyện viết chữ Hán</footer>
+</div>
+
+<div class="access-modal" id="accessModal">
+  <div class="access-box">
+    <button class="access-close" id="accessCloseBtn">×</button>
+    <div class="brand">TIẾNG TRUNG ALUNI</div>
+    <h3>🔒 Mở toàn bộ Khóa 50+</h3>
+    <p class="hint">Bài 01–10 được học miễn phí. Bài 11–50 cần kích hoạt.</p>
+    <input id="accessIdentity" placeholder="Số điện thoại hoặc email" style="margin-bottom:9px">
+    <input id="accessCode" placeholder="Mã kích hoạt, ví dụ 50P-ABCD-EFGH">
+    <div class="access-msg" id="accessMsg"></div>
+    <div class="access-actions">
+      <button class="btn ghost" id="accessCancelBtn">← Quay lại dùng miễn phí</button>
+      <button class="btn primary" id="accessActivateBtn">Kích hoạt 12 tháng</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let courses = Array.isArray(window.ALUNI_DEFAULT_DATA) ? JSON.parse(JSON.stringify(window.ALUNI_DEFAULT_DATA)) : [];
+let selectedCourseObj=null, selectedLessonObj=null, writer=null, currentItem=null, currentChars=[], currentCharIndex=0, radicalMode=true, currentAudio=null;
+const ACCESS_KEY='aluni_entitlement_50plus_v18';
+
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function norm(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ü/gi,'u').toLowerCase().replace(/[^a-z0-9]+/g,'')}
+function isHan(s){return /\p{Script=Han}/u.test(String(s||''))}
+function singleHan(s){const a=[...String(s||'')].filter(c=>/\p{Script=Han}/u.test(c));return a.length===1&&String(s).trim()===a[0]}
+function api(path){return String(window.ALUNI_API_BASE||'').replace(/\/+$/,'')+path}
+
+async function loadRemoteContent(){
+  try{
+    const r=await fetch(api('/content/all'),{cache:'no-store'});
+    if(r.ok){
+      const j=await r.json();
+      if(Array.isArray(j.courses) && j.courses.length) courses=j.courses;
+    }
+  }catch(e){}
+  renderCourseSelect();
+}
+
+function getCourse(id){return courses.find(c=>c.id===id)||null}
+function freeCount(course){return Number(course.free_lessons ?? (course.id==='50plus'?10:9999))}
+function savedEntitlement(){
+  try{const x=JSON.parse(localStorage.getItem(ACCESS_KEY)||'null');if(!x||!x.token||!x.expires_at)return null;if(Date.now()>=new Date(x.expires_at).getTime()){localStorage.removeItem(ACCESS_KEY);return null}return x}catch(e){return null}
+}
+async function hasFullAccess(courseId){
+  if(courseId!=='50plus') return true;
+  const e=savedEntitlement(); if(!e) return false;
+  try{const r=await fetch(api('/access/verify'),{headers:{Authorization:`Bearer ${e.token}`}});return r.ok}catch(err){return true}
+}
+function renderCourseSelect(){
+  const s=$('courseSelect');s.innerHTML='<option value="">Chọn khóa học</option>';
+  courses.forEach(c=>s.add(new Option(c.name,c.id)));
+  $('lessonSelect').innerHTML='<option value="">Chọn bài học</option>';
+  renderStrip(null,false);
+}
+async function renderLessons(course){
+  selectedCourseObj=course;
+  const full=await hasFullAccess(course.id);
+  const limit=freeCount(course);
+  const s=$('lessonSelect');s.innerHTML='<option value="">Chọn bài học</option>';
+  (course.lessons||[]).forEach((l,i)=>{
+    const locked=!full && (i+1)>limit;
+    s.add(new Option((locked?'🔒 ':'')+(l.title||l.name||`Bài ${i+1}`),l.id));
+  });
+  renderStrip(course,full);
+}
+function renderStrip(course,full){
+  const box=$('lessonStrip');box.innerHTML=''; if(!course)return;
+  const limit=freeCount(course);
+  (course.lessons||[]).forEach((l,i)=>{
+    const b=document.createElement('button');const locked=!full&&(i+1)>limit;
+    b.className='lesson-chip'+(locked?' locked':'');b.textContent=(locked?'🔒 ':'')+String(i+1).padStart(2,'0');
+    b.onclick=()=>selectLesson(course,l,i,full);box.appendChild(b);
+  });
+}
+async function selectLesson(course,lesson,index,fullKnown=null){
+  const full=fullKnown===null?await hasFullAccess(course.id):fullKnown;
+  const locked=!full && (index+1)>freeCount(course);
+  if(locked){openAccess();return}
+  selectedLessonObj=lesson;$('lessonSelect').value=lesson.id;renderItems(lesson.items||[],lesson.title||lesson.name);warmAudio(lesson.items||[]);
+}
+function renderItems(items,title){
+  $('resultsTitle').textContent=title||'Từ vựng';$('resultCount').textContent=`${items.length} mục`;const box=$('words');box.innerHTML='';
+  if(!items.length){box.innerHTML='<div class="empty">Không tìm thấy dữ liệu phù hợp.</div>';return}
+  items.forEach(item=>{const d=document.createElement('div');d.className='word';d.innerHTML=`<button class="speak">🔊</button><div class="hanzi">${esc(item.hanzi)}</div><div class="pinyin">${esc(item.pinyin||'')}</div><div class="meaning">${esc(item.vi||'')}</div>`;d.querySelector('.speak').onclick=e=>{e.stopPropagation();speak(item.hanzi)};d.onclick=()=>openPractice(item);box.appendChild(d)})
+}
+function ttsUrl(text){const ep=String(window.ALUNI_TTS_ENDPOINT||'').trim();if(!ep)return'';const sep=ep.includes('?')?'&':'?';return `${ep}${sep}text=${encodeURIComponent(text)}&v=${encodeURIComponent(window.ALUNI_TTS_VERSION||'1')}`}
+function speak(text){
+  const u=ttsUrl(text);if(!u)return;
+  if(currentAudio){currentAudio.onerror=null;try{currentAudio.pause()}catch(e){}currentAudio=null}
+  const a=new Audio(u);currentAudio=a;a.play().catch(()=>{$('status').textContent='Hãy bấm lại nút loa.'});
+}
+function warmAudio(items){(items||[]).slice(0,12).forEach((x,i)=>setTimeout(()=>fetch(ttsUrl(x.hanzi),{cache:'force-cache'}).catch(()=>{}),i*220))}
+function doSearch(){
+  const raw=$('searchInput').value.trim();if(!raw)return renderItems([],'Kết quả tìm kiếm');const q=norm(raw),exact=[],near=[];
+  courses.forEach(c=>(c.lessons||[]).forEach(l=>(l.items||[]).forEach(it=>{const h=String(it.hanzi||'').trim(),p=norm(it.pinyin),v=norm(it.vi);if(h===raw)exact.push(it);else{let score=0;if(isHan(raw)&&h.includes(raw))score=70;if(!isHan(raw)){if(p===q)score=100;else if(p.startsWith(q))score=90;else if(q.length>=2&&p.includes(q))score=80;if(v===q)score=Math.max(score,95);else if(v.startsWith(q))score=Math.max(score,75);else if(q.length>=2&&v.includes(q))score=Math.max(score,60)}if(score)near.push({...it,_score:score})}})));
+  if(singleHan(raw)&&!exact.some(x=>x.hanzi===raw))exact.unshift({hanzi:raw,pinyin:'',vi:'Luyện viết chữ này'});
+  near.sort((a,b)=>(b._score-a._score)||String(a.hanzi).length-String(b.hanzi).length);renderItems(exact.length?[...exact,...near]:near,`Kết quả: ${raw}`)
+}
+
+function extractChars(t){return [...String(t)].filter(c=>/\p{Script=Han}/u.test(c))}
+function openPractice(item){currentItem=item;currentChars=extractChars(item.hanzi);currentCharIndex=0;$('practiceWord').textContent=item.hanzi;$('practicePinyin').textContent=item.pinyin||'';$('practiceMeaning').textContent=item.vi||'';renderPills();$('practiceCard').classList.add('show');if(currentChars.length)buildWriter(currentChars[0],false);$('practiceCard').scrollIntoView({behavior:'smooth'})}
+function renderPills(){const b=$('charPills');b.innerHTML='';currentChars.forEach((c,i)=>{const x=document.createElement('button');x.className='char-pill'+(i===currentCharIndex?' active':'');x.textContent=c;x.onclick=()=>{currentCharIndex=i;renderPills();buildWriter(c,false)};b.appendChild(x)})}
+function buildWriter(ch,quiz=false){$('writerTarget').innerHTML='';const size=Math.min(320,Math.max(240,innerWidth-70));writer=HanziWriter.create('writerTarget',ch,{width:size,height:size,padding:18,showOutline:true,showCharacter:!quiz,strokeAnimationSpeed:1,delayBetweenStrokes:180,showHintAfterMisses:2,highlightOnComplete:true,strokeColor:'#2e3a34',radicalColor:radicalMode?'#789976':null});if(quiz)writer.quiz();updateRadicalInfo(ch)}
+async function updateRadicalInfo(ch){
+  const box=$('radicalInfo');box.innerHTML='<div class="hint">Đang tải...</div>';
+  try{const r=await fetch('https://cdn.jsdelivr.net/gh/skishore/makemeahanzi@master/dictionary.txt');const txt=await r.text();let meta=null;for(const line of txt.split(/\r?\n/)){if(line.includes(`"character":"${ch}"`)){meta=JSON.parse(line);break}}if(meta){box.innerHTML=`<div class="ri"><div class="rk">Bộ thủ</div><div class="rv">${esc(meta.radical||'—')}</div></div><div class="ri"><div class="rk">Cấu tạo</div><div class="rv">${esc(meta.decomposition||'—')}</div></div>`}else box.textContent='Chưa có dữ liệu bộ thủ.'}catch(e){box.textContent='Chưa tải được dữ liệu bộ thủ.'}
+}
+function openAccess(){$('accessMsg').textContent='';$('accessModal').classList.add('show')}
+function closeAccess(){$('accessModal').classList.remove('show')}
+async function activate(){
+  const identity=$('accessIdentity').value.trim(),code=$('accessCode').value.trim().toUpperCase(),msg=$('accessMsg');if(!identity||!code){msg.textContent='Nhập đủ SĐT/email và mã.';msg.className='access-msg err';return}
+  msg.textContent='Đang kiểm tra...';try{const r=await fetch(api('/access/activate'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identity,code,course_id:'50plus'})});const j=await r.json();if(!r.ok||!j.ok){msg.textContent=j.error||'Mã không hợp lệ.';msg.className='access-msg err';return}localStorage.setItem(ACCESS_KEY,JSON.stringify(j));msg.textContent='Kích hoạt thành công.';msg.className='access-msg ok';setTimeout(async()=>{closeAccess();const c=getCourse('50plus');await renderLessons(c)},400)}catch(e){msg.textContent='Chưa kết nối được hệ thống.';msg.className='access-msg err'}
+}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.mode').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.mode).classList.add('active')});
+$('courseSelect').onchange=async()=>{const c=getCourse($('courseSelect').value);if(!c){$('lessonSelect').innerHTML='<option>Chọn bài học</option>';return}await renderLessons(c)};
+$('lessonSelect').onchange=async()=>{const c=selectedCourseObj;if(!c)return;const i=(c.lessons||[]).findIndex(l=>l.id===$('lessonSelect').value);if(i>=0)await selectLesson(c,c.lessons[i],i)};
+$('demoBtn').onclick=async()=>{document.querySelector('.tab[data-mode="courseMode"]').click();const c=getCourse('50plus')||courses[0];if(!c)return;$('courseSelect').value=c.id;await renderLessons(c);if(c.lessons?.[0])await selectLesson(c,c.lessons[0],0,true)};
+$('searchBtn').onclick=doSearch;$('searchInput').onkeydown=e=>{if(e.key==='Enter')doSearch()};
+$('accessActivateBtn').onclick=activate;$('accessCancelBtn').onclick=closeAccess;$('accessCloseBtn').onclick=closeAccess;$('accessModal').onclick=e=>{if(e.target===$('accessModal'))closeAccess()};
+$('animateBtn').onclick=()=>writer&&writer.animateCharacter();$('quizBtn').onclick=()=>currentChars.length&&buildWriter(currentChars[currentCharIndex],true);$('resetBtn').onclick=()=>currentChars.length&&buildWriter(currentChars[currentCharIndex],true);$('nextCharBtn').onclick=()=>{if(!currentChars.length)return;currentCharIndex=(currentCharIndex+1)%currentChars.length;renderPills();buildWriter(currentChars[currentCharIndex],false)};$('radicalBtn').onclick=()=>{radicalMode=!radicalMode;$('radicalBtn').textContent=`🎨 Tách bộ thủ: ${radicalMode?'BẬT':'TẮT'}`;if(currentChars.length)buildWriter(currentChars[currentCharIndex],false)};$('speakPractice').onclick=()=>currentItem&&speak(currentItem.hanzi);
+loadRemoteContent();
+
+document.querySelectorAll('.app-nav-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.app-nav-btn').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.aluni-section').forEach(x=>x.classList.remove('active'));
+    btn.classList.add('active');
+    const section=document.getElementById(btn.dataset.section);
+    if(section) section.classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+
+document.querySelectorAll('.transcript-line').forEach(line=>{
+  line.addEventListener('click',()=>{
+    document.querySelectorAll('.transcript-line').forEach(x=>x.classList.remove('active'));
+    line.classList.add('active');
+  });
+});
+
+const demoCheck=document.getElementById('checkDemoExercise');
+if(demoCheck){
+  demoCheck.addEventListener('click',()=>{
+    const chosen=document.querySelector('input[name="demoQ"]:checked');
+    const out=document.getElementById('demoExerciseResult');
+    if(!chosen){
+      out.textContent='Hãy chọn một đáp án.';
+      return;
+    }
+    if(chosen.value==='b'){
+      out.textContent='✓ Chính xác.';
+      out.style.color='#39734d';
+    }else{
+      out.textContent='Chưa đúng. Đáp án đúng là: 我吃饭了。';
+      out.style.color='#a24d46';
+    }
+  });
+}
+
+</script>
+
+</section>
+
+
+<section class="aluni-section" id="shadowSection">
+  <div class="wrap">
+    <div class="module-header">
+      <div class="brand">TIẾNG TRUNG ALUNI</div>
+      <h1>Shadowing tiếng Trung</h1>
+      <p>Xem tình huống · nghe từng câu · lặp lại · nói theo đúng nhịp.</p>
+    </div>
+
+    <div class="module-card">
+      <div class="module-grid">
+        <div>
+          <label>Khóa học</label>
+          <select id="shadowCourse"><option value="">Chọn khóa học</option></select>
+        </div>
+        <div>
+          <label>Bài / Video</label>
+          <select id="shadowVideo"><option value="">Chọn video</option></select>
+        </div>
+      </div>
+      <div class="module-note" id="shadowNote">
+        Chọn khóa và video để bắt đầu luyện Shadowing.
+      </div>
+    </div>
+
+    <div class="module-card shadow-grid" id="shadowPlayerCard" style="display:none">
+      <div>
+        <div class="video-frame">
+          <div class="video-demo" id="youtubePlayer"></div>
+        </div>
+        <div class="shadow-controls">
+          <button class="btn ghost" data-speed="0.75">0.75×</button>
+          <button class="btn ghost" data-speed="1">1×</button>
+          <button class="btn primary" id="repeatLineBtn">🔁 Lặp câu</button>
+          <button class="btn ghost" id="togglePinyinBtn">Ẩn Pinyin</button>
+          <button class="btn ghost" id="toggleViBtn">Ẩn nghĩa Việt</button>
+        </div>
+      </div>
+      <div class="transcript-list" id="shadowTranscript"></div>
+    </div>
+  </div>
+</section>
+
+<section class="aluni-section" id="grammarSection">
+  <div class="wrap">
+    <div class="module-header">
+      <div class="brand">TIẾNG TRUNG ALUNI</div>
+      <h1>Ngữ pháp & Bài tập</h1>
+      <p>Học ngắn gọn · xem ví dụ · làm bài ngay trong cùng một bài học.</p>
+    </div>
+
+    <div class="module-card">
+      <div class="module-grid">
+        <div>
+          <label>Khóa học</label>
+          <select id="grammarCourse">
+            <option>HSK 1</option>
+            <option>50+ Phản xạ</option>
+          </select>
+        </div>
+        <div>
+          <label>Bài học</label>
+          <select id="grammarLesson">
+            <option>Bài mẫu · Sinh hoạt hằng ngày</option>
+          </select>
+        </div>
+      </div>
+      <div class="module-note">
+        Đây là khung Ngữ pháp & Bài tập. Sau này dữ liệu sẽ được nhập từ Admin giống cách anh đang nhập từ vựng.
+      </div>
+    </div>
+
+    <div class="module-card grammar-grid">
+      <div class="grammar-box">
+        <span class="grammar-tag">NGỮ PHÁP MẪU</span>
+        <h2>了 · le</h2>
+        <p>Dùng để biểu thị hành động đã hoàn thành hoặc tình huống đã thay đổi.</p>
+        <div class="grammar-formula">S + V + 了</div>
+        <div class="grammar-example">
+          <strong>我吃饭了。</strong><br>
+          <span class="pinyin">Wǒ chīfàn le.</span><br>
+          <span class="meaning">Tôi ăn cơm rồi.</span>
+        </div>
+        <div class="grammar-example">
+          <strong>他回家了。</strong><br>
+          <span class="pinyin">Tā huí jiā le.</span><br>
+          <span class="meaning">Anh ấy về nhà rồi.</span>
+        </div>
+      </div>
+
+      <div class="exercise-box">
+        <span class="grammar-tag">BÀI TẬP MẪU</span>
+        <h2>Câu 1</h2>
+        <p>“Tôi ăn cơm rồi.” nói thế nào?</p>
+        <label class="exercise-option"><input type="radio" name="demoQ" value="a"> 我吃饭。</label>
+        <label class="exercise-option"><input type="radio" name="demoQ" value="b"> 我吃饭了。</label>
+        <label class="exercise-option"><input type="radio" name="demoQ" value="c"> 我了吃饭。</label>
+        <button class="btn primary" id="checkDemoExercise">Kiểm tra đáp án</button>
+        <div class="exercise-result" id="demoExerciseResult"></div>
+      </div>
+    </div>
+  </div>
+</section>
+<script>
+// ===== SHADOWING V22 =====
+let shadowCourses = [];
+let shadowVideos = [];
+let shadowSegments = [];
+let shadowPlayer = null;
+let shadowCurrentIndex = -1;
+let shadowTimer = null;
+let repeatCurrentLine = false;
+let showShadowPinyin = true;
+let showShadowVi = true;
+
+function shadowApi(path){
+  const base = String(window.ALUNI_API_BASE || '').replace(/\/+$/,'');
+  return base + path;
+}
+
+function youtubeIdFromUrl(url){
+  const s = String(url || '').trim();
+  const m = s.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{6,})/);
+  return m ? m[1] : s;
+}
+
+async function loadShadowCourses(){
+  const courseSel = document.getElementById('shadowCourse');
+  if(!courseSel) return;
+
+  try{
+    const r = await fetch(shadowApi('/shadowing/courses'), {cache:'no-store'});
+    if(!r.ok) throw new Error();
+    const j = await r.json();
+    shadowCourses = Array.isArray(j.courses) ? j.courses : [];
+
+    courseSel.innerHTML = '<option value="">Chọn khóa học</option>';
+    shadowCourses.forEach(c => courseSel.add(new Option(c.name, c.id)));
+
+    if(!shadowCourses.length){
+      document.getElementById('shadowNote').textContent = 'Chưa có video Shadowing. Hãy thêm video trong trang Admin.';
+    }
+  }catch(e){
+    document.getElementById('shadowNote').textContent = 'Chưa tải được dữ liệu Shadowing.';
+  }
+}
+
+async function loadShadowVideos(courseId){
+  const videoSel = document.getElementById('shadowVideo');
+  videoSel.innerHTML = '<option value="">Chọn video</option>';
+  document.getElementById('shadowPlayerCard').style.display = 'none';
+  if(!courseId) return;
+
+  try{
+    const r = await fetch(shadowApi('/shadowing/videos?course_id=' + encodeURIComponent(courseId)), {cache:'no-store'});
+    const j = await r.json();
+    shadowVideos = Array.isArray(j.videos) ? j.videos : [];
+
+    shadowVideos.forEach(v=>{
+      const lock = v.locked ? '🔒 ' : '';
+      videoSel.add(new Option(lock + v.title, v.id));
+    });
+
+    document.getElementById('shadowNote').textContent =
+      shadowVideos.length ? `Có ${shadowVideos.length} video.` : 'Khóa này chưa có video Shadowing.';
+  }catch(e){
+    document.getElementById('shadowNote').textContent = 'Chưa tải được danh sách video.';
+  }
+}
+
+async function loadShadowVideo(videoId){
+  if(!videoId) return;
+  try{
+    const r = await fetch(shadowApi('/shadowing/video?id=' + encodeURIComponent(videoId)), {cache:'no-store'});
+    const j = await r.json();
+
+    if(!r.ok){
+      document.getElementById('shadowNote').textContent = j.error || `Không mở được video (HTTP ${r.status}).`;
+      return;
+    }
+
+    shadowSegments = Array.isArray(j.segments) ? j.segments : [];
+    shadowCurrentIndex = -1;
+    repeatCurrentLine = false;
+    document.getElementById('repeatLineBtn').textContent = '🔁 Lặp câu';
+
+    renderShadowTranscript();
+
+    const ytId = youtubeIdFromUrl(j.video.youtube_url);
+    document.getElementById('shadowPlayerCard').style.display = 'grid';
+    document.getElementById('shadowNote').textContent = j.video.title;
+
+    if(shadowPlayer && typeof shadowPlayer.loadVideoById === 'function'){
+      shadowPlayer.loadVideoById(ytId);
+    } else {
+      shadowPlayer = new YT.Player('youtubePlayer', {
+        videoId: ytId,
+        playerVars: { rel:0, playsinline:1 },
+        events: {
+          onReady: startShadowSync,
+          onStateChange: startShadowSync
+        }
+      });
+    }
+
+    startShadowSync();
+  }catch(e){
+    console.error('Shadowing load error:', e);
+    document.getElementById('shadowNote').textContent = 'Có lỗi khi tải video: ' + (e?.message || e);
+  }
+}
+
+function shadowEsc(value){
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#039;'
+  }[ch]));
+}
+
+function renderShadowTranscript(){
+  const box = document.getElementById('shadowTranscript');
+  box.innerHTML = '';
+
+  shadowSegments.forEach((s,i)=>{
+    const line = document.createElement('div');
+    line.className = 'transcript-line';
+    line.dataset.index = i;
+    line.innerHTML = `
+      <div class="transcript-zh">${shadowEsc(s.hanzi)}</div>
+      <div class="transcript-py" style="${showShadowPinyin?'':'display:none'}">${s.pinyin || ''}</div>
+      <div class="transcript-vi" style="${showShadowVi?'':'display:none'}">${s.vi || ''}</div>
+    `;
+    line.addEventListener('click', ()=>{
+      shadowCurrentIndex = i;
+      if(shadowPlayer && shadowPlayer.seekTo){
+        shadowPlayer.seekTo(Number(s.start_sec || 0), true);
+        shadowPlayer.playVideo();
+      }
+      highlightShadowLine(i);
+    });
+    box.appendChild(line);
+  });
+}
+
+function highlightShadowLine(index){
+  document.querySelectorAll('#shadowTranscript .transcript-line').forEach((el,i)=>{
+    el.classList.toggle('active', i===index);
+  });
+  const active = document.querySelector(`#shadowTranscript .transcript-line[data-index="${index}"]`);
+  if(active) active.scrollIntoView({block:'nearest', behavior:'smooth'});
+}
+
+function syncShadow(){
+  if(!shadowPlayer || !shadowPlayer.getCurrentTime || !shadowSegments.length) return;
+  const t = shadowPlayer.getCurrentTime();
+
+  let found = -1;
+  for(let i=0;i<shadowSegments.length;i++){
+    const s = shadowSegments[i];
+    if(t >= Number(s.start_sec) && t < Number(s.end_sec)){
+      found = i; break;
+    }
+  }
+
+  if(found !== -1 && found !== shadowCurrentIndex){
+    shadowCurrentIndex = found;
+    highlightShadowLine(found);
+  }
+
+  if(repeatCurrentLine && shadowCurrentIndex >= 0){
+    const s = shadowSegments[shadowCurrentIndex];
+    if(t >= Number(s.end_sec)){
+      shadowPlayer.seekTo(Number(s.start_sec), true);
+    }
+  }
+}
+
+function startShadowSync(){
+  if(shadowTimer) clearInterval(shadowTimer);
+  shadowTimer = setInterval(syncShadow, 120);
+}
+
+function setShadowSpeed(speed){
+  if(shadowPlayer && shadowPlayer.setPlaybackRate){
+    shadowPlayer.setPlaybackRate(Number(speed));
+  }
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  const courseSel = document.getElementById('shadowCourse');
+  const videoSel = document.getElementById('shadowVideo');
+
+  if(courseSel){
+    courseSel.addEventListener('change', ()=>loadShadowVideos(courseSel.value));
+  }
+
+  if(videoSel){
+    videoSel.addEventListener('change', ()=>loadShadowVideo(videoSel.value));
+  }
+
+  document.querySelectorAll('#shadowSection [data-speed]').forEach(btn=>{
+    btn.addEventListener('click', ()=>setShadowSpeed(btn.dataset.speed));
+  });
+
+  const repeat = document.getElementById('repeatLineBtn');
+  if(repeat){
+    repeat.addEventListener('click', ()=>{
+      repeatCurrentLine = !repeatCurrentLine;
+      repeat.textContent = repeatCurrentLine ? '🔁 Đang lặp câu' : '🔁 Lặp câu';
+    });
+  }
+
+  const pinyinBtn = document.getElementById('togglePinyinBtn');
+  if(pinyinBtn){
+    pinyinBtn.addEventListener('click', ()=>{
+      showShadowPinyin = !showShadowPinyin;
+      pinyinBtn.textContent = showShadowPinyin ? 'Ẩn Pinyin' : 'Hiện Pinyin';
+      renderShadowTranscript();
+      if(shadowCurrentIndex>=0) highlightShadowLine(shadowCurrentIndex);
+    });
+  }
+
+  const viBtn = document.getElementById('toggleViBtn');
+  if(viBtn){
+    viBtn.addEventListener('click', ()=>{
+      showShadowVi = !showShadowVi;
+      viBtn.textContent = showShadowVi ? 'Ẩn nghĩa Việt' : 'Hiện nghĩa Việt';
+      renderShadowTranscript();
+      if(shadowCurrentIndex>=0) highlightShadowLine(shadowCurrentIndex);
+    });
+  }
+
+  // Chỉ tải dữ liệu khi người dùng thực sự bấm tab Shadowing.
+  document.querySelectorAll('.app-nav-btn').forEach(btn=>{
+    if(btn.dataset.section === 'shadowSection'){
+      btn.addEventListener('click', ()=>{
+        if(!shadowCourses.length) loadShadowCourses();
+      });
+    }
+  });
+});
+</script>
+</body>
+</html>
