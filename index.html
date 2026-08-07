@@ -452,6 +452,7 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
 .word-popup[hidden]{display:none!important}
 .word-popup-zh{font-size:1.45rem;font-weight:900}
 .word-popup-py{color:var(--green);font-weight:750;margin-top:2px}
+.word-popup-pos{display:inline-block;margin-top:5px;padding:2px 8px;border-radius:999px;background:#e6eee3;color:#4b6150;font-size:.82rem;font-weight:800}
 .word-popup-vi{font-size:1.05rem;margin-top:5px}
 .word-popup-status{color:var(--muted);font-size:.84rem;margin-top:4px}
 .word-popup-close{position:absolute;right:8px;top:8px;border:0;background:transparent;font-size:1.35rem;cursor:pointer}
@@ -777,6 +778,7 @@ if(demoCheck){
   <button class="word-popup-close" id="wordPopupClose" aria-label="Đóng">✕</button>
   <div class="word-popup-zh" id="wordPopupZh"></div>
   <div class="word-popup-py" id="wordPopupPy"></div>
+  <div class="word-popup-pos" id="wordPopupPos" hidden></div>
   <div class="word-popup-vi" id="wordPopupVi"></div>
   <div class="word-popup-status" id="wordPopupStatus"></div>
 </div>
@@ -984,6 +986,16 @@ function shadowEsc(value){
 }
 
 const shadowWordCache = new Map();
+const shadowDictionaryOverrides = {
+  '看一下': {pinyin:'kàn yíxià', pos:'động từ', meaning:'xem một chút; xem thử'},
+  '一下': {pinyin:'yíxià', pos:'bổ ngữ', meaning:'một chút; một lát'},
+  '看看': {pinyin:'kànkan', pos:'động từ', meaning:'xem thử; nhìn thử'},
+  '好': {pinyin:'hǎo', pos:'tính từ', meaning:'tốt; hay; được'},
+  '我': {pinyin:'wǒ', pos:'đại từ', meaning:'tôi; mình'},
+  '你': {pinyin:'nǐ', pos:'đại từ', meaning:'bạn; anh; chị'},
+  '他': {pinyin:'tā', pos:'đại từ', meaning:'anh ấy; ông ấy'},
+  '她': {pinyin:'tā', pos:'đại từ', meaning:'cô ấy; bà ấy'}
+};
 const shadowSegmenter = ('Segmenter' in Intl)
   ? new Intl.Segmenter('zh-CN', {granularity:'word'})
   : null;
@@ -1011,30 +1023,72 @@ async function showWordMeaning(word){
   if(!popup || !word) return;
   document.getElementById('wordPopupZh').textContent = word;
   document.getElementById('wordPopupPy').textContent = '';
+  const posBox = document.getElementById('wordPopupPos');
+  posBox.textContent = '';
+  posBox.hidden = true;
   document.getElementById('wordPopupVi').textContent = '';
   document.getElementById('wordPopupStatus').textContent = 'Đang tra nghĩa…';
   popup.hidden = false;
 
   if(shadowWordCache.has(word)){
-    document.getElementById('wordPopupVi').textContent = shadowWordCache.get(word);
+    renderWordEntry(shadowWordCache.get(word));
     document.getElementById('wordPopupStatus').textContent = 'Chạm ra ngoài để đóng';
     return;
   }
+  if(shadowDictionaryOverrides[word]){
+    shadowWordCache.set(word, shadowDictionaryOverrides[word]);
+    renderWordEntry(shadowDictionaryOverrides[word]);
+    document.getElementById('wordPopupStatus').textContent = 'Từ điển Aluni · chạm ra ngoài để đóng';
+    return;
+  }
   try{
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=zh-CN&tl=vi&dt=t&q=${encodeURIComponent(word)}`;
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=zh-CN&tl=vi&dt=t&dt=bd&dt=rm&q=${encodeURIComponent(word)}`;
     const response = await fetch(url);
     if(!response.ok) throw new Error('lookup failed');
     const data = await response.json();
-    const meaning = Array.isArray(data?.[0])
+    const translated = Array.isArray(data?.[0])
       ? data[0].map(row=>row?.[0] || '').join('').trim()
       : '';
-    if(!meaning) throw new Error('empty meaning');
-    shadowWordCache.set(word, meaning);
-    document.getElementById('wordPopupVi').textContent = meaning;
-    document.getElementById('wordPopupStatus').textContent = 'Nghĩa dịch nhanh · chạm ra ngoài để đóng';
+    const dictionaryRow = Array.isArray(data?.[1]) ? data[1][0] : null;
+    const rawPos = String(dictionaryRow?.[0] || '').toLowerCase();
+    const posMap = {
+      noun:'danh từ', verb:'động từ', adjective:'tính từ', adverb:'phó từ',
+      pronoun:'đại từ', preposition:'giới từ', conjunction:'liên từ',
+      interjection:'thán từ', auxiliary:'trợ từ', classifier:'lượng từ',
+      'danh từ':'danh từ', 'động từ':'động từ', 'tính từ':'tính từ',
+      'phó từ':'phó từ', 'đại từ':'đại từ', 'giới từ':'giới từ', 'liên từ':'liên từ'
+    };
+    const senses = Array.isArray(dictionaryRow?.[1])
+      ? dictionaryRow[1].filter(x=>typeof x === 'string').slice(0,3)
+      : [];
+    let pinyin = '';
+    if(Array.isArray(data?.[0])){
+      for(const row of data[0]){
+        const candidate = [row?.[3], row?.[2]].find(x=>typeof x === 'string' && /[a-zA-ZüÜāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/u.test(x) && !/[\u3400-\u9fff]/u.test(x));
+        if(candidate){ pinyin = candidate; break; }
+      }
+    }
+    const entry = {
+      pinyin,
+      pos: posMap[rawPos] || (rawPos ? rawPos : ''),
+      meaning: (senses.length ? senses.join('; ') : translated).replace(/[.!。]+$/,'')
+    };
+    if(!entry.meaning) throw new Error('empty meaning');
+    shadowWordCache.set(word, entry);
+    renderWordEntry(entry);
+    document.getElementById('wordPopupStatus').textContent = 'Từ điển nhanh · chạm ra ngoài để đóng';
   }catch(e){
     document.getElementById('wordPopupStatus').textContent = 'Chưa tra được từ này. Hãy kiểm tra kết nối Internet.';
   }
+}
+
+function renderWordEntry(entry){
+  const item = typeof entry === 'string' ? {meaning:entry} : (entry || {});
+  document.getElementById('wordPopupPy').textContent = item.pinyin || 'Chưa có pinyin';
+  const posBox = document.getElementById('wordPopupPos');
+  posBox.textContent = item.pos || '';
+  posBox.hidden = !item.pos;
+  document.getElementById('wordPopupVi').textContent = item.meaning || 'Chưa có nghĩa';
 }
 
 function renderShadowTranscript(){
