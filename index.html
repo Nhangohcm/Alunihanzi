@@ -314,21 +314,22 @@ function closeAccessModal(goFree = true){
   pendingPaidCourseId = null;
 
   if(goFree){
-    // Chuyển hẳn sang khu tra chữ miễn phí để người dùng không bị mắc ở khóa trả phí.
-    const searchTab = document.querySelector('.tab[data-mode="searchMode"]');
-    if(searchTab){
-      searchTab.click();
+    // Bỏ lựa chọn khóa trả phí vừa bấm.
+    if(courseSelect) courseSelect.value = '';
+    if(lessonSelect){
+      lessonSelect.innerHTML = '<option value="">Chọn bài học</option>';
     }
 
-    if(lessonSelect){
-      lessonSelect.innerHTML = '<option>🔒 Khóa 50+ cần mã kích hoạt</option>';
-    }
+    // Quay lại khu miễn phí.
+    const searchTab = document.querySelector('.tab[data-mode="searchMode"]');
+    if(searchTab) searchTab.click();
 
     renderItems([], 'Tra chữ miễn phí');
+
     setTimeout(()=>{
       const input = el('searchInput');
       if(input) input.focus();
-    }, 80);
+    },80);
   }
 }
 async function activatePaidCourse(){
@@ -513,13 +514,18 @@ const wordsEl = el('words');
 
 function fillCourses(){
   courseSelect.innerHTML = '';
-  el('adminCourseSelect').innerHTML = '';
+
+  // Luôn để người dùng chủ động chọn khóa. Không tự chọn 50+ khi vừa mở tab.
+  courseSelect.add(new Option('Chọn khóa học', ''));
+
   data.forEach((c,i)=>{
-    const o = new Option((isPaidCourse(c.id) ? '🔒 ' : '') + c.name, c.id);
-    courseSelect.add(o);
-    el('adminCourseSelect').add(new Option(c.name, c.id));
+    const label = (isPaidCourse(c.id) ? '🔒 ' : '') + c.name;
+    courseSelect.add(new Option(label, c.id));
   });
-  initializeCourseView();
+
+  courseSelect.value = '';
+  lessonSelect.innerHTML = '<option value="">Chọn bài học</option>';
+  renderItems([], 'Từ vựng');
 }
 
 
@@ -542,7 +548,8 @@ async function initializeCourseView(){
 }
 
 function selectedCourse(){
-  return data.find(c=>c.id===courseSelect.value) || data[0];
+  if(!courseSelect.value) return null;
+  return data.find(c=>c.id===courseSelect.value) || null;
 }
 function fillLessonsUnlocked(){
   lessonSelect.innerHTML='';
@@ -855,12 +862,10 @@ document.querySelectorAll('.tab').forEach(btn=>{
     document.querySelectorAll('.mode').forEach(m=>m.classList.remove('active'));
     btn.classList.add('active'); el(btn.dataset.mode).classList.add('active');
     if(btn.dataset.mode==='courseMode'){
-      const c = selectedCourse();
-      if(c && isPaidCourse(c.id)){
-        verifyPaidAccess(c.id).then(ok=>{
-          if(ok) fillLessonsUnlocked();
-          else openAccessModal(c.id);
-        });
+      // Mở tab khóa học chỉ để xem/chọn khóa, không tự bật paywall.
+      if(!courseSelect.value){
+        lessonSelect.innerHTML = '<option value="">Chọn bài học</option>';
+        renderItems([], 'Từ vựng');
       }else{
         renderSelectedLesson();
       }
@@ -870,6 +875,13 @@ document.querySelectorAll('.tab').forEach(btn=>{
 
 courseSelect.addEventListener('change', async ()=>{
   const courseId = courseSelect.value;
+
+  if(!courseId){
+    lessonSelect.innerHTML = '<option value="">Chọn bài học</option>';
+    renderItems([], 'Từ vựng');
+    return;
+  }
+
   if(isPaidCourse(courseId)){
     const ok = await verifyPaidAccess(courseId);
     if(!ok){
@@ -877,6 +889,7 @@ courseSelect.addEventListener('change', async ()=>{
       return;
     }
   }
+
   fillLessonsUnlocked();
 });
 lessonSelect.addEventListener('change', renderSelectedLesson);
@@ -1033,11 +1046,11 @@ fillCourses();
       <input id="accessCode" placeholder="Mã kích hoạt, ví dụ 50P-ABCD-EFGH" autocomplete="off">
     </div>
     <div class="free-note">
-      Chưa có mã? Bấm “Để sau” để tiếp tục Tra chữ, nghe, xem bộ thủ và luyện viết miễn phí.
+      Chưa có mã? Bấm “Quay lại dùng miễn phí” để tiếp tục Tra chữ, nghe, xem bộ thủ và luyện viết.
     </div>
     <div class="access-msg" id="accessMsg"></div>
     <div class="access-actions">
-      <button class="btn ghost" id="accessCancelBtn">Để sau</button>
+      <button class="btn ghost" id="accessCancelBtn">← Quay lại dùng miễn phí</button>
       <button class="btn primary" id="accessActivateBtn">Kích hoạt</button>
     </div>
   </div>
