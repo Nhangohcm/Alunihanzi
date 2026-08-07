@@ -1,78 +1,296 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Aluni Admin</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="access-config.js"></script>
 <style>
-:root{--bg:#f5f0e7;--paper:#fffdf8;--ink:#26382f;--muted:#727972;--green:#718875;--line:#ddd6ca}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Arial}.wrap{width:min(1100px,calc(100% - 20px));margin:auto;padding:24px 0 50px}.card{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:14px}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.tab{border:1px solid var(--line);background:white;padding:10px 14px;border-radius:12px;font-weight:850}.tab.active{background:var(--green);color:white}.pane{display:none}.pane.active{display:block}.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}input,select,button{font:inherit}input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:white}button{padding:11px 14px;border-radius:12px;border:0;font-weight:850;cursor:pointer}.primary{background:var(--green);color:white}.ghost{background:white;border:1px solid var(--line)}.row{display:flex;gap:8px;flex-wrap:wrap}.muted{color:var(--muted)}table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left}.tablewrap{overflow:auto}.status{min-height:22px;margin-top:8px;font-weight:700}.sample{background:#f7f3eb;border:1px dashed var(--line);padding:12px;border-radius:12px;font-family:ui-monospace,monospace;font-size:.82rem;white-space:pre-wrap}
-@media(max-width:760px){.grid,.grid2{grid-template-columns:1fr}}
+:root{--bg:#f5f0e7;--paper:#fffdf8;--ink:#26382f;--muted:#727972;--green:#718875;--line:#ddd6ca;--soft:#edf2ea}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#f8f4ec,#f2ede3);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Arial}
+.wrap{width:min(1120px,calc(100% - 20px));margin:auto;padding:24px 0 50px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:14px}
+h1,h2{margin-top:0}.brand{font-weight:900;letter-spacing:.1em;color:var(--green)}
+.muted{color:var(--muted);line-height:1.5}
+input,select,button{font:inherit}
+input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:white}
+button{padding:11px 14px;border-radius:12px;border:0;font-weight:850;cursor:pointer}
+.primary{background:var(--green);color:white}.ghost{background:white;border:1px solid var(--line)}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row{display:flex;gap:8px;flex-wrap:wrap}.status{min-height:22px;margin-top:8px;font-weight:750}.ok{color:#39734d}.err{color:#a24d46}
+.admin-app{display:none}.admin-app.show{display:block}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 16px}
+.tab{border:1px solid var(--line);background:white;padding:10px 14px;border-radius:12px;font-weight:850}
+.tab.active{background:var(--green);color:white}
+.pane{display:none}.pane.active{display:block}
+table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.tablewrap{overflow:auto}
+.sample{background:#f7f3eb;border:1px dashed var(--line);padding:12px;border-radius:12px;font-family:ui-monospace,monospace;font-size:.82rem;white-space:pre-wrap}
+.login-box{width:min(620px,100%);margin:0 auto}.login-row{display:grid;grid-template-columns:1fr auto;gap:8px}
+.badge{display:inline-block;background:var(--soft);padding:5px 9px;border-radius:999px;font-size:.82rem;font-weight:800}
+@media(max-width:760px){.grid,.grid2{grid-template-columns:1fr}.login-row{grid-template-columns:1fr}}
 </style>
 </head>
-<body><div class="wrap">
-<div class="card">
-  <div style="font-weight:900;letter-spacing:.1em;color:#718875">TIẾNG TRUNG ALUNI</div>
+<body>
+<div class="wrap">
+
+<div class="card login-box" id="loginCard">
+  <div class="brand">TIẾNG TRUNG ALUNI</div>
   <h1>Quản trị Aluni</h1>
-  <div class="grid">
-    <div><label>Mã quản trị</label><input id="adminKey" type="password" placeholder="Nhập ADMIN_SECRET"></div>
-    <div></div><div></div>
+  <p class="muted">Nhập mã quản trị để mở khu quản lý. Mã này chỉ dùng ở phía quản trị.</p>
+  <div class="login-row">
+    <input id="adminKey" type="password" placeholder="Nhập mã quản trị">
+    <button class="primary" id="loginBtn">Đăng nhập</button>
   </div>
-  <div class="tabs"><button class="tab active" data-pane="codesPane">Mã kích hoạt</button><button class="tab" data-pane="contentPane">Nội dung khóa học</button></div>
+  <div class="status" id="loginStatus"></div>
 </div>
 
-<section class="pane active" id="codesPane">
-<div class="card">
-  <div class="grid">
-    <div><label>Khóa học</label><select id="codeCourse"><option value="50plus">50+ Phản xạ</option></select></div>
-    <div><label>Số mã cần tạo</label><input id="count" type="number" min="1" max="200" value="20"></div><div></div>
+<div class="admin-app" id="adminApp">
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div>
+        <div class="brand">TIẾNG TRUNG ALUNI</div>
+        <h2 style="margin-bottom:4px">Bảng điều khiển</h2>
+        <span class="badge">Đã đăng nhập quản trị</span>
+      </div>
+      <button class="ghost" id="logoutBtn">Đăng xuất</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-pane="codesPane">🔑 Mã kích hoạt</button>
+      <button class="tab" data-pane="contentPane">📚 Nội dung khóa học</button>
+    </div>
   </div>
-  <div class="row" style="margin-top:10px"><button class="primary" id="generateBtn">Tạo mã</button><button class="ghost" id="refreshCodes">Làm mới danh sách</button><button class="ghost" id="downloadCodes">⬇ Tải CSV</button></div>
-  <div class="status" id="codeStatus"></div>
-</div>
-<div class="card"><h2>Mã kích hoạt</h2><div class="tablewrap"><table><thead><tr><th>Mã</th><th>Trạng thái</th><th>Người dùng</th><th>Kích hoạt</th><th>Hết hạn</th><th></th></tr></thead><tbody id="codeBody"></tbody></table></div></div>
-</section>
 
-<section class="pane" id="contentPane">
-<div class="card">
-  <h2>Tạo / cập nhật khóa học</h2>
-  <div class="grid">
-    <div><label>Mã khóa</label><input id="courseId" placeholder="Ví dụ hsk1"></div>
-    <div><label>Tên khóa</label><input id="courseName" placeholder="Ví dụ HSK 1"></div>
-    <div><label>Số bài mở miễn phí</label><input id="freeLessons" type="number" min="0" value="5"></div>
-  </div>
-  <div class="row" style="margin-top:10px"><button class="primary" id="saveCourse">Lưu khóa</button><button class="ghost" id="loadCourses">Làm mới khóa</button></div>
-  <div class="status" id="contentStatus"></div>
-</div>
-<div class="card">
-  <h2>Nhập bài & từ vựng</h2>
-  <div class="grid2">
-    <div><label>Chọn khóa</label><select id="importCourse"></select></div>
-    <div><label>File CSV hoặc XLSX</label><input id="importFile" type="file" accept=".csv,.xlsx,.xls"></div>
-  </div>
-  <p class="muted">Các cột bắt buộc:</p>
-  <div class="sample">lesson_number,lesson_title,hanzi,pinyin,vi
+  <section class="pane active" id="codesPane">
+    <div class="card">
+      <h2>Mã kích hoạt</h2>
+      <div class="grid">
+        <div><label>Khóa học</label><select id="codeCourse"><option value="50plus">50+ Phản xạ</option></select></div>
+        <div><label>Số mã cần tạo</label><input id="count" type="number" min="1" max="200" value="20"></div>
+        <div></div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="primary" id="generateBtn">Tạo mã</button>
+        <button class="ghost" id="refreshCodes">Làm mới danh sách</button>
+        <button class="ghost" id="downloadCodes">⬇ Tải CSV</button>
+      </div>
+      <div class="status" id="codeStatus"></div>
+    </div>
+
+    <div class="card">
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Mã</th><th>Trạng thái</th><th>Người dùng</th><th>Kích hoạt</th><th>Hết hạn</th><th></th></tr></thead>
+          <tbody id="codeBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="pane" id="contentPane">
+    <div class="card">
+      <h2>Tạo / cập nhật khóa học</h2>
+      <div class="grid">
+        <div><label>Mã khóa</label><input id="courseId" placeholder="Ví dụ: hsk1"></div>
+        <div><label>Tên khóa</label><input id="courseName" placeholder="Ví dụ: HSK 1"></div>
+        <div><label>Số bài mở miễn phí</label><input id="freeLessons" type="number" min="0" value="5"></div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="primary" id="saveCourse">Lưu khóa học</button>
+        <button class="ghost" id="loadCourses">Làm mới danh sách khóa</button>
+      </div>
+      <div class="status" id="contentStatus"></div>
+    </div>
+
+    <div class="card">
+      <h2>Nhập bài và từ vựng</h2>
+      <div class="grid2">
+        <div><label>Chọn khóa</label><select id="importCourse"></select></div>
+        <div><label>File CSV hoặc XLSX</label><input id="importFile" type="file" accept=".csv,.xlsx,.xls"></div>
+      </div>
+      <p class="muted">File gồm 5 cột bắt buộc:</p>
+      <div class="sample">lesson_number,lesson_title,hanzi,pinyin,vi
 1,Chào hỏi,你好,nǐ hǎo,xin chào
 1,Chào hỏi,我,wǒ,tôi
 2,Gia đình,妈妈,māma,mẹ</div>
-  <div class="row" style="margin-top:10px"><button class="primary" id="importBtn">⬆ Nhập nội dung</button><button class="ghost" id="templateBtn">⬇ Tải file mẫu CSV</button></div>
+      <div class="row" style="margin-top:10px">
+        <button class="primary" id="importBtn">⬆ Nhập nội dung</button>
+        <button class="ghost" id="templateBtn">⬇ Tải file mẫu CSV</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Danh sách khóa học</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Mã khóa</th><th>Tên khóa</th><th>Bài miễn phí</th><th>Số bài</th></tr></thead>
+          <tbody id="courseBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 </div>
-<div class="card"><h2>Danh sách khóa</h2><div class="tablewrap"><table><thead><tr><th>Mã</th><th>Tên</th><th>Free</th><th>Số bài</th></tr></thead><tbody id="courseBody"></tbody></table></div></div>
-</section>
+
 </div>
+
 <script>
-const base=String(window.ALUNI_API_BASE||'').replace(/\/+$/,'');const $=id=>document.getElementById(id);let codes=[],courses=[];
-function key(){return $('adminKey').value.trim()}function fmt(v){return v?new Date(v).toLocaleString('vi-VN'):'—'}
-async function api(path,opts={}){opts.headers={...(opts.headers||{}),'X-Admin-Key':key()};const r=await fetch(base+path,opts);const j=await r.json();if(!r.ok)throw new Error(j.error||'Lỗi');return j}
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.pane').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.pane).classList.add('active')});
-async function refreshCodes(){try{const j=await api('/admin/codes?course_id='+encodeURIComponent($('codeCourse').value));codes=j.codes||[];$('codeBody').innerHTML='';codes.forEach(x=>{const tr=document.createElement('tr');tr.innerHTML=`<td><code>${x.code}</code></td><td>${x.status}</td><td>${x.identity||'—'}</td><td>${fmt(x.activated_at)}</td><td>${fmt(x.expires_at)}</td><td><button class="ghost lock" data-id="${x.id}">${x.status==='blocked'?'Mở':'Khóa'}</button></td>`;$('codeBody').appendChild(tr)});document.querySelectorAll('.lock').forEach(b=>b.onclick=async()=>{await api('/admin/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:Number(b.dataset.id)})});refreshCodes()});$('codeStatus').textContent=`Có ${codes.length} mã.`}catch(e){$('codeStatus').textContent=e.message}}
-async function generate(){try{await api('/admin/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:$('codeCourse').value,count:Number($('count').value||1)})});refreshCodes()}catch(e){$('codeStatus').textContent=e.message}}
-function csvEsc(v){return '"'+String(v??'').replace(/"/g,'""')+'"'}function downloadCodes(){if(!codes.length)return;const rows=[['Mã','Khóa','Trạng thái','Người dùng','Kích hoạt','Hết hạn'],...codes.map(x=>[x.code,x.course_id,x.status,x.identity||'',x.activated_at||'',x.expires_at||''])];const csv='\uFEFF'+rows.map(r=>r.map(csvEsc).join(',')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='aluni-ma-kich-hoat.csv';a.click()}
-async function loadCourses(){try{const j=await api('/admin/content/courses');courses=j.courses||[];$('courseBody').innerHTML='';$('importCourse').innerHTML='';$('codeCourse').innerHTML='';courses.forEach(c=>{$('importCourse').add(new Option(c.name,c.id));$('codeCourse').add(new Option(c.name,c.id));const tr=document.createElement('tr');tr.innerHTML=`<td>${c.id}</td><td>${c.name}</td><td>${c.free_lessons}</td><td>${c.lesson_count||0}</td>`;$('courseBody').appendChild(tr)});$('contentStatus').textContent=`Có ${courses.length} khóa.`}catch(e){$('contentStatus').textContent=e.message}}
-async function saveCourse(){try{await api('/admin/content/course',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:$('courseId').value.trim(),name:$('courseName').value.trim(),free_lessons:Number($('freeLessons').value||0)})});loadCourses()}catch(e){$('contentStatus').textContent=e.message}}
-async function parseFile(file){const name=file.name.toLowerCase();if(name.endsWith('.csv')){const text=await file.text();const wb=XLSX.read(text,{type:'string'});return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''})}const buf=await file.arrayBuffer();const wb=XLSX.read(buf,{type:'array'});return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''})}
-async function doImport(){const file=$('importFile').files[0];if(!file){$('contentStatus').textContent='Chọn file CSV/XLSX.';return}try{const rows=await parseFile(file);await api('/admin/content/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:$('importCourse').value,rows})});$('contentStatus').textContent=`Đã nhập ${rows.length} dòng.`;loadCourses()}catch(e){$('contentStatus').textContent=e.message}}
-function template(){const t='\uFEFFlesson_number,lesson_title,hanzi,pinyin,vi\r\n1,Chào hỏi,你好,nǐ hǎo,xin chào\r\n1,Chào hỏi,我,wǒ,tôi\r\n2,Gia đình,妈妈,māma,mẹ\r\n';const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'}));a.download='mau-noi-dung-aluni.csv';a.click()}
-$('generateBtn').onclick=generate;$('refreshCodes').onclick=refreshCodes;$('downloadCodes').onclick=downloadCodes;$('saveCourse').onclick=saveCourse;$('loadCourses').onclick=loadCourses;$('importBtn').onclick=doImport;$('templateBtn').onclick=template;
-</script></body></html>
+const base=String(window.ALUNI_API_BASE||'').replace(/\/+$/,'');
+const $=id=>document.getElementById(id);
+let codes=[],courses=[],adminSecret='';
+
+function fmt(v){return v?new Date(v).toLocaleString('vi-VN'):'—'}
+async function api(path,opts={}){
+  opts.headers={...(opts.headers||{}),'X-Admin-Key':adminSecret};
+  const r=await fetch(base+path,opts);
+  let j={};
+  try{j=await r.json()}catch(e){}
+  if(!r.ok)throw new Error(j.error||`HTTP ${r.status}`);
+  return j;
+}
+
+async function login(){
+  adminSecret=$('adminKey').value.trim();
+  if(!adminSecret){
+    $('loginStatus').textContent='Nhập mã quản trị.';
+    $('loginStatus').className='status err';
+    return;
+  }
+  $('loginStatus').textContent='Đang kiểm tra...';
+  try{
+    await api('/admin/content/courses');
+    $('loginStatus').textContent='Đăng nhập thành công.';
+    $('loginStatus').className='status ok';
+    $('loginCard').style.display='none';
+    $('adminApp').classList.add('show');
+    await loadCourses();
+    await refreshCodes();
+  }catch(e){
+    $('loginStatus').textContent='Sai mã quản trị.';
+    $('loginStatus').className='status err';
+  }
+}
+function logout(){
+  adminSecret='';
+  $('adminKey').value='';
+  $('adminApp').classList.remove('show');
+  $('loginCard').style.display='block';
+  $('loginStatus').textContent='';
+}
+
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  $(b.dataset.pane).classList.add('active');
+  if(b.dataset.pane==='contentPane') loadCourses();
+});
+
+async function refreshCodes(){
+  try{
+    const j=await api('/admin/codes?course_id='+encodeURIComponent($('codeCourse').value));
+    codes=j.codes||[];
+    $('codeBody').innerHTML='';
+    codes.forEach(x=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td><code>${x.code}</code></td>
+        <td>${x.status==='unused'?'Chưa dùng':x.status==='active'?'Đang dùng':'Đã khóa'}</td>
+        <td>${x.identity||'—'}</td>
+        <td>${fmt(x.activated_at)}</td>
+        <td>${fmt(x.expires_at)}</td>
+        <td><button class="ghost lock" data-id="${x.id}">${x.status==='blocked'?'Mở':'Khóa'}</button></td>`;
+      $('codeBody').appendChild(tr);
+    });
+    document.querySelectorAll('.lock').forEach(b=>b.onclick=async()=>{
+      await api('/admin/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:Number(b.dataset.id)})});
+      refreshCodes();
+    });
+    $('codeStatus').textContent=`Có ${codes.length} mã.`;
+  }catch(e){$('codeStatus').textContent=e.message}
+}
+async function generate(){
+  try{
+    await api('/admin/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:$('codeCourse').value,count:Number($('count').value||1)})});
+    await refreshCodes();
+  }catch(e){$('codeStatus').textContent=e.message}
+}
+function csvEsc(v){return '"'+String(v??'').replace(/"/g,'""')+'"'}
+function downloadCodes(){
+  if(!codes.length){$('codeStatus').textContent='Chưa có dữ liệu để tải.';return}
+  const rows=[['Mã','Khóa','Trạng thái','Người dùng','Kích hoạt','Hết hạn'],...codes.map(x=>[x.code,x.course_id,x.status,x.identity||'',x.activated_at||'',x.expires_at||''])];
+  const csv='\uFEFF'+rows.map(r=>r.map(csvEsc).join(',')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='aluni-ma-kich-hoat.csv';a.click();
+}
+
+async function loadCourses(){
+  try{
+    const j=await api('/admin/content/courses');
+    courses=j.courses||[];
+    $('courseBody').innerHTML='';
+    $('importCourse').innerHTML='';
+    $('codeCourse').innerHTML='';
+    courses.forEach(c=>{
+      $('importCourse').add(new Option(c.name,c.id));
+      $('codeCourse').add(new Option(c.name,c.id));
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${c.id}</td><td>${c.name}</td><td>${c.free_lessons}</td><td>${c.lesson_count||0}</td>`;
+      $('courseBody').appendChild(tr);
+    });
+    $('contentStatus').textContent=`Có ${courses.length} khóa.`;
+  }catch(e){$('contentStatus').textContent=e.message}
+}
+async function saveCourse(){
+  try{
+    const id=$('courseId').value.trim(),name=$('courseName').value.trim();
+    if(!id||!name){$('contentStatus').textContent='Nhập mã khóa và tên khóa.';return}
+    await api('/admin/content/course',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id,name,free_lessons:Number($('freeLessons').value||0)})
+    });
+    $('contentStatus').textContent='Đã lưu khóa học.';
+    await loadCourses();
+  }catch(e){$('contentStatus').textContent=e.message}
+}
+async function parseFile(file){
+  const n=file.name.toLowerCase();
+  if(n.endsWith('.csv')){
+    const t=await file.text();
+    const wb=XLSX.read(t,{type:'string'});
+    return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+  }
+  const buf=await file.arrayBuffer();
+  const wb=XLSX.read(buf,{type:'array'});
+  return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+}
+async function doImport(){
+  const f=$('importFile').files[0];
+  if(!f){$('contentStatus').textContent='Chọn file CSV/XLSX.';return}
+  try{
+    const rows=await parseFile(f);
+    await api('/admin/content/import',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({course_id:$('importCourse').value,rows})
+    });
+    $('contentStatus').textContent=`Đã nhập ${rows.length} dòng.`;
+    await loadCourses();
+  }catch(e){$('contentStatus').textContent=e.message}
+}
+function template(){
+  const t='\uFEFFlesson_number,lesson_title,hanzi,pinyin,vi\r\n1,Chào hỏi,你好,nǐ hǎo,xin chào\r\n1,Chào hỏi,我,wǒ,tôi\r\n2,Gia đình,妈妈,māma,mẹ\r\n';
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download='mau-noi-dung-aluni.csv';a.click();
+}
+
+$('loginBtn').onclick=login;
+$('adminKey').onkeydown=e=>{if(e.key==='Enter')login()};
+$('logoutBtn').onclick=logout;
+$('generateBtn').onclick=generate;
+$('refreshCodes').onclick=refreshCodes;
+$('downloadCodes').onclick=downloadCodes;
+$('saveCourse').onclick=saveCourse;
+$('loadCourses').onclick=loadCourses;
+$('importBtn').onclick=doImport;
+$('templateBtn').onclick=template;
+</script>
+</body>
+</html>
