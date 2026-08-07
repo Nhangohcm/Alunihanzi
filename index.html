@@ -29,6 +29,44 @@ input,select{width:100%;border:1px solid var(--line);border-radius:13px;backgrou
 .writerbox{width:min(340px,86vw);height:min(340px,86vw);margin:16px auto;background:white;border:1px solid var(--line);border-radius:20px;overflow:hidden;display:flex;align-items:center;justify-content:center}.actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}.status{text-align:center;min-height:24px;color:var(--muted);margin-top:10px;font-weight:700}
 .radical-legend{text-align:center;margin-top:9px;color:var(--muted);font-size:.88rem}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 5px 0 10px}.dot.rad{background:#789976}.dot.rest{background:#2e3a34}.radical-info{width:min(620px,94%);margin:14px auto 0;padding:14px 16px;border:1px solid var(--line);background:#faf7f0;border-radius:16px;text-align:left}.ri{display:grid;grid-template-columns:100px 1fr;gap:8px;margin:4px 0}.rk{color:var(--muted);font-weight:800}.rv{font-weight:650}
 .access-modal{position:fixed;inset:0;background:rgba(25,35,30,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:9999}.access-modal.show{display:flex}.access-box{position:relative;width:min(470px,100%);background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.22)}.access-close{position:absolute;right:12px;top:10px;width:36px;height:36px;border-radius:999px;border:1px solid var(--line);background:white;font-size:1.2rem}.access-msg{min-height:22px;margin-top:10px;font-weight:750}.access-msg.err{color:#a24d46}.access-msg.ok{color:#39734d}.access-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
+
+.contact-card{
+  margin-top:16px;
+  background:linear-gradient(135deg,#eef2e9,#fffaf2);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:18px;
+  text-align:center;
+}
+.contact-card h3{margin:4px 0 6px;font-size:1.18rem}
+.contact-card p{margin:4px 0 12px;color:var(--muted);line-height:1.5}
+.contact-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  justify-content:center;
+}
+.contact-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  text-decoration:none;
+  border:1px solid var(--line);
+  background:white;
+  color:var(--ink);
+  padding:10px 14px;
+  border-radius:13px;
+  font-weight:850;
+  min-width:165px;
+}
+.contact-link.primary{
+  background:var(--green);
+  color:white;
+  border-color:var(--green);
+}
+.contact-link:hover{transform:translateY(-1px)}
+
 footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
 @media(max-width:760px){.words{grid-template-columns:repeat(2,1fr)}.row,.hero-demo{grid-template-columns:1fr}.hero-demo{text-align:center}}
 @media(max-width:480px){.wrap{width:min(100% - 12px,1080px);padding-top:12px}.card{padding:14px;border-radius:18px}.searchrow{grid-template-columns:1fr}.words{gap:8px}.word{min-height:120px}.ri{grid-template-columns:86px 1fr}}
@@ -97,6 +135,24 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
   <div class="radical-legend" id="radicalLegend"><span class="dot rad"></span>Bộ thủ <span class="dot rest"></span>Phần còn lại</div>
   <div class="radical-info"><strong>Giải thích bộ thủ</strong><div id="radicalInfo">Chọn một chữ để xem.</div></div>
   <div class="status" id="status"></div>
+</section>
+
+
+<section class="contact-card">
+  <div class="brand">LIÊN HỆ TIẾNG TRUNG ALUNI</div>
+  <h3>Thầy Ngô Thanh Nhã</h3>
+  <p>Cần tư vấn khóa học hoặc hỗ trợ sử dụng, bạn có thể liên hệ trực tiếp:</p>
+  <div class="contact-actions">
+    <a class="contact-link primary" href="https://zalo.me/0931444083" target="_blank" rel="noopener noreferrer">
+      💬 Zalo: 0931 444 083
+    </a>
+    <a class="contact-link" href="tel:0931444083">
+      📞 Gọi: 0931 444 083
+    </a>
+    <a class="contact-link" href="https://www.facebook.com/bi.ngo.988926" target="_blank" rel="noopener noreferrer">
+      🔵 Facebook: Ngô Thanh Nhã
+    </a>
+  </div>
 </section>
 
 <footer>Tiếng Trung Aluni · Công cụ luyện viết chữ Hán</footer>
