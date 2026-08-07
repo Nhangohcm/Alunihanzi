@@ -136,7 +136,7 @@
     <div class="brand">TIẾNG TRUNG ALUNI</div>
     <h1>Luyện viết chữ Hán</h1>
     <p class="subtitle">Tìm từ trong khóa học, nghe phát âm và luyện viết từng chữ.</p>
-    <p class="hint" style="text-align:center;margin-top:8px">Bấm 🔊 để nghe giọng tiếng Trung Cloud TTS. Điện thoại và máy tính đều dùng cùng một giọng đọc.</p>
+    <p class="hint" style="text-align:center;margin-top:8px">Bấm 🔊 để nghe giọng tiếng Trung. Web tự tải trước audio của bài để phản hồi nhanh hơn.</p>
   </header>
 
   <section class="card">
@@ -398,12 +398,62 @@ function fillLessons(){
   (course.lessons || []).forEach(l=>lessonSelect.add(new Option(l.title || l.name, l.id)));
   renderSelectedLesson();
 }
+
+const preloadedAudioUrls = new Set();
+
+function makeTtsUrl(content){
+  const endpoint = String(window.ALUNI_TTS_ENDPOINT || '').trim();
+  if(!endpoint || !content) return '';
+  const sep = endpoint.includes('?') ? '&' : '?';
+  const version = encodeURIComponent(window.ALUNI_TTS_VERSION || '1');
+  return `${endpoint}${sep}text=${encodeURIComponent(content)}&v=${version}`;
+}
+
+function warmAudioCache(items, limit = 12){
+  const endpoint = String(window.ALUNI_TTS_ENDPOINT || '').trim();
+  if(!endpoint || !Array.isArray(items) || !items.length) return;
+
+  // Chỉ làm nóng một số mục đầu để tránh gọi quá nhiều request cùng lúc.
+  const unique = [];
+  const seen = new Set();
+
+  for(const item of items){
+    const text = String(item?.hanzi || '').trim();
+    if(!text || seen.has(text)) continue;
+    seen.add(text);
+    unique.push(text);
+    if(unique.length >= limit) break;
+  }
+
+  // Chạy tuần tự nhẹ nhàng để không tạo burst request.
+  let delay = 250;
+  unique.forEach((content, index) => {
+    const url = makeTtsUrl(content);
+    if(!url || preloadedAudioUrls.has(url)) return;
+    preloadedAudioUrls.add(url);
+
+    setTimeout(() => {
+      fetch(url, {
+        method: 'GET',
+        mode: 'cors',
+        cache: 'force-cache'
+      }).then(r => {
+        // Đọc body để request hoàn tất và browser cache được response.
+        if(r.ok) return r.arrayBuffer();
+      }).catch(() => {});
+    }, delay * index);
+  });
+}
+
 function renderSelectedLesson(){
   const course = selectedCourse();
   if(!course) return;
   const lesson = (course.lessons||[]).find(l=>l.id===lessonSelect.value) || (course.lessons||[])[0];
   if(!lesson) return renderItems([], course.name);
   renderItems(lesson.items || [], lesson.title || lesson.name);
+
+  // Làm nóng audio cho các mục đầu của bài.
+  warmAudioCache(lesson.items || [], 12);
 }
 
 function renderItems(items, title){
@@ -506,9 +556,7 @@ function speak(text){
         window.speechSynthesis.cancel();
       }
 
-      const sep = endpoint.includes('?') ? '&' : '?';
-      const version = encodeURIComponent(window.ALUNI_TTS_VERSION || '1');
-      const url = `${endpoint}${sep}text=${encodeURIComponent(content)}&v=${version}`;
+      const url = makeTtsUrl(content);
 
       const audio = new Audio(url);
       currentAudio = audio;
