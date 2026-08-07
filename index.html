@@ -487,19 +487,21 @@ function speak(text){
   const content = String(text || '').trim();
   if(!content) return;
 
-  // Nếu đã cấu hình Cloud TTS thì CHỈ dùng Cloud TTS.
-  // Không gọi speechSynthesis để tránh máy tính phát hai giọng cùng lúc.
+  // Nếu đã cấu hình Cloud TTS thì chỉ dùng Cloud TTS.
   if(endpoint){
     try{
-      // Dừng audio cloud cũ nếu người học bấm sang từ khác.
+      // Dừng audio cũ thật sạch, không tạo sự kiện lỗi giả.
       if(currentAudio){
-        currentAudio.pause();
-        currentAudio.currentTime = 0;
-        currentAudio.src = '';
+        currentAudio.onerror = null;
+        currentAudio.onended = null;
+        try{
+          currentAudio.pause();
+          currentAudio.currentTime = 0;
+        }catch(e){}
         currentAudio = null;
       }
 
-      // Dừng luôn mọi speechSynthesis còn sót từ lần chạy trước.
+      // Hủy mọi TTS cục bộ còn sót từ phiên bản cũ.
       if('speechSynthesis' in window){
         window.speechSynthesis.cancel();
       }
@@ -508,33 +510,49 @@ function speak(text){
       const version = encodeURIComponent(window.ALUNI_TTS_VERSION || '1');
       const url = `${endpoint}${sep}text=${encodeURIComponent(content)}&v=${version}`;
 
-      const audio = new Audio();
+      const audio = new Audio(url);
       currentAudio = audio;
       audio.preload = 'auto';
-      audio.src = url;
 
+      // Chỉ báo lỗi thật của audio mới.
       audio.onerror = () => {
-        alert('Chưa phát được Cloud TTS. Hãy kiểm tra mạng rồi bấm lại nút loa.');
+        if(currentAudio !== audio) return;
+        console.warn('Cloud TTS audio error:', url);
+        // Không dùng alert gây gián đoạn trải nghiệm.
+        const status = el('status');
+        if(status) status.textContent = 'Chưa phát được âm thanh. Hãy bấm lại nút loa.';
+      };
+
+      audio.onended = () => {
+        if(currentAudio === audio){
+          currentAudio = null;
+        }
       };
 
       const playPromise = audio.play();
 
       if(playPromise && typeof playPromise.catch === 'function'){
-        playPromise.catch(() => {
-          alert('Trình duyệt đang chặn phát âm thanh. Hãy bấm lại nút loa một lần.');
+        playPromise.catch((err) => {
+          if(currentAudio !== audio) return;
+          console.warn('Cloud TTS play blocked:', err);
+          const status = el('status');
+          if(status) status.textContent = 'Trình duyệt chưa phát âm thanh. Hãy bấm lại nút loa.';
         });
       }
 
       return;
     }catch(e){
-      alert('Chưa phát được Cloud TTS. Hãy tải lại trang rồi thử lại.');
+      console.warn('Cloud TTS exception:', e);
+      const status = el('status');
+      if(status) status.textContent = 'Chưa phát được âm thanh. Hãy tải lại trang rồi thử lại.';
       return;
     }
   }
 
-  // Chỉ dùng TTS của thiết bị khi KHÔNG cấu hình Cloud TTS.
+  // Chỉ dùng TTS của thiết bị khi KHÔNG có Cloud TTS.
   if(!speakLocal(content)){
-    alert('Thiết bị chưa có giọng Trung.');
+    const status = el('status');
+    if(status) status.textContent = 'Thiết bị chưa có giọng Trung.';
   }
 }
 
