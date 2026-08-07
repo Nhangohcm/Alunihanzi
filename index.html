@@ -641,7 +641,7 @@ async function loadShadowVideo(videoId){
     const j = await r.json();
 
     if(!r.ok){
-      document.getElementById('shadowNote').textContent = j.error || 'Chưa mở được video.';
+      document.getElementById('shadowNote').textContent = j.error || `Không mở được video (HTTP ${r.status}).`;
       return;
     }
 
@@ -671,8 +671,19 @@ async function loadShadowVideo(videoId){
 
     startShadowSync();
   }catch(e){
-    document.getElementById('shadowNote').textContent = 'Có lỗi khi tải video.';
+    console.error('Shadowing load error:', e);
+    document.getElementById('shadowNote').textContent = 'Có lỗi khi tải video: ' + (e?.message || e);
   }
+}
+
+function shadowEsc(value){
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#039;'
+  }[ch]));
 }
 
 function renderShadowTranscript(){
@@ -684,7 +695,7 @@ function renderShadowTranscript(){
     line.className = 'transcript-line';
     line.dataset.index = i;
     line.innerHTML = `
-      <div class="transcript-zh">${escapeHtml ? escapeHtml(s.hanzi) : s.hanzi}</div>
+      <div class="transcript-zh">${shadowEsc(s.hanzi)}</div>
       <div class="transcript-py" style="${showShadowPinyin?'':'display:none'}">${s.pinyin || ''}</div>
       <div class="transcript-vi" style="${showShadowVi?'':'display:none'}">${s.vi || ''}</div>
     `;

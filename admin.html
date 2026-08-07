@@ -202,7 +202,7 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
       <h2>Danh sách video</h2>
       <div class="tablewrap">
         <table>
-          <thead><tr><th>Khóa</th><th>Bài</th><th>Tiêu đề</th><th>YouTube</th><th>Free riêng</th><th>Số câu</th></tr></thead>
+          <thead><tr><th>Khóa</th><th>Bài</th><th>Tiêu đề</th><th>YouTube</th><th>Free riêng</th><th>Số câu</th><th></th></tr></thead>
           <tbody id="shadowVideoBody"></tbody>
         </table>
       </div>
@@ -417,8 +417,12 @@ async function loadShadowAdminVideos(){
       tr.innerHTML=`<td>${v.course_id}</td><td>${v.lesson_number}</td><td>${v.title}</td>
         <td><a href="${v.youtube_url}" target="_blank">Mở</a></td>
         <td>${Number(v.free_override||0) ? 'Có' : '—'}</td>
-        <td>${v.segment_count||0}</td>`;
+        <td>${v.segment_count||0}</td>
+        <td><button class="ghost shadowDeleteBtn" data-id="${v.id}">Xóa</button></td>`;
       $('shadowVideoBody').appendChild(tr);
+    });
+    document.querySelectorAll('.shadowDeleteBtn').forEach(btn=>{
+      btn.onclick=()=>deleteShadowVideo(Number(btn.dataset.id));
     });
   }catch(e){
     $('shadowStatus').textContent=e.message;
@@ -453,6 +457,21 @@ async function saveShadowRule(){
       })
     });
     $('shadowStatus').textContent='Đã lưu quy tắc quyền xem Shadowing.';
+    await loadShadowAdminVideos();
+  }catch(e){
+    $('shadowStatus').textContent=e.message;
+  }
+}
+
+async function deleteShadowVideo(id){
+  if(!confirm('Xóa video Shadowing này?')) return;
+  try{
+    await api('/admin/shadowing/delete',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id})
+    });
+    $('shadowStatus').textContent='Đã xóa video.';
     await loadShadowAdminVideos();
   }catch(e){
     $('shadowStatus').textContent=e.message;
