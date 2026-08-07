@@ -153,6 +153,19 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
       </div>
       <div class="grid2" style="margin-top:10px">
         <div>
+          <label>Ngoại lệ cho video này</label>
+          <label style="display:flex;align-items:center;gap:9px;padding-top:10px;font-weight:750">
+            <input id="shadowFreeOverride" type="checkbox" style="width:auto">
+            Cho video này xem miễn phí
+          </label>
+          <div class="muted" style="margin-top:5px">
+            Dùng khi muốn mở riêng một video demo dù bài đó nằm ngoài số bài miễn phí.
+          </div>
+        </div>
+        <div></div>
+      </div>
+      <div class="grid2" style="margin-top:10px">
+        <div>
           <label>Số bài miễn phí Shadowing</label>
           <input id="shadowFreeLessons" type="number" min="0" value="10">
         </div>
@@ -189,7 +202,7 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
       <h2>Danh sách video</h2>
       <div class="tablewrap">
         <table>
-          <thead><tr><th>Khóa</th><th>Bài</th><th>Tiêu đề</th><th>YouTube</th><th>Số câu</th></tr></thead>
+          <thead><tr><th>Khóa</th><th>Bài</th><th>Tiêu đề</th><th>YouTube</th><th>Free riêng</th><th>Số câu</th></tr></thead>
           <tbody id="shadowVideoBody"></tbody>
         </table>
       </div>
@@ -403,6 +416,7 @@ async function loadShadowAdminVideos(){
       const tr=document.createElement('tr');
       tr.innerHTML=`<td>${v.course_id}</td><td>${v.lesson_number}</td><td>${v.title}</td>
         <td><a href="${v.youtube_url}" target="_blank">Mở</a></td>
+        <td>${Number(v.free_override||0) ? 'Có' : '—'}</td>
         <td>${v.segment_count||0}</td>`;
       $('shadowVideoBody').appendChild(tr);
     });
@@ -479,6 +493,7 @@ async function saveShadowVideo(){
         lesson_number:Number($('shadowLessonNumber').value||1),
         title:$('shadowTitle').value.trim(),
         youtube_url:$('shadowYoutube').value.trim(),
+        free_override:$('shadowFreeOverride').checked ? 1 : 0,
         segments
       })
     });
