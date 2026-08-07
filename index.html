@@ -411,14 +411,40 @@ courseSelect.addEventListener('change', fillLessons);
 lessonSelect.addEventListener('change', renderSelectedLesson);
 
 function doSearch(){
-  const q=el('searchInput').value.trim().toLowerCase();
+  const raw = el('searchInput').value.trim();
+  const q = raw.toLowerCase();
   if(!q) return renderItems([], 'Kết quả tìm kiếm');
-  const found=[];
-  data.forEach(course=>(course.lessons||[]).forEach(lesson=>(lesson.items||[]).forEach(item=>{
-    const hay=[item.hanzi,item.pinyin,item.vi].join(' ').toLowerCase();
-    if(hay.includes(q)) found.push({...item,_course:course.name,_lesson:lesson.title});
+
+  const exact = [];
+  const contains = [];
+
+  data.forEach(course => (course.lessons || []).forEach(lesson => (lesson.items || []).forEach(item => {
+    const hanzi = String(item.hanzi || '').trim();
+    const pinyin = String(item.pinyin || '').trim();
+    const vi = String(item.vi || '').trim();
+
+    // Ưu tiên tuyệt đối kết quả khớp chính xác.
+    if(
+      hanzi.toLowerCase() === q ||
+      pinyin.toLowerCase() === q ||
+      vi.toLowerCase() === q
+    ){
+      exact.push({...item, _course:course.name, _lesson:lesson.title});
+      return;
+    }
+
+    // Chỉ dùng kết quả chứa từ khi không tìm được kết quả chính xác.
+    const hay = [hanzi, pinyin, vi].join(' ').toLowerCase();
+    if(hay.includes(q)){
+      contains.push({...item, _course:course.name, _lesson:lesson.title});
+    }
   })));
-  renderItems(found, `Kết quả: ${el('searchInput').value.trim()}`);
+
+  if(exact.length){
+    renderItems(exact, `Kết quả chính xác: ${raw}`);
+  }else{
+    renderItems(contains, `Kết quả gần đúng: ${raw}`);
+  }
 }
 el('searchBtn').addEventListener('click',doSearch);
 el('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter') doSearch()});
