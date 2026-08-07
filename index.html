@@ -487,45 +487,54 @@ function speak(text){
   const content = String(text || '').trim();
   if(!content) return;
 
-  // Nếu Cloud TTS đã cấu hình, ưu tiên tuyệt đối.
+  // Nếu đã cấu hình Cloud TTS thì CHỈ dùng Cloud TTS.
+  // Không gọi speechSynthesis để tránh máy tính phát hai giọng cùng lúc.
   if(endpoint){
     try{
+      // Dừng audio cloud cũ nếu người học bấm sang từ khác.
       if(currentAudio){
         currentAudio.pause();
+        currentAudio.currentTime = 0;
         currentAudio.src = '';
+        currentAudio = null;
+      }
+
+      // Dừng luôn mọi speechSynthesis còn sót từ lần chạy trước.
+      if('speechSynthesis' in window){
+        window.speechSynthesis.cancel();
       }
 
       const sep = endpoint.includes('?') ? '&' : '?';
       const version = encodeURIComponent(window.ALUNI_TTS_VERSION || '1');
       const url = `${endpoint}${sep}text=${encodeURIComponent(content)}&v=${version}`;
-      const audio = new Audio(url);
+
+      const audio = new Audio();
       currentAudio = audio;
       audio.preload = 'auto';
+      audio.src = url;
 
       audio.onerror = () => {
-        // Cloud TTS lỗi thì vẫn có TTS cục bộ làm phương án dự phòng.
-        if(!speakLocal(content)){
-          alert('Chưa phát được âm thanh. Hãy kiểm tra kết nối mạng rồi thử lại.');
-        }
+        alert('Chưa phát được Cloud TTS. Hãy kiểm tra mạng rồi bấm lại nút loa.');
       };
 
-      const p = audio.play();
-      if(p && typeof p.catch === 'function'){
-        p.catch(() => {
-          if(!speakLocal(content)){
-            alert('Trình duyệt đang chặn phát âm thanh. Hãy bấm lại nút loa.');
-          }
+      const playPromise = audio.play();
+
+      if(playPromise && typeof playPromise.catch === 'function'){
+        playPromise.catch(() => {
+          alert('Trình duyệt đang chặn phát âm thanh. Hãy bấm lại nút loa một lần.');
         });
       }
+
       return;
     }catch(e){
-      // fall through to local TTS
+      alert('Chưa phát được Cloud TTS. Hãy tải lại trang rồi thử lại.');
+      return;
     }
   }
 
-  // Chưa cấu hình Cloud TTS: dùng giọng của thiết bị.
+  // Chỉ dùng TTS của thiết bị khi KHÔNG cấu hình Cloud TTS.
   if(!speakLocal(content)){
-    alert('Thiết bị chưa có giọng Trung. Khi bật Cloud TTS, phần nghe sẽ hoạt động độc lập với thiết bị.');
+    alert('Thiết bị chưa có giọng Trung.');
   }
 }
 
