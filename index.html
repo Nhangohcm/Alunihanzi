@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f0e7">
+  <title>Tiếng Trung Aluni - Luyện viết chữ Hán</title>
+  <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+  <script src="data.js"></script>
+  <style>
+    :root{
+      --bg:#f5f0e7; --paper:#fffdf8; --ink:#24372e; --muted:#6f776f;
+      --green:#5f7f6c; --green2:#dfe9df; --line:#ddd6ca; --warm:#efe7da;
+      --danger:#a24d46; --shadow:0 12px 32px rgba(46,58,50,.09);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh; color:var(--ink);
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Arial,sans-serif;
+      background:linear-gradient(180deg,#f8f4ed,#f2ece1);
+    }
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    .wrap{width:min(1050px,calc(100% - 24px));margin:auto;padding:22px 0 54px}
+    header{text-align:center;padding:12px 8px 20px}
+    .brand{font-size:.82rem;font-weight:850;letter-spacing:.12em;color:var(--green)}
+    h1{font-size:clamp(1.8rem,5vw,2.7rem);margin:7px 0}
+    .subtitle{color:var(--muted);margin:0;line-height:1.55}
+    .card{
+      background:rgba(255,253,248,.98); border:1px solid var(--line);
+      border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; margin-bottom:16px;
+    }
+    .tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+    .tab{
+      border:1px solid var(--line); background:white; color:var(--muted);
+      padding:12px;border-radius:14px;font-weight:800
+    }
+    .tab.active{background:var(--green);border-color:var(--green);color:white}
+    .mode{display:none}.mode.active{display:block}
+    label{font-weight:750;display:block;margin-bottom:7px}
+    input,select,textarea{
+      width:100%;border:1px solid var(--line);border-radius:13px;background:white;color:var(--ink);
+      padding:13px 14px;outline:none
+    }
+    textarea{min-height:140px;resize:vertical}
+    input:focus,select:focus,textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(95,127,108,.12)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .searchrow{display:grid;grid-template-columns:1fr auto;gap:8px}
+    .btn{
+      border:1px solid transparent;border-radius:13px;padding:12px 15px;font-weight:800
+    }
+    .primary{background:var(--green);color:white}
+    .soft{background:var(--green2);color:var(--ink)}
+    .ghost{background:white;border-color:var(--line);color:var(--ink)}
+    .danger{background:#f7e2df;color:var(--danger)}
+    .hint{font-size:.88rem;color:var(--muted);line-height:1.5;margin:8px 0 0}
+    .section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+    .section-title h2{margin:0;font-size:1.25rem}
+    .count{font-size:.84rem;background:var(--warm);padding:6px 9px;border-radius:999px;color:var(--muted)}
+    .words{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .word{
+      border:1px solid var(--line);background:white;border-radius:17px;padding:14px;text-align:center;
+      min-height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      transition:.16s transform,.16s box-shadow;position:relative
+    }
+    .word:hover{transform:translateY(-2px);box-shadow:0 9px 24px rgba(46,58,50,.08)}
+    .hanzi{font-size:clamp(1.7rem,5vw,2.4rem);font-weight:750;line-height:1.2}
+    .pinyin{margin-top:6px;color:var(--green);font-weight:700}
+    .meaning{margin-top:4px;color:var(--muted);font-size:.94rem}
+    .speak{
+      position:absolute;right:8px;top:8px;border:0;background:var(--green2);border-radius:999px;
+      width:34px;height:34px;font-size:1rem
+    }
+    .empty{text-align:center;color:var(--muted);padding:28px 10px}
+    .practice{display:none}.practice.show{display:block}
+    .practice-top{text-align:center}
+    .word-big{font-size:clamp(2.2rem,8vw,4.5rem);font-weight:800;letter-spacing:.06em}
+    .char-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:12px 0}
+    .char-pill{border:1px solid var(--line);background:white;border-radius:12px;padding:8px 13px;font-size:1.35rem}
+    .char-pill.active{background:var(--green);color:white;border-color:var(--green)}
+    .writerbox{
+      width:min(340px,86vw);height:min(340px,86vw);margin:16px auto;
+      background:white;border:1px solid var(--line);border-radius:20px;overflow:hidden;
+      display:flex;align-items:center;justify-content:center
+    }
+    #writerTarget{touch-action:none}
+    .actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+    .status{text-align:center;min-height:24px;color:var(--muted);margin-top:10px;font-weight:650}
+    .admin-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;background:transparent;border:0;padding:0;color:var(--ink)}
+    .admin{display:none;margin-top:16px;border-top:1px solid var(--line);padding-top:16px}
+    .admin.show{display:block}
+    .admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .admin-note{background:#f8f4ec;border:1px dashed var(--line);padding:12px;border-radius:13px;color:var(--muted);font-size:.9rem;line-height:1.5}
+    footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:6px}
+    @media(max-width:760px){
+      .words{grid-template-columns:repeat(2,1fr)}
+      .row,.admin-grid{grid-template-columns:1fr}
+    }
+    @media(max-width:480px){
+      .wrap{width:min(100% - 14px,1050px);padding-top:12px}
+      .card{padding:14px;border-radius:18px}
+      .words{grid-template-columns:1fr 1fr;gap:8px}
+      .word{min-height:122px;padding:11px 8px}
+      .meaning{font-size:.86rem}
+      .searchrow{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">TIẾNG TRUNG ALUNI</div>
+    <h1>Luyện viết chữ Hán</h1>
+    <p class="subtitle">Tìm từ trong khóa học, nghe phát âm và luyện viết từng chữ.</p>
+  </header>
+
+  <section class="card">
+    <div class="tabs">
+      <button class="tab active" data-mode="courseMode">Khóa học → Bài</button>
+      <button class="tab" data-mode="searchMode">Gõ chữ để tìm</button>
+    </div>
+
+    <div id="courseMode" class="mode active">
+      <div class="row">
+        <div>
+          <label for="courseSelect">Khóa học</label>
+          <select id="courseSelect"></select>
+        </div>
+        <div>
+          <label for="lessonSelect">Bài học</label>
+          <select id="lessonSelect"></select>
+        </div>
+      </div>
+    </div>
+
+    <div id="searchMode" class="mode">
+      <label for="searchInput">Nhập chữ hoặc từ tiếng Trung</label>
+      <div class="searchrow">
+        <input id="searchInput" placeholder="Ví dụ: 产品, 妈妈, 工作..." autocomplete="off">
+        <button class="btn primary" id="searchBtn">Tìm</button>
+      </div>
+      <p class="hint">Có thể gõ một chữ, một từ hoặc một phần của câu.</p>
+    </div>
+  </section>
+
+  <section class="card" id="resultsCard">
+    <div class="section-title">
+      <h2 id="resultsTitle">Từ vựng</h2>
+      <span class="count" id="resultCount">0 mục</span>
+    </div>
+    <div id="words" class="words"></div>
+  </section>
+
+  <section class="card practice" id="practiceCard">
+    <div class="practice-top">
+      <div class="brand">LUYỆN VIẾT</div>
+      <div class="word-big" id="practiceWord"></div>
+      <div class="pinyin" id="practicePinyin"></div>
+      <div class="meaning" id="practiceMeaning"></div>
+      <div class="char-pills" id="charPills"></div>
+      <button class="btn soft" id="speakPractice">🔊 Nghe từ</button>
+    </div>
+
+    <div class="writerbox">
+      <div id="writerTarget"></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn soft" id="animateBtn">▶ Xem thứ tự nét</button>
+      <button class="btn primary" id="quizBtn">✍ Tập viết</button>
+      <button class="btn ghost" id="resetBtn">↻ Viết lại</button>
+      <button class="btn ghost" id="nextCharBtn">Chữ tiếp →</button>
+    </div>
+    <div class="status" id="status"></div>
+  </section>
+
+  <section class="card">
+    <button class="admin-toggle" id="adminToggle">
+      <strong>⚙ Quản lý khóa học</strong>
+      <span>mở / đóng</span>
+    </button>
+    <div class="admin" id="adminPanel">
+      <div class="admin-note">
+        Phần này dành cho người quản trị. Có thể tạo thêm khóa, tạo bài và dán dữ liệu theo từng dòng.
+        Dữ liệu thêm trên thiết bị này được lưu trong trình duyệt. Nút “Xuất dữ liệu” tạo file JSON để lưu hoặc đưa lên bản web chính thức.
+      </div>
+
+      <h3>1. Tạo khóa học mới</h3>
+      <div class="admin-grid">
+        <input id="newCourseName" placeholder="Tên khóa, ví dụ: Công xưởng cơ bản">
+        <button class="btn primary" id="addCourseBtn">+ Thêm khóa</button>
+      </div>
+
+      <h3>2. Tạo bài và nhập từ</h3>
+      <div class="admin-grid">
+        <select id="adminCourseSelect"></select>
+        <input id="newLessonName" placeholder="Tên bài, ví dụ: Bài 01. Sản phẩm">
+      </div>
+      <p class="hint">Mỗi dòng nhập: <b>Chữ Hán | Pinyin | Nghĩa tiếng Việt</b></p>
+      <textarea id="bulkInput" placeholder="产品 | chǎnpǐn | sản phẩm&#10;质量 | zhìliàng | chất lượng"></textarea>
+      <div class="actions" style="justify-content:flex-start;margin-top:10px">
+        <button class="btn primary" id="addLessonBtn">+ Thêm bài & từ vựng</button>
+        <button class="btn ghost" id="exportBtn">⬇ Xuất dữ liệu JSON</button>
+        <label class="btn ghost" style="display:inline-block;margin:0">
+          ⬆ Nhập JSON
+          <input type="file" id="importFile" accept=".json" style="display:none">
+        </label>
+        <button class="btn danger" id="resetDataBtn">Khôi phục dữ liệu gốc</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>Tiếng Trung Aluni · Công cụ luyện viết chữ Hán</footer>
+</div>
+
+<script>
+const STORAGE_KEY = 'aluni_hanzi_courses_v1';
+let data = loadData();
+let writer = null;
+let currentItem = null;
+let currentChars = [];
+let currentCharIndex = 0;
+
+function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
+
+function loadData(){
+  try{
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if(saved) return JSON.parse(saved);
+  }catch(e){}
+  return deepClone(window.ALUNI_DEFAULT_DATA || []);
+}
+function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+
+const el = id => document.getElementById(id);
+const courseSelect = el('courseSelect');
+const lessonSelect = el('lessonSelect');
+const wordsEl = el('words');
+
+function fillCourses(){
+  courseSelect.innerHTML = '';
+  el('adminCourseSelect').innerHTML = '';
+  data.forEach((c,i)=>{
+    const o = new Option(c.name, c.id);
+    courseSelect.add(o);
+    el('adminCourseSelect').add(new Option(c.name, c.id));
+  });
+  fillLessons();
+}
+
+function selectedCourse(){
+  return data.find(c=>c.id===courseSelect.value) || data[0];
+}
+function fillLessons(){
+  lessonSelect.innerHTML='';
+  const course = selectedCourse();
+  if(!course) return renderItems([], 'Chưa có khóa học');
+  (course.lessons || []).forEach(l=>lessonSelect.add(new Option(l.title || l.name, l.id)));
+  renderSelectedLesson();
+}
+function renderSelectedLesson(){
+  const course = selectedCourse();
+  if(!course) return;
+  const lesson = (course.lessons||[]).find(l=>l.id===lessonSelect.value) || (course.lessons||[])[0];
+  if(!lesson) return renderItems([], course.name);
+  renderItems(lesson.items || [], lesson.title || lesson.name);
+}
+
+function renderItems(items, title){
+  el('resultsTitle').textContent = title || 'Từ vựng';
+  el('resultCount').textContent = `${items.length} mục`;
+  wordsEl.innerHTML='';
+  if(!items.length){
+    wordsEl.innerHTML='<div class="empty" style="grid-column:1/-1">Không tìm thấy dữ liệu phù hợp.</div>';
+    return;
+  }
+  items.forEach(item=>{
+    const card = document.createElement('div');
+    card.className='word';
+    card.innerHTML = `
+      <button class="speak" title="Nghe">🔊</button>
+      <div class="hanzi">${escapeHtml(item.hanzi)}</div>
+      <div class="pinyin">${escapeHtml(item.pinyin || '')}</div>
+      <div class="meaning">${escapeHtml(item.vi || '')}</div>
+    `;
+    card.querySelector('.speak').addEventListener('click', e=>{
+      e.stopPropagation(); speak(item.hanzi);
+    });
+    card.addEventListener('click', ()=>openPractice(item));
+    wordsEl.appendChild(card);
+  });
+}
+function escapeHtml(s){
+  return String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+}
+
+function speak(text){
+  if(!('speechSynthesis' in window)){
+    alert('Trình duyệt này chưa hỗ trợ đọc văn bản.');
+    return;
+  }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang='zh-CN'; u.rate=0.78; u.pitch=1;
+  const voices = speechSynthesis.getVoices();
+  const zh = voices.find(v => /^zh(-|_)/i.test(v.lang));
+  if(zh) u.voice=zh;
+  speechSynthesis.speak(u);
+}
+
+function extractHanzi(text){
+  return [...String(text)].filter(ch => /\p{Script=Han}/u.test(ch));
+}
+
+function openPractice(item){
+  currentItem=item;
+  currentChars=extractHanzi(item.hanzi);
+  currentCharIndex=0;
+  el('practiceWord').textContent=item.hanzi;
+  el('practicePinyin').textContent=item.pinyin || '';
+  el('practiceMeaning').textContent=item.vi || '';
+  renderCharPills();
+  el('practiceCard').classList.add('show');
+  if(currentChars.length){
+    buildWriter(currentChars[0], false);
+    el('status').textContent='Chọn “Xem thứ tự nét” hoặc “Tập viết”.';
+  } else {
+    el('writerTarget').innerHTML='';
+    el('status').textContent='Mục này không có chữ Hán để luyện viết.';
+  }
+  el('practiceCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function renderCharPills(){
+  const box=el('charPills'); box.innerHTML='';
+  currentChars.forEach((ch,i)=>{
+    const b=document.createElement('button');
+    b.className='char-pill'+(i===currentCharIndex?' active':'');
+    b.textContent=ch;
+    b.addEventListener('click',()=>{
+      currentCharIndex=i; renderCharPills(); buildWriter(ch,false);
+    });
+    box.appendChild(b);
+  });
+}
+
+function buildWriter(ch, startQuiz=false){
+  const target=el('writerTarget');
+  target.innerHTML='';
+  const size=Math.min(320, Math.max(240, window.innerWidth-70));
+  try{
+    writer = HanziWriter.create('writerTarget', ch, {
+      width:size, height:size, padding:18,
+      showOutline:true, showCharacter:!startQuiz,
+      strokeAnimationSpeed:1,
+      delayBetweenStrokes:180,
+      showHintAfterMisses:2,
+      highlightOnComplete:true,
+      onLoadCharDataError:function(){
+        el('status').textContent='Không tải được dữ liệu nét cho chữ này.';
+      }
+    });
+    if(startQuiz){
+      writer.quiz({
+        onComplete:function(summary){
+          el('status').textContent = summary.totalMistakes === 0
+            ? 'Hoàn thành rất tốt.'
+            : `Hoàn thành. Số lần viết sai nét: ${summary.totalMistakes}.`;
+        }
+      });
+    }
+  }catch(e){
+    el('status').textContent='Không thể mở chữ này trong Hanzi Writer.';
+  }
+}
+
+el('animateBtn').addEventListener('click',()=>{
+  if(!writer) return;
+  buildWriter(currentChars[currentCharIndex], false);
+  setTimeout(()=>writer && writer.animateCharacter(),100);
+  el('status').textContent='Đang xem thứ tự nét.';
+});
+el('quizBtn').addEventListener('click',()=>{
+  if(!currentChars.length) return;
+  buildWriter(currentChars[currentCharIndex], true);
+  el('status').textContent='Dùng ngón tay hoặc chuột để viết theo.';
+});
+el('resetBtn').addEventListener('click',()=>{
+  if(!currentChars.length) return;
+  buildWriter(currentChars[currentCharIndex], true);
+  el('status').textContent='Đã làm mới ô viết.';
+});
+el('nextCharBtn').addEventListener('click',()=>{
+  if(!currentChars.length) return;
+  currentCharIndex=(currentCharIndex+1)%currentChars.length;
+  renderCharPills(); buildWriter(currentChars[currentCharIndex],false);
+});
+el('speakPractice').addEventListener('click',()=>currentItem && speak(currentItem.hanzi));
+
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.mode').forEach(m=>m.classList.remove('active'));
+    btn.classList.add('active'); el(btn.dataset.mode).classList.add('active');
+    if(btn.dataset.mode==='courseMode') renderSelectedLesson();
+  });
+});
+
+courseSelect.addEventListener('change', fillLessons);
+lessonSelect.addEventListener('change', renderSelectedLesson);
+
+function doSearch(){
+  const q=el('searchInput').value.trim().toLowerCase();
+  if(!q) return renderItems([], 'Kết quả tìm kiếm');
+  const found=[];
+  data.forEach(course=>(course.lessons||[]).forEach(lesson=>(lesson.items||[]).forEach(item=>{
+    const hay=[item.hanzi,item.pinyin,item.vi].join(' ').toLowerCase();
+    if(hay.includes(q)) found.push({...item,_course:course.name,_lesson:lesson.title});
+  })));
+  renderItems(found, `Kết quả: ${el('searchInput').value.trim()}`);
+}
+el('searchBtn').addEventListener('click',doSearch);
+el('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter') doSearch()});
+
+el('adminToggle').addEventListener('click',()=>el('adminPanel').classList.toggle('show'));
+
+function slug(s){
+  return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+    .replace(/đ/g,'d').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || Date.now().toString();
+}
+el('addCourseBtn').addEventListener('click',()=>{
+  const name=el('newCourseName').value.trim();
+  if(!name) return alert('Nhập tên khóa học.');
+  let id=slug(name), base=id, n=2;
+  while(data.some(c=>c.id===id)) id=base+'-'+n++;
+  data.push({id,name,description:'Khóa học thêm mới',lessons:[]});
+  saveData(); el('newCourseName').value=''; fillCourses();
+  courseSelect.value=id; el('adminCourseSelect').value=id; fillLessons();
+  alert('Đã thêm khóa học trên thiết bị này.');
+});
+
+el('addLessonBtn').addEventListener('click',()=>{
+  const cid=el('adminCourseSelect').value;
+  const course=data.find(c=>c.id===cid);
+  const lessonName=el('newLessonName').value.trim();
+  const raw=el('bulkInput').value.trim();
+  if(!course) return alert('Chọn khóa học.');
+  if(!lessonName) return alert('Nhập tên bài.');
+  if(!raw) return alert('Dán danh sách từ vựng.');
+  const items=[];
+  raw.split(/\r?\n/).forEach((line,i)=>{
+    const parts=line.split('|').map(x=>x.trim());
+    if(parts[0]) items.push({no:String(i+1).padStart(2,'0'),hanzi:parts[0],pinyin:parts[1]||'',vi:parts[2]||''});
+  });
+  const id=course.id+'-'+slug(lessonName)+'-'+Date.now().toString().slice(-5);
+  course.lessons.push({id,number:course.lessons.length+1,title:lessonName,name:lessonName,items});
+  saveData();
+  el('newLessonName').value=''; el('bulkInput').value='';
+  courseSelect.value=course.id; fillLessons(); lessonSelect.value=id; renderSelectedLesson();
+  alert(`Đã thêm ${items.length} mục vào ${lessonName}.`);
+});
+
+el('exportBtn').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='aluni-courses.json'; a.click(); URL.revokeObjectURL(a.href);
+});
+el('importFile').addEventListener('change',async e=>{
+  const file=e.target.files[0]; if(!file) return;
+  try{
+    const imported=JSON.parse(await file.text());
+    if(!Array.isArray(imported)) throw new Error();
+    data=imported; saveData(); fillCourses(); alert('Đã nhập dữ liệu.');
+  }catch(err){ alert('File JSON không đúng định dạng.'); }
+  e.target.value='';
+});
+el('resetDataBtn').addEventListener('click',()=>{
+  if(!confirm('Khôi phục toàn bộ dữ liệu về bản gốc 50+? Dữ liệu thêm trên thiết bị này sẽ mất.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  data=deepClone(window.ALUNI_DEFAULT_DATA || []);
+  fillCourses();
+});
+
+window.addEventListener('resize',()=>{
+  if(currentChars.length) buildWriter(currentChars[currentCharIndex],false);
+});
+
+fillCourses();
+</script>
+</body>
+</html>
