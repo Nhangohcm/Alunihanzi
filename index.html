@@ -8,6 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
   <script src="data.js"></script>
   <script src="tts-config.js"></script>
+  <script src="access-config.js"></script>
   <style>
     :root{
       --bg:#f5f0e7; --paper:#fffdf8; --ink:#24372e; --muted:#6f776f;
@@ -115,6 +116,33 @@
       .radical-info-row{grid-template-columns:88px 1fr}
     }
 
+    
+    .locked-badge{
+      display:inline-flex;align-items:center;gap:5px;
+      margin-left:6px;padding:2px 7px;border-radius:999px;
+      background:#f0e4ca;color:#7a5a22;font-size:.76rem;font-weight:800;
+    }
+    .access-modal{
+      position:fixed;inset:0;background:rgba(25,35,30,.52);
+      display:none;align-items:center;justify-content:center;
+      padding:16px;z-index:9999;
+    }
+    .access-modal.show{display:flex}
+    .access-box{
+      width:min(460px,100%);background:var(--paper);border:1px solid var(--line);
+      border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.2);padding:20px;
+    }
+    .access-box h3{margin:0 0 8px;font-size:1.35rem}
+    .access-box p{margin:0 0 14px;color:var(--muted);line-height:1.55}
+    .access-grid{display:grid;gap:10px}
+    .access-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+    .access-msg{min-height:22px;margin-top:10px;font-size:.9rem;font-weight:700}
+    .access-msg.ok{color:#39734d}.access-msg.err{color:#a24d46}
+    .free-note{
+      margin-top:10px;padding:10px 12px;border-radius:13px;
+      background:#f6f4ee;color:var(--muted);font-size:.88rem;line-height:1.5;
+    }
+
     footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:6px}
     @media(max-width:760px){
       .words{grid-template-columns:repeat(2,1fr)}
@@ -210,47 +238,125 @@
     <div class="status" id="status"></div>
   </section>
 
-  <section class="card">
-    <button class="admin-toggle" id="adminToggle">
-      <strong>⚙ Quản lý khóa học</strong>
-      <span>mở / đóng</span>
-    </button>
-    <div class="admin" id="adminPanel">
-      <div class="admin-note">
-        Phần này dành cho người quản trị. Có thể tạo thêm khóa, tạo bài và dán dữ liệu theo từng dòng.
-        Dữ liệu thêm trên thiết bị này được lưu trong trình duyệt. Nút “Xuất dữ liệu” tạo file JSON để lưu hoặc đưa lên bản web chính thức.
-      </div>
-
-      <h3>1. Tạo khóa học mới</h3>
-      <div class="admin-grid">
-        <input id="newCourseName" placeholder="Tên khóa, ví dụ: Công xưởng cơ bản">
-        <button class="btn primary" id="addCourseBtn">+ Thêm khóa</button>
-      </div>
-
-      <h3>2. Tạo bài và nhập từ</h3>
-      <div class="admin-grid">
-        <select id="adminCourseSelect"></select>
-        <input id="newLessonName" placeholder="Tên bài, ví dụ: Bài 01. Sản phẩm">
-      </div>
-      <p class="hint">Mỗi dòng nhập: <b>Chữ Hán | Pinyin | Nghĩa tiếng Việt</b></p>
-      <textarea id="bulkInput" placeholder="产品 | chǎnpǐn | sản phẩm&#10;质量 | zhìliàng | chất lượng"></textarea>
-      <div class="actions" style="justify-content:flex-start;margin-top:10px">
-        <button class="btn primary" id="addLessonBtn">+ Thêm bài & từ vựng</button>
-        <button class="btn ghost" id="exportBtn">⬇ Xuất dữ liệu JSON</button>
-        <label class="btn ghost" style="display:inline-block;margin:0">
-          ⬆ Nhập JSON
-          <input type="file" id="importFile" accept=".json" style="display:none">
-        </label>
-        <button class="btn danger" id="resetDataBtn">Khôi phục dữ liệu gốc</button>
-      </div>
-    </div>
-  </section>
+  
 
   <footer>Tiếng Trung Aluni · Công cụ luyện viết chữ Hán</footer>
 </div>
 
 <script>
 const RADICAL_VI = {"一": ["Nhất", "một"], "丨": ["Cổn", "nét sổ"], "丶": ["Chủ", "chấm"], "丿": ["Phiệt", "nét phẩy"], "乙": ["Ất", "can Ất / nét cong"], "亅": ["Quyết", "nét móc"], "二": ["Nhị", "hai"], "亠": ["Đầu", "phần đầu / nắp"], "人": ["Nhân", "người"], "亻": ["Nhân đứng", "người"], "儿": ["Nhi", "trẻ em / chân người"], "入": ["Nhập", "vào"], "八": ["Bát", "tám / chia ra"], "冂": ["Quynh", "khung mở"], "冖": ["Mịch", "mái che"], "冫": ["Băng", "nước đá"], "几": ["Kỷ", "ghế nhỏ"], "凵": ["Khảm", "khung lõm"], "刀": ["Đao", "dao"], "刂": ["Đao đứng", "dao"], "力": ["Lực", "sức mạnh"], "勹": ["Bao", "bao bọc"], "匕": ["Chủy", "cái thìa / dao găm"], "匚": ["Phương", "hộp / khung"], "十": ["Thập", "mười"], "卜": ["Bốc", "bói"], "卩": ["Tiết", "đốt tre / quỳ"], "厂": ["Hán", "vách đá"], "厶": ["Khư", "riêng tư"], "又": ["Hựu", "lại / tay phải"], "口": ["Khẩu", "miệng"], "囗": ["Vi", "vây quanh"], "土": ["Thổ", "đất"], "士": ["Sĩ", "kẻ sĩ"], "夂": ["Truy", "đi xuống"], "夕": ["Tịch", "buổi tối"], "大": ["Đại", "lớn"], "女": ["Nữ", "nữ giới"], "子": ["Tử", "con"], "宀": ["Miên", "mái nhà"], "寸": ["Thốn", "tấc"], "小": ["Tiểu", "nhỏ"], "尢": ["Uông", "yếu / què"], "尸": ["Thi", "xác / thân người"], "山": ["Sơn", "núi"], "巛": ["Xuyên", "sông"], "工": ["Công", "công việc"], "己": ["Kỷ", "bản thân"], "巾": ["Cân", "khăn"], "干": ["Can", "khô / can"], "幺": ["Yêu", "nhỏ"], "广": ["Nghiễm", "mái nhà rộng"], "廴": ["Dẫn", "bước dài"], "廾": ["Củng", "hai tay"], "弋": ["Dặc", "bắn / cọc"], "弓": ["Cung", "cây cung"], "彐": ["Kệ", "mõm lợn / nét quét"], "彡": ["Sam", "lông / vân"], "彳": ["Xích", "bước chân"], "心": ["Tâm", "tim / tâm"], "忄": ["Tâm đứng", "tâm / cảm xúc"], "戈": ["Qua", "giáo mác / vũ khí"], "户": ["Hộ", "cửa một cánh"], "手": ["Thủ", "tay"], "扌": ["Thủ đứng", "tay / động tác"], "支": ["Chi", "cành / chống"], "攵": ["Phộc", "đánh / hành động"], "文": ["Văn", "văn chương"], "斗": ["Đẩu", "cái đấu"], "斤": ["Cân", "rìu"], "方": ["Phương", "phương hướng"], "日": ["Nhật", "mặt trời / ngày"], "曰": ["Viết", "nói"], "月": ["Nguyệt", "mặt trăng / tháng"], "木": ["Mộc", "cây / gỗ"], "欠": ["Khiếm", "thiếu / há miệng"], "止": ["Chỉ", "dừng / chân"], "歹": ["Đãi", "xấu / chết"], "殳": ["Thù", "vũ khí"], "毋": ["Vô", "chớ / đừng"], "比": ["Tỷ", "so sánh"], "毛": ["Mao", "lông"], "氏": ["Thị", "họ"], "气": ["Khí", "hơi / khí"], "水": ["Thủy", "nước"], "氵": ["Thủy", "nước"], "火": ["Hỏa", "lửa"], "灬": ["Hỏa", "lửa"], "爪": ["Trảo", "móng vuốt"], "爫": ["Trảo", "móng / tay"], "父": ["Phụ", "cha"], "爻": ["Hào", "hào quẻ"], "爿": ["Tường", "mảnh gỗ"], "片": ["Phiến", "mảnh / tấm"], "牙": ["Nha", "răng"], "牛": ["Ngưu", "trâu / bò"], "牜": ["Ngưu đứng", "trâu / bò"], "犬": ["Khuyển", "chó"], "犭": ["Khuyển đứng", "động vật"], "玉": ["Ngọc", "ngọc"], "王": ["Ngọc/Vương", "ngọc / vua"], "瓜": ["Qua", "dưa"], "瓦": ["Ngõa", "ngói"], "甘": ["Cam", "ngọt"], "生": ["Sinh", "sinh ra"], "用": ["Dụng", "dùng"], "田": ["Điền", "ruộng"], "疒": ["Nạch", "bệnh tật"], "癶": ["Bát", "bước chân"], "白": ["Bạch", "trắng"], "皮": ["Bì", "da"], "皿": ["Mãnh", "đồ đựng"], "目": ["Mục", "mắt"], "矛": ["Mâu", "giáo"], "矢": ["Thỉ", "mũi tên"], "石": ["Thạch", "đá"], "示": ["Thị", "thần / chỉ thị"], "礻": ["Thị", "thần / lễ"], "禾": ["Hòa", "lúa"], "穴": ["Huyệt", "hang"], "立": ["Lập", "đứng"], "竹": ["Trúc", "tre"], "⺮": ["Trúc", "tre"], "米": ["Mễ", "gạo"], "糸": ["Mịch", "tơ"], "纟": ["Mịch", "tơ / sợi"], "缶": ["Phẫu", "đồ sành"], "网": ["Võng", "lưới"], "罒": ["Võng", "lưới"], "羊": ["Dương", "dê / cừu"], "羽": ["Vũ", "lông vũ"], "老": ["Lão", "già"], "而": ["Nhi", "mà / râu"], "耒": ["Lỗi", "cái cày"], "耳": ["Nhĩ", "tai"], "聿": ["Duật", "bút"], "肉": ["Nhục", "thịt"], "月(肉)": ["Nhục", "thịt / cơ thể"], "臣": ["Thần", "bề tôi"], "自": ["Tự", "tự mình"], "至": ["Chí", "đến"], "臼": ["Cữu", "cối"], "舌": ["Thiệt", "lưỡi"], "舛": ["Suyễn", "trái ngược"], "舟": ["Chu", "thuyền"], "艮": ["Cấn", "dừng / quẻ Cấn"], "色": ["Sắc", "màu sắc"], "艹": ["Thảo", "cỏ / thực vật"], "虍": ["Hổ", "hổ"], "虫": ["Trùng", "côn trùng"], "血": ["Huyết", "máu"], "行": ["Hành", "đi / đường"], "衣": ["Y", "áo"], "衤": ["Y", "áo / quần áo"], "襾": ["Á", "che phủ"], "見": ["Kiến", "nhìn"], "见": ["Kiến", "nhìn"], "角": ["Giác", "sừng / góc"], "言": ["Ngôn", "lời nói"], "讠": ["Ngôn", "lời nói"], "谷": ["Cốc", "thung lũng"], "豆": ["Đậu", "đậu / đồ đựng"], "豕": ["Thỉ", "lợn"], "豸": ["Trãi", "loài thú"], "貝": ["Bối", "vỏ sò / tiền"], "贝": ["Bối", "vỏ sò / tiền"], "赤": ["Xích", "đỏ"], "走": ["Tẩu", "chạy / đi"], "足": ["Túc", "chân"], "⻊": ["Túc", "chân / bước"], "身": ["Thân", "thân thể"], "車": ["Xa", "xe"], "车": ["Xa", "xe"], "辛": ["Tân", "cay / hình phạt"], "辰": ["Thần", "thìn / thời gian"], "辵": ["Sước", "đi"], "辶": ["Sước", "đi / di chuyển"], "邑": ["Ấp", "làng / thành"], "阝": ["Ấp/Phụ", "làng hoặc gò đất"], "酉": ["Dậu", "rượu / bình rượu"], "釆": ["Biện", "phân biệt"], "里": ["Lý", "làng / dặm"], "金": ["Kim", "kim loại / vàng"], "钅": ["Kim", "kim loại"], "長": ["Trường", "dài"], "长": ["Trường", "dài"], "門": ["Môn", "cửa"], "门": ["Môn", "cửa"], "阜": ["Phụ", "gò đất"], "隶": ["Đãi", "kịp / lệ thuộc"], "隹": ["Chuy", "chim đuôi ngắn"], "雨": ["Vũ", "mưa"], "青": ["Thanh", "xanh"], "非": ["Phi", "không / sai"], "面": ["Diện", "mặt"], "革": ["Cách", "da thuộc"], "韋": ["Vi", "da thuộc"], "韦": ["Vi", "da thuộc"], "韭": ["Cửu", "hẹ"], "音": ["Âm", "âm thanh"], "頁": ["Hiệt", "đầu / trang"], "页": ["Hiệt", "đầu / trang"], "風": ["Phong", "gió"], "风": ["Phong", "gió"], "飛": ["Phi", "bay"], "飞": ["Phi", "bay"], "食": ["Thực", "ăn / thức ăn"], "饣": ["Thực", "ăn / thức ăn"], "首": ["Thủ", "đầu"], "香": ["Hương", "thơm"], "馬": ["Mã", "ngựa"], "马": ["Mã", "ngựa"], "骨": ["Cốt", "xương"], "高": ["Cao", "cao"], "髟": ["Bưu", "tóc dài"], "鬥": ["Đấu", "đánh nhau"], "鬯": ["Sưởng", "rượu cúng"], "鬲": ["Cách", "nồi ba chân"], "鬼": ["Quỷ", "ma quỷ"], "魚": ["Ngư", "cá"], "鱼": ["Ngư", "cá"], "鳥": ["Điểu", "chim"], "鸟": ["Điểu", "chim"], "鹵": ["Lỗ", "muối"], "鹿": ["Lộc", "hươu"], "麥": ["Mạch", "lúa mạch"], "麦": ["Mạch", "lúa mạch"], "麻": ["Ma", "gai"], "黃": ["Hoàng", "vàng"], "黄": ["Hoàng", "vàng"], "黍": ["Thử", "kê"], "黑": ["Hắc", "đen"], "黹": ["Chỉ", "thêu"], "黽": ["Mãnh", "ếch"], "鼎": ["Đỉnh", "vạc"], "鼓": ["Cổ", "trống"], "鼠": ["Thử", "chuột"], "鼻": ["Tỵ", "mũi"], "齊": ["Tề", "đều"], "齐": ["Tề", "đều"], "齒": ["Xỉ", "răng"], "齿": ["Xỉ", "răng"], "龍": ["Long", "rồng"], "龙": ["Long", "rồng"], "龜": ["Quy", "rùa"], "龟": ["Quy", "rùa"], "龠": ["Dược", "sáo"]};
+
+
+const ACCESS_STORAGE_KEY = 'aluni_access_50plus_v1';
+let pendingPaidCourseId = null;
+
+function paidCourseIds(){
+  return Array.isArray(window.ALUNI_PAID_COURSES) ? window.ALUNI_PAID_COURSES : [];
+}
+function isPaidCourse(courseId){
+  return paidCourseIds().includes(courseId);
+}
+function accessEndpoint(path){
+  const base = String(window.ALUNI_ACCESS_ENDPOINT || '').replace(/\/+$/,'');
+  return base + path;
+}
+function getSavedEntitlement(){
+  try{
+    const raw = localStorage.getItem(ACCESS_STORAGE_KEY);
+    if(!raw) return null;
+    const obj = JSON.parse(raw);
+    if(!obj.token || !obj.expires_at) return null;
+    if(Date.now() >= new Date(obj.expires_at).getTime()){
+      localStorage.removeItem(ACCESS_STORAGE_KEY);
+      return null;
+    }
+    return obj;
+  }catch(e){ return null; }
+}
+function saveEntitlement(obj){
+  localStorage.setItem(ACCESS_STORAGE_KEY, JSON.stringify(obj));
+}
+async function verifyPaidAccess(courseId){
+  if(!isPaidCourse(courseId)) return true;
+  const saved = getSavedEntitlement();
+  if(!saved) return false;
+  try{
+    const r = await fetch(accessEndpoint('/access/verify'), {
+      headers: { 'Authorization': `Bearer ${saved.token}` }
+    });
+    if(!r.ok) return false;
+    const j = await r.json();
+    return !!(j.valid && j.course_id === courseId);
+  }catch(e){
+    // Nếu offline nhưng token chưa hết hạn, cho phép tiếp tục trên thiết bị đã kích hoạt.
+    return true;
+  }
+}
+function openAccessModal(courseId){
+  pendingPaidCourseId = courseId;
+  el('accessMsg').textContent = '';
+  el('accessMsg').className = 'access-msg';
+  el('accessModal').classList.add('show');
+  setTimeout(()=>el('accessIdentity').focus(),50);
+}
+function closeAccessModal(){
+  el('accessModal').classList.remove('show');
+  pendingPaidCourseId = null;
+}
+async function activatePaidCourse(){
+  const identity = el('accessIdentity').value.trim();
+  const code = el('accessCode').value.trim().toUpperCase();
+  const msg = el('accessMsg');
+
+  if(!identity || !code){
+    msg.textContent = 'Nhập đủ số điện thoại/email và mã kích hoạt.';
+    msg.className = 'access-msg err';
+    return;
+  }
+
+  msg.textContent = 'Đang kiểm tra mã...';
+  msg.className = 'access-msg';
+
+  try{
+    const r = await fetch(accessEndpoint('/access/activate'), {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        identity,
+        code,
+        course_id: pendingPaidCourseId || '50plus'
+      })
+    });
+    const j = await r.json();
+
+    if(!r.ok || !j.ok){
+      msg.textContent = j.error || 'Mã không hợp lệ.';
+      msg.className = 'access-msg err';
+      return;
+    }
+
+    saveEntitlement({
+      token:j.token,
+      expires_at:j.expires_at,
+      identity:j.identity,
+      course_id:j.course_id
+    });
+
+    msg.textContent = `Kích hoạt thành công. Quyền học đến ${new Date(j.expires_at).toLocaleDateString('vi-VN')}.`;
+    msg.className = 'access-msg ok';
+
+    const courseId = pendingPaidCourseId || '50plus';
+    setTimeout(()=>{
+      closeAccessModal();
+      courseSelect.value = courseId;
+      fillLessonsUnlocked();
+    },500);
+
+  }catch(e){
+    msg.textContent = 'Chưa kết nối được hệ thống kích hoạt. Hãy thử lại.';
+    msg.className = 'access-msg err';
+  }
+}
 
 const STORAGE_KEY = 'aluni_hanzi_courses_v1';
 let data = loadData();
@@ -381,17 +487,36 @@ function fillCourses(){
   courseSelect.innerHTML = '';
   el('adminCourseSelect').innerHTML = '';
   data.forEach((c,i)=>{
-    const o = new Option(c.name, c.id);
+    const o = new Option((isPaidCourse(c.id) ? '🔒 ' : '') + c.name, c.id);
     courseSelect.add(o);
     el('adminCourseSelect').add(new Option(c.name, c.id));
   });
-  fillLessons();
+  initializeCourseView();
+}
+
+
+async function initializeCourseView(){
+  const course = selectedCourse();
+  if(!course) return;
+
+  if(isPaidCourse(course.id)){
+    const ok = await verifyPaidAccess(course.id);
+    if(!ok){
+      // Mặc định chuyển sang tab Tra chữ miễn phí thay vì ép nhập mã ngay khi mở web.
+      const searchTab = document.querySelector('.tab[data-mode="searchMode"]');
+      if(searchTab) searchTab.click();
+      lessonSelect.innerHTML = '<option>🔒 Cần mã để mở Khóa 50+</option>';
+      renderItems([], 'Tra chữ miễn phí');
+      return;
+    }
+  }
+  fillLessonsUnlocked();
 }
 
 function selectedCourse(){
   return data.find(c=>c.id===courseSelect.value) || data[0];
 }
-function fillLessons(){
+function fillLessonsUnlocked(){
   lessonSelect.innerHTML='';
   const course = selectedCourse();
   if(!course) return renderItems([], 'Chưa có khóa học');
@@ -701,11 +826,31 @@ document.querySelectorAll('.tab').forEach(btn=>{
     document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
     document.querySelectorAll('.mode').forEach(m=>m.classList.remove('active'));
     btn.classList.add('active'); el(btn.dataset.mode).classList.add('active');
-    if(btn.dataset.mode==='courseMode') renderSelectedLesson();
+    if(btn.dataset.mode==='courseMode'){
+      const c = selectedCourse();
+      if(c && isPaidCourse(c.id)){
+        verifyPaidAccess(c.id).then(ok=>{
+          if(ok) fillLessonsUnlocked();
+          else openAccessModal(c.id);
+        });
+      }else{
+        renderSelectedLesson();
+      }
+    }
   });
 });
 
-courseSelect.addEventListener('change', fillLessons);
+courseSelect.addEventListener('change', async ()=>{
+  const courseId = courseSelect.value;
+  if(isPaidCourse(courseId)){
+    const ok = await verifyPaidAccess(courseId);
+    if(!ok){
+      openAccessModal(courseId);
+      return;
+    }
+  }
+  fillLessonsUnlocked();
+});
 lessonSelect.addEventListener('change', renderSelectedLesson);
 
 function normalizeLatin(s){
@@ -815,79 +960,14 @@ function doSearch(){
 el('searchBtn').addEventListener('click',doSearch);
 el('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter') doSearch()});
 
-el('adminToggle').addEventListener('click',()=>el('adminPanel').classList.toggle('show'));
 
-function slug(s){
-  return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
-    .replace(/đ/g,'d').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || Date.now().toString();
-}
-el('addCourseBtn').addEventListener('click',()=>{
-  const name=el('newCourseName').value.trim();
-  if(!name) return alert('Nhập tên khóa học.');
-  let id=slug(name), base=id, n=2;
-  while(data.some(c=>c.id===id)) id=base+'-'+n++;
-  data.push({id,name,description:'Khóa học thêm mới',lessons:[]});
-  saveData(); el('newCourseName').value=''; fillCourses();
-  courseSelect.value=id; el('adminCourseSelect').value=id; fillLessons();
-  alert('Đã thêm khóa học trên thiết bị này.');
+el('accessActivateBtn').addEventListener('click', activatePaidCourse);
+el('accessCancelBtn').addEventListener('click', closeAccessModal);
+el('accessModal').addEventListener('click', (e)=>{
+  if(e.target === el('accessModal')) closeAccessModal();
 });
-
-el('addLessonBtn').addEventListener('click',()=>{
-  const cid=el('adminCourseSelect').value;
-  const course=data.find(c=>c.id===cid);
-  const lessonName=el('newLessonName').value.trim();
-  const raw=el('bulkInput').value.trim();
-  if(!course) return alert('Chọn khóa học.');
-  if(!lessonName) return alert('Nhập tên bài.');
-  if(!raw) return alert('Dán danh sách từ vựng.');
-  const items=[];
-  raw.split(/\r?\n/).forEach((line,i)=>{
-    const parts=line.split('|').map(x=>x.trim());
-    if(parts[0]) items.push({no:String(i+1).padStart(2,'0'),hanzi:parts[0],pinyin:parts[1]||'',vi:parts[2]||''});
-  });
-  const id=course.id+'-'+slug(lessonName)+'-'+Date.now().toString().slice(-5);
-  course.lessons.push({id,number:course.lessons.length+1,title:lessonName,name:lessonName,items});
-  saveData();
-  el('newLessonName').value=''; el('bulkInput').value='';
-  courseSelect.value=course.id; fillLessons(); lessonSelect.value=id; renderSelectedLesson();
-  alert(`Đã thêm ${items.length} mục vào ${lessonName}.`);
-});
-
-el('exportBtn').addEventListener('click',()=>{
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download='aluni-courses.json'; a.click(); URL.revokeObjectURL(a.href);
-});
-el('importFile').addEventListener('change',async e=>{
-  const file=e.target.files[0]; if(!file) return;
-  try{
-    const imported=JSON.parse(await file.text());
-    if(!Array.isArray(imported)) throw new Error();
-    data=imported; saveData(); fillCourses(); alert('Đã nhập dữ liệu.');
-  }catch(err){ alert('File JSON không đúng định dạng.'); }
-  e.target.value='';
-});
-el('resetDataBtn').addEventListener('click',()=>{
-  if(!confirm('Khôi phục toàn bộ dữ liệu về bản gốc 50+? Dữ liệu thêm trên thiết bị này sẽ mất.')) return;
-  localStorage.removeItem(STORAGE_KEY);
-  data=deepClone(window.ALUNI_DEFAULT_DATA || []);
-  fillCourses();
-});
-
-
-el('radicalBtn').addEventListener('click',()=>{
-  radicalMode = !radicalMode;
-  el('radicalBtn').textContent = radicalMode
-    ? '🎨 Tách bộ thủ: BẬT'
-    : '🎨 Tách bộ thủ: TẮT';
-  el('radicalLegend').style.display = radicalMode ? 'block' : 'none';
-
-  if(currentChars.length){
-    buildWriter(currentChars[currentCharIndex], false);
-    el('status').textContent = radicalMode
-      ? 'Bộ thủ đang được tô màu riêng.'
-      : 'Đã trở về hiển thị một màu.';
-  }
+el('accessCode').addEventListener('keydown', e=>{
+  if(e.key === 'Enter') activatePaidCourse();
 });
 
 window.addEventListener('resize',()=>{
@@ -896,5 +976,26 @@ window.addEventListener('resize',()=>{
 
 fillCourses();
 </script>
+
+<div class="access-modal" id="accessModal">
+  <div class="access-box">
+    <div class="brand">TIẾNG TRUNG ALUNI</div>
+    <h3>🔒 Kích hoạt Khóa 50+</h3>
+    <p>Nhập số điện thoại hoặc email của bạn cùng mã kích hoạt. Mã sẽ gắn với người kích hoạt đầu tiên và có hiệu lực 12 tháng.</p>
+    <div class="access-grid">
+      <input id="accessIdentity" placeholder="Số điện thoại hoặc email">
+      <input id="accessCode" placeholder="Mã kích hoạt, ví dụ 50P-ABCD-EFGH" autocomplete="off">
+    </div>
+    <div class="free-note">
+      Không có mã vẫn dùng miễn phí phần Tra chữ, nghe, bộ thủ và luyện viết chữ Hán.
+    </div>
+    <div class="access-msg" id="accessMsg"></div>
+    <div class="access-actions">
+      <button class="btn ghost" id="accessCancelBtn">Để sau</button>
+      <button class="btn primary" id="accessActivateBtn">Kích hoạt</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

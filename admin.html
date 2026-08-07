@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aluni Admin - Mã kích hoạt</title>
+<style>
+:root{--bg:#f5f0e7;--paper:#fffdf8;--ink:#24372e;--muted:#6f776f;--green:#5f7f6c;--line:#ddd6ca}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Arial}
+.wrap{width:min(1000px,calc(100% - 24px));margin:auto;padding:24px 0 50px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:14px}
+h1{margin:4px 0 8px}.muted{color:var(--muted)}input,select,button{font:inherit}
+input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:white}
+button{padding:11px 14px;border-radius:12px;border:0;font-weight:800;cursor:pointer}
+.primary{background:var(--green);color:white}.ghost{background:white;border:1px solid var(--line)}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.row{display:flex;gap:8px;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+code{font-weight:800}.status{min-height:22px;margin-top:8px;font-weight:700}
+@media(max-width:720px){.grid{grid-template-columns:1fr}.tablewrap{overflow:auto}}
+</style>
+<script src="access-config.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div style="font-weight:850;letter-spacing:.1em;color:#5f7f6c">TIẾNG TRUNG ALUNI</div>
+    <h1>Quản lý mã kích hoạt</h1>
+    <p class="muted">Trang dành riêng cho quản trị. Mã admin không lưu vào website công khai.</p>
+    <div class="grid">
+      <div><label>Mã quản trị</label><input id="adminKey" type="password" placeholder="Nhập ADMIN_SECRET"></div>
+      <div><label>Khóa học</label><select id="course"><option value="50plus">50+ Phản xạ</option></select></div>
+      <div><label>Số mã cần tạo</label><input id="count" type="number" min="1" max="200" value="20"></div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="primary" id="generateBtn">Tạo mã</button>
+      <button class="ghost" id="refreshBtn">Tải danh sách</button>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="card">
+    <h2>Mã kích hoạt</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Mã</th><th>Trạng thái</th><th>Người dùng</th><th>Kích hoạt</th><th>Hết hạn</th><th></th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+const base=String(window.ALUNI_ACCESS_ENDPOINT||'').replace(/\/+$/,'');
+const $=id=>document.getElementById(id);
+function key(){return $('adminKey').value.trim()}
+function fmt(v){return v?new Date(v).toLocaleString('vi-VN'):'—'}
+async function api(path,opts={}){
+  opts.headers={...(opts.headers||{}),'X-Admin-Key':key()};
+  const r=await fetch(base+path,opts);
+  const j=await r.json();
+  if(!r.ok) throw new Error(j.error||'Lỗi');
+  return j;
+}
+async function refresh(){
+  $('status').textContent='Đang tải...';
+  try{
+    const j=await api('/admin/codes?course_id='+encodeURIComponent($('course').value));
+    $('tbody').innerHTML='';
+    j.codes.forEach(x=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td><code>${x.code}</code></td>
+        <td>${x.status==='unused'?'Chưa dùng':x.status==='active'?'Đang dùng':'Đã khóa'}</td>
+        <td>${x.identity||'—'}</td><td>${fmt(x.activated_at)}</td><td>${fmt(x.expires_at)}</td>
+        <td><button class="ghost lockBtn" data-id="${x.id}">${x.status==='blocked'?'Mở':'Khóa'}</button></td>`;
+      $('tbody').appendChild(tr);
+    });
+    document.querySelectorAll('.lockBtn').forEach(b=>b.onclick=()=>toggle(b.dataset.id));
+    $('status').textContent=`Có ${j.codes.length} mã.`;
+  }catch(e){$('status').textContent=e.message}
+}
+async function generate(){
+  try{
+    const j=await api('/admin/generate',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({course_id:$('course').value,count:Number($('count').value||1)})
+    });
+    $('status').textContent=`Đã tạo ${j.codes.length} mã mới.`;
+    await refresh();
+  }catch(e){$('status').textContent=e.message}
+}
+async function toggle(id){
+  try{
+    await api('/admin/toggle',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id})
+    });
+    await refresh();
+  }catch(e){$('status').textContent=e.message}
+}
+$('generateBtn').onclick=generate;$('refreshBtn').onclick=refresh;
+</script>
+</body></html>
