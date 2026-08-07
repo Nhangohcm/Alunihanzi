@@ -99,6 +99,21 @@
     .admin.show{display:block}
     .admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .admin-note{background:#f8f4ec;border:1px dashed var(--line);padding:12px;border-radius:13px;color:var(--muted);font-size:.9rem;line-height:1.5}
+    
+    .radical-info-box{
+      width:min(620px,94%);margin:14px auto 0;padding:14px 16px;
+      border:1px solid var(--line);background:#faf7f0;border-radius:16px;
+      text-align:left;line-height:1.55
+    }
+    .radical-info-title{font-weight:850;margin-bottom:7px;color:var(--ink)}
+    .radical-info-row{display:grid;grid-template-columns:105px 1fr;gap:8px;margin:4px 0}
+    .radical-info-key{color:var(--muted);font-weight:700}
+    .radical-info-value{font-weight:650}
+    .radical-loading{color:var(--muted);font-style:italic}
+    @media(max-width:480px){
+      .radical-info-row{grid-template-columns:88px 1fr}
+    }
+
     footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:6px}
     @media(max-width:760px){
       .words{grid-template-columns:repeat(2,1fr)}
@@ -120,7 +135,7 @@
     <div class="brand">TIẾNG TRUNG ALUNI</div>
     <h1>Luyện viết chữ Hán</h1>
     <p class="subtitle">Tìm từ trong khóa học, nghe phát âm và luyện viết từng chữ.</p>
-    <p class="hint" style="text-align:center;margin-top:8px">Trên điện thoại, bấm 🔊 để nghe. Nếu máy chưa có giọng Trung, web sẽ hướng dẫn bật giọng phù hợp.</p>
+    <p class="hint" style="text-align:center;margin-top:8px">Bấm 🔊 để nghe. Khả năng đọc phụ thuộc giọng tiếng Trung có sẵn trên thiết bị; phần luyện viết và bộ thủ không phụ thuộc âm thanh.</p>
   </header>
 
   <section class="card">
@@ -185,6 +200,12 @@
       <span class="dot rad"></span>Bộ thủ
       <span class="dot rest"></span>Phần còn lại
     </div>
+
+    <div class="radical-info-box" id="radicalInfoBox">
+      <div class="radical-info-title">Giải thích bộ thủ</div>
+      <div id="radicalInfoContent" class="radical-loading">Chọn một chữ để xem thông tin bộ thủ.</div>
+    </div>
+
     <div class="status" id="status"></div>
   </section>
 
@@ -228,6 +249,8 @@
 </div>
 
 <script>
+const RADICAL_VI = {"一": ["Nhất", "một"], "丨": ["Cổn", "nét sổ"], "丶": ["Chủ", "chấm"], "丿": ["Phiệt", "nét phẩy"], "乙": ["Ất", "can Ất / nét cong"], "亅": ["Quyết", "nét móc"], "二": ["Nhị", "hai"], "亠": ["Đầu", "phần đầu / nắp"], "人": ["Nhân", "người"], "亻": ["Nhân đứng", "người"], "儿": ["Nhi", "trẻ em / chân người"], "入": ["Nhập", "vào"], "八": ["Bát", "tám / chia ra"], "冂": ["Quynh", "khung mở"], "冖": ["Mịch", "mái che"], "冫": ["Băng", "nước đá"], "几": ["Kỷ", "ghế nhỏ"], "凵": ["Khảm", "khung lõm"], "刀": ["Đao", "dao"], "刂": ["Đao đứng", "dao"], "力": ["Lực", "sức mạnh"], "勹": ["Bao", "bao bọc"], "匕": ["Chủy", "cái thìa / dao găm"], "匚": ["Phương", "hộp / khung"], "十": ["Thập", "mười"], "卜": ["Bốc", "bói"], "卩": ["Tiết", "đốt tre / quỳ"], "厂": ["Hán", "vách đá"], "厶": ["Khư", "riêng tư"], "又": ["Hựu", "lại / tay phải"], "口": ["Khẩu", "miệng"], "囗": ["Vi", "vây quanh"], "土": ["Thổ", "đất"], "士": ["Sĩ", "kẻ sĩ"], "夂": ["Truy", "đi xuống"], "夕": ["Tịch", "buổi tối"], "大": ["Đại", "lớn"], "女": ["Nữ", "nữ giới"], "子": ["Tử", "con"], "宀": ["Miên", "mái nhà"], "寸": ["Thốn", "tấc"], "小": ["Tiểu", "nhỏ"], "尢": ["Uông", "yếu / què"], "尸": ["Thi", "xác / thân người"], "山": ["Sơn", "núi"], "巛": ["Xuyên", "sông"], "工": ["Công", "công việc"], "己": ["Kỷ", "bản thân"], "巾": ["Cân", "khăn"], "干": ["Can", "khô / can"], "幺": ["Yêu", "nhỏ"], "广": ["Nghiễm", "mái nhà rộng"], "廴": ["Dẫn", "bước dài"], "廾": ["Củng", "hai tay"], "弋": ["Dặc", "bắn / cọc"], "弓": ["Cung", "cây cung"], "彐": ["Kệ", "mõm lợn / nét quét"], "彡": ["Sam", "lông / vân"], "彳": ["Xích", "bước chân"], "心": ["Tâm", "tim / tâm"], "忄": ["Tâm đứng", "tâm / cảm xúc"], "戈": ["Qua", "giáo mác / vũ khí"], "户": ["Hộ", "cửa một cánh"], "手": ["Thủ", "tay"], "扌": ["Thủ đứng", "tay / động tác"], "支": ["Chi", "cành / chống"], "攵": ["Phộc", "đánh / hành động"], "文": ["Văn", "văn chương"], "斗": ["Đẩu", "cái đấu"], "斤": ["Cân", "rìu"], "方": ["Phương", "phương hướng"], "日": ["Nhật", "mặt trời / ngày"], "曰": ["Viết", "nói"], "月": ["Nguyệt", "mặt trăng / tháng"], "木": ["Mộc", "cây / gỗ"], "欠": ["Khiếm", "thiếu / há miệng"], "止": ["Chỉ", "dừng / chân"], "歹": ["Đãi", "xấu / chết"], "殳": ["Thù", "vũ khí"], "毋": ["Vô", "chớ / đừng"], "比": ["Tỷ", "so sánh"], "毛": ["Mao", "lông"], "氏": ["Thị", "họ"], "气": ["Khí", "hơi / khí"], "水": ["Thủy", "nước"], "氵": ["Thủy", "nước"], "火": ["Hỏa", "lửa"], "灬": ["Hỏa", "lửa"], "爪": ["Trảo", "móng vuốt"], "爫": ["Trảo", "móng / tay"], "父": ["Phụ", "cha"], "爻": ["Hào", "hào quẻ"], "爿": ["Tường", "mảnh gỗ"], "片": ["Phiến", "mảnh / tấm"], "牙": ["Nha", "răng"], "牛": ["Ngưu", "trâu / bò"], "牜": ["Ngưu đứng", "trâu / bò"], "犬": ["Khuyển", "chó"], "犭": ["Khuyển đứng", "động vật"], "玉": ["Ngọc", "ngọc"], "王": ["Ngọc/Vương", "ngọc / vua"], "瓜": ["Qua", "dưa"], "瓦": ["Ngõa", "ngói"], "甘": ["Cam", "ngọt"], "生": ["Sinh", "sinh ra"], "用": ["Dụng", "dùng"], "田": ["Điền", "ruộng"], "疒": ["Nạch", "bệnh tật"], "癶": ["Bát", "bước chân"], "白": ["Bạch", "trắng"], "皮": ["Bì", "da"], "皿": ["Mãnh", "đồ đựng"], "目": ["Mục", "mắt"], "矛": ["Mâu", "giáo"], "矢": ["Thỉ", "mũi tên"], "石": ["Thạch", "đá"], "示": ["Thị", "thần / chỉ thị"], "礻": ["Thị", "thần / lễ"], "禾": ["Hòa", "lúa"], "穴": ["Huyệt", "hang"], "立": ["Lập", "đứng"], "竹": ["Trúc", "tre"], "⺮": ["Trúc", "tre"], "米": ["Mễ", "gạo"], "糸": ["Mịch", "tơ"], "纟": ["Mịch", "tơ / sợi"], "缶": ["Phẫu", "đồ sành"], "网": ["Võng", "lưới"], "罒": ["Võng", "lưới"], "羊": ["Dương", "dê / cừu"], "羽": ["Vũ", "lông vũ"], "老": ["Lão", "già"], "而": ["Nhi", "mà / râu"], "耒": ["Lỗi", "cái cày"], "耳": ["Nhĩ", "tai"], "聿": ["Duật", "bút"], "肉": ["Nhục", "thịt"], "月(肉)": ["Nhục", "thịt / cơ thể"], "臣": ["Thần", "bề tôi"], "自": ["Tự", "tự mình"], "至": ["Chí", "đến"], "臼": ["Cữu", "cối"], "舌": ["Thiệt", "lưỡi"], "舛": ["Suyễn", "trái ngược"], "舟": ["Chu", "thuyền"], "艮": ["Cấn", "dừng / quẻ Cấn"], "色": ["Sắc", "màu sắc"], "艹": ["Thảo", "cỏ / thực vật"], "虍": ["Hổ", "hổ"], "虫": ["Trùng", "côn trùng"], "血": ["Huyết", "máu"], "行": ["Hành", "đi / đường"], "衣": ["Y", "áo"], "衤": ["Y", "áo / quần áo"], "襾": ["Á", "che phủ"], "見": ["Kiến", "nhìn"], "见": ["Kiến", "nhìn"], "角": ["Giác", "sừng / góc"], "言": ["Ngôn", "lời nói"], "讠": ["Ngôn", "lời nói"], "谷": ["Cốc", "thung lũng"], "豆": ["Đậu", "đậu / đồ đựng"], "豕": ["Thỉ", "lợn"], "豸": ["Trãi", "loài thú"], "貝": ["Bối", "vỏ sò / tiền"], "贝": ["Bối", "vỏ sò / tiền"], "赤": ["Xích", "đỏ"], "走": ["Tẩu", "chạy / đi"], "足": ["Túc", "chân"], "⻊": ["Túc", "chân / bước"], "身": ["Thân", "thân thể"], "車": ["Xa", "xe"], "车": ["Xa", "xe"], "辛": ["Tân", "cay / hình phạt"], "辰": ["Thần", "thìn / thời gian"], "辵": ["Sước", "đi"], "辶": ["Sước", "đi / di chuyển"], "邑": ["Ấp", "làng / thành"], "阝": ["Ấp/Phụ", "làng hoặc gò đất"], "酉": ["Dậu", "rượu / bình rượu"], "釆": ["Biện", "phân biệt"], "里": ["Lý", "làng / dặm"], "金": ["Kim", "kim loại / vàng"], "钅": ["Kim", "kim loại"], "長": ["Trường", "dài"], "长": ["Trường", "dài"], "門": ["Môn", "cửa"], "门": ["Môn", "cửa"], "阜": ["Phụ", "gò đất"], "隶": ["Đãi", "kịp / lệ thuộc"], "隹": ["Chuy", "chim đuôi ngắn"], "雨": ["Vũ", "mưa"], "青": ["Thanh", "xanh"], "非": ["Phi", "không / sai"], "面": ["Diện", "mặt"], "革": ["Cách", "da thuộc"], "韋": ["Vi", "da thuộc"], "韦": ["Vi", "da thuộc"], "韭": ["Cửu", "hẹ"], "音": ["Âm", "âm thanh"], "頁": ["Hiệt", "đầu / trang"], "页": ["Hiệt", "đầu / trang"], "風": ["Phong", "gió"], "风": ["Phong", "gió"], "飛": ["Phi", "bay"], "飞": ["Phi", "bay"], "食": ["Thực", "ăn / thức ăn"], "饣": ["Thực", "ăn / thức ăn"], "首": ["Thủ", "đầu"], "香": ["Hương", "thơm"], "馬": ["Mã", "ngựa"], "马": ["Mã", "ngựa"], "骨": ["Cốt", "xương"], "高": ["Cao", "cao"], "髟": ["Bưu", "tóc dài"], "鬥": ["Đấu", "đánh nhau"], "鬯": ["Sưởng", "rượu cúng"], "鬲": ["Cách", "nồi ba chân"], "鬼": ["Quỷ", "ma quỷ"], "魚": ["Ngư", "cá"], "鱼": ["Ngư", "cá"], "鳥": ["Điểu", "chim"], "鸟": ["Điểu", "chim"], "鹵": ["Lỗ", "muối"], "鹿": ["Lộc", "hươu"], "麥": ["Mạch", "lúa mạch"], "麦": ["Mạch", "lúa mạch"], "麻": ["Ma", "gai"], "黃": ["Hoàng", "vàng"], "黄": ["Hoàng", "vàng"], "黍": ["Thử", "kê"], "黑": ["Hắc", "đen"], "黹": ["Chỉ", "thêu"], "黽": ["Mãnh", "ếch"], "鼎": ["Đỉnh", "vạc"], "鼓": ["Cổ", "trống"], "鼠": ["Thử", "chuột"], "鼻": ["Tỵ", "mũi"], "齊": ["Tề", "đều"], "齐": ["Tề", "đều"], "齒": ["Xỉ", "răng"], "齿": ["Xỉ", "răng"], "龍": ["Long", "rồng"], "龙": ["Long", "rồng"], "龜": ["Quy", "rùa"], "龟": ["Quy", "rùa"], "龠": ["Dược", "sáo"]};
+
 const STORAGE_KEY = 'aluni_hanzi_courses_v1';
 let data = loadData();
 let writer = null;
@@ -235,6 +258,107 @@ let currentItem = null;
 let currentChars = [];
 let currentCharIndex = 0;
 let radicalMode = true;
+
+
+let hanziMetaMap = null;
+let hanziMetaLoading = null;
+
+async function ensureHanziMeta(){
+  if(hanziMetaMap) return hanziMetaMap;
+  if(hanziMetaLoading) return hanziMetaLoading;
+
+  hanziMetaLoading = fetch('https://cdn.jsdelivr.net/gh/skishore/makemeahanzi@master/dictionary.txt')
+    .then(r => {
+      if(!r.ok) throw new Error('metadata fetch failed');
+      return r.text();
+    })
+    .then(txt => {
+      const map = {};
+      txt.split(/\r?\n/).forEach(line => {
+        const s = line.trim();
+        if(!s) return;
+        try{
+          const obj = JSON.parse(s);
+          if(obj.character) map[obj.character] = obj;
+        }catch(e){}
+      });
+      hanziMetaMap = map;
+      return map;
+    })
+    .catch(err => {
+      console.warn('Không tải được dữ liệu cấu tạo chữ:', err);
+      hanziMetaMap = {};
+      return hanziMetaMap;
+    });
+
+  return hanziMetaLoading;
+}
+
+function radicalInfoHtml(ch, meta){
+  if(!meta){
+    return `
+      <div class="radical-info-row">
+        <div class="radical-info-key">Chữ</div>
+        <div class="radical-info-value">${escapeHtml(ch)}</div>
+      </div>
+      <div class="radical-info-row">
+        <div class="radical-info-key">Bộ thủ</div>
+        <div class="radical-info-value">Đang cập nhật dữ liệu bộ thủ.</div>
+      </div>`;
+  }
+
+  const radical = meta.radical || '—';
+  const info = RADICAL_VI[radical] || null;
+  const decomposition = meta.decomposition || '—';
+  const strokeCount = Array.isArray(meta.matches) ? meta.matches.length : '';
+
+  return `
+    <div class="radical-info-row">
+      <div class="radical-info-key">Bộ thủ</div>
+      <div class="radical-info-value">
+        <strong style="font-size:1.25em">${escapeHtml(radical)}</strong>
+        ${info ? ` · Bộ ${escapeHtml(info[0])}` : ''}
+      </div>
+    </div>
+    ${info ? `
+    <div class="radical-info-row">
+      <div class="radical-info-key">Gợi nhớ</div>
+      <div class="radical-info-value">${escapeHtml(info[1])}</div>
+    </div>` : ''}
+    <div class="radical-info-row">
+      <div class="radical-info-key">Cấu tạo</div>
+      <div class="radical-info-value">${escapeHtml(decomposition)}</div>
+    </div>
+    ${strokeCount ? `
+    <div class="radical-info-row">
+      <div class="radical-info-key">Số nét</div>
+      <div class="radical-info-value">${strokeCount}</div>
+    </div>` : ''}
+  `;
+}
+
+async function updateRadicalInfo(ch){
+  const box = el('radicalInfoContent');
+  if(!box) return;
+
+  box.innerHTML = '<span class="radical-loading">Đang tải thông tin bộ thủ...</span>';
+
+  try{
+    const map = await ensureHanziMeta();
+    const meta = map[ch] || null;
+    box.innerHTML = radicalInfoHtml(ch, meta);
+  }catch(e){
+    box.innerHTML = `
+      <div class="radical-info-row">
+        <div class="radical-info-key">Chữ</div>
+        <div class="radical-info-value">${escapeHtml(ch)}</div>
+      </div>
+      <div class="radical-info-row">
+        <div class="radical-info-key">Bộ thủ</div>
+        <div class="radical-info-value">Chưa tải được dữ liệu. Phần luyện viết vẫn hoạt động bình thường.</div>
+      </div>`;
+  }
+}
 
 function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
 
@@ -444,6 +568,7 @@ function renderCharPills(){
 }
 
 function buildWriter(ch, startQuiz=false){
+  updateRadicalInfo(ch);
   const target=el('writerTarget');
   target.innerHTML='';
   const size=Math.min(320, Math.max(240, window.innerWidth-70));
@@ -523,14 +648,30 @@ function isHanziQuery(s){
   return /\p{Script=Han}/u.test(String(s || ''));
 }
 
+function normalizeLatin(s){
+  return String(s || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .replace(/ü/gi,'u')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g,'');
+}
+
+function isHanziQuery(s){
+  return /\p{Script=Han}/u.test(String(s || ''));
+}
+
+function isSingleHanzi(s){
+  const chars = [...String(s || '')].filter(ch => /\p{Script=Han}/u.test(ch));
+  return chars.length === 1 && String(s || '').trim() === chars[0];
+}
+
 function doSearch(){
   const raw = el('searchInput').value.trim();
   if(!raw) return renderItems([], 'Kết quả tìm kiếm');
 
-  const qLower = raw.toLowerCase();
   const qNorm = normalizeLatin(raw);
   const hanziInput = isHanziQuery(raw);
-
   const exactHanzi = [];
   const ranked = [];
 
@@ -539,8 +680,6 @@ function doSearch(){
     const pinyin = String(item.pinyin || '').trim();
     const vi = String(item.vi || '').trim();
 
-    // Nếu người học gõ chữ Hán và có mục khớp chính xác,
-    // chỉ hiện mục chính xác để tránh kéo theo hàng loạt câu dài.
     if(hanziInput && hanzi === raw){
       exactHanzi.push({...item, _course:course.name, _lesson:lesson.title});
       return;
@@ -554,12 +693,10 @@ function doSearch(){
       const pyNorm = normalizeLatin(pinyin);
       const viNorm = normalizeLatin(vi);
 
-      // Pinyin không cần dấu: zìxíngchē -> zixingche
       if(pyNorm === qNorm) score = Math.max(score, 100);
       else if(pyNorm.startsWith(qNorm)) score = Math.max(score, 90);
       else if(qNorm.length >= 2 && pyNorm.includes(qNorm)) score = Math.max(score, 80);
 
-      // Nghĩa Việt cũng có thể tra không dấu.
       if(viNorm === qNorm) score = Math.max(score, 95);
       else if(viNorm.startsWith(qNorm)) score = Math.max(score, 75);
       else if(qNorm.length >= 2 && viNorm.includes(qNorm)) score = Math.max(score, 60);
@@ -570,17 +707,36 @@ function doSearch(){
     }
   })));
 
+  // Khi gõ đúng 1 chữ Hán, luôn tạo 1 thẻ luyện riêng ở đầu.
+  if(isSingleHanzi(raw)){
+    const already = exactHanzi.some(x => x.hanzi === raw);
+    if(!already){
+      exactHanzi.unshift({
+        no:'',
+        hanzi:raw,
+        pinyin:'',
+        vi:'Luyện viết chữ này',
+        _course:'Tra chữ',
+        _lesson:'Chữ đơn'
+      });
+    }
+  }
+
   if(exactHanzi.length){
-    renderItems(exactHanzi, `Kết quả chính xác: ${raw}`);
+    // Với 1 chữ Hán, vẫn cho hiện các từ/câu chứa chữ đó phía sau để tham khảo.
+    if(isSingleHanzi(raw)){
+      ranked.sort((a,b)=>String(a.hanzi||'').length-String(b.hanzi||'').length);
+      renderItems([...exactHanzi, ...ranked], `Kết quả: ${raw}`);
+    }else{
+      renderItems(exactHanzi, `Kết quả chính xác: ${raw}`);
+    }
     return;
   }
 
   ranked.sort((a,b)=>{
     if(b._score !== a._score) return b._score - a._score;
-    // Ưu tiên từ/cụm ngắn hơn câu dài khi cùng điểm.
     return String(a.hanzi || '').length - String(b.hanzi || '').length;
   });
-
   renderItems(ranked, `Kết quả: ${raw}`);
 }
 el('searchBtn').addEventListener('click',doSearch);
