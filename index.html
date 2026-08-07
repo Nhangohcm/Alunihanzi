@@ -132,7 +132,15 @@
       width:min(460px,100%);background:var(--paper);border:1px solid var(--line);
       border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.2);padding:20px;
     }
-    .access-box h3{margin:0 0 8px;font-size:1.35rem}
+    .access-box{position:relative}
+    .access-close{
+      position:absolute;right:12px;top:10px;width:36px;height:36px;
+      border-radius:999px;border:1px solid var(--line);background:white;
+      color:var(--muted);font-size:1.25rem;font-weight:900;line-height:1;
+      display:flex;align-items:center;justify-content:center;padding:0;
+    }
+    .access-close:hover{background:#f3efe7;color:var(--ink)}
+    .access-box h3{margin:0 44px 8px 0;font-size:1.35rem}
     .access-box p{margin:0 0 14px;color:var(--muted);line-height:1.55}
     .access-grid{display:grid;gap:10px}
     .access-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
@@ -299,9 +307,29 @@ function openAccessModal(courseId){
   el('accessModal').classList.add('show');
   setTimeout(()=>el('accessIdentity').focus(),50);
 }
-function closeAccessModal(){
-  el('accessModal').classList.remove('show');
+function closeAccessModal(goFree = true){
+  const modal = el('accessModal');
+  if(modal) modal.classList.remove('show');
+
   pendingPaidCourseId = null;
+
+  if(goFree){
+    // Chuyển hẳn sang khu tra chữ miễn phí để người dùng không bị mắc ở khóa trả phí.
+    const searchTab = document.querySelector('.tab[data-mode="searchMode"]');
+    if(searchTab){
+      searchTab.click();
+    }
+
+    if(lessonSelect){
+      lessonSelect.innerHTML = '<option>🔒 Khóa 50+ cần mã kích hoạt</option>';
+    }
+
+    renderItems([], 'Tra chữ miễn phí');
+    setTimeout(()=>{
+      const input = el('searchInput');
+      if(input) input.focus();
+    }, 80);
+  }
 }
 async function activatePaidCourse(){
   const identity = el('accessIdentity').value.trim();
@@ -347,7 +375,7 @@ async function activatePaidCourse(){
 
     const courseId = pendingPaidCourseId || '50plus';
     setTimeout(()=>{
-      closeAccessModal();
+      closeAccessModal(false);
       courseSelect.value = courseId;
       fillLessonsUnlocked();
     },500);
@@ -962,10 +990,27 @@ el('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter') doSearch()}
 
 
 el('accessActivateBtn').addEventListener('click', activatePaidCourse);
-el('accessCancelBtn').addEventListener('click', closeAccessModal);
-el('accessModal').addEventListener('click', (e)=>{
-  if(e.target === el('accessModal')) closeAccessModal();
+
+el('accessCancelBtn').addEventListener('click', ()=>{
+  closeAccessModal(true);
 });
+
+el('accessCloseBtn').addEventListener('click', ()=>{
+  closeAccessModal(true);
+});
+
+el('accessModal').addEventListener('click', (e)=>{
+  if(e.target === el('accessModal')){
+    closeAccessModal(true);
+  }
+});
+
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape' && el('accessModal').classList.contains('show')){
+    closeAccessModal(true);
+  }
+});
+
 el('accessCode').addEventListener('keydown', e=>{
   if(e.key === 'Enter') activatePaidCourse();
 });
@@ -978,16 +1023,17 @@ fillCourses();
 </script>
 
 <div class="access-modal" id="accessModal">
-  <div class="access-box">
+  <div class="access-box" role="dialog" aria-modal="true" aria-labelledby="accessTitle">
+    <button class="access-close" id="accessCloseBtn" aria-label="Đóng">×</button>
     <div class="brand">TIẾNG TRUNG ALUNI</div>
-    <h3>🔒 Kích hoạt Khóa 50+</h3>
+    <h3 id="accessTitle">🔒 Kích hoạt Khóa 50+</h3>
     <p>Nhập số điện thoại hoặc email của bạn cùng mã kích hoạt. Mã sẽ gắn với người kích hoạt đầu tiên và có hiệu lực 12 tháng.</p>
     <div class="access-grid">
       <input id="accessIdentity" placeholder="Số điện thoại hoặc email">
       <input id="accessCode" placeholder="Mã kích hoạt, ví dụ 50P-ABCD-EFGH" autocomplete="off">
     </div>
     <div class="free-note">
-      Không có mã vẫn dùng miễn phí phần Tra chữ, nghe, bộ thủ và luyện viết chữ Hán.
+      Chưa có mã? Bấm “Để sau” để tiếp tục Tra chữ, nghe, xem bộ thủ và luyện viết miễn phí.
     </div>
     <div class="access-msg" id="accessMsg"></div>
     <div class="access-actions">
