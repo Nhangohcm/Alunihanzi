@@ -348,6 +348,49 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
     max-width:none!important;
   }
 }
+
+/* Mobile sentence picker: keep the video visible while the learner browses. */
+@media(max-width:780px){
+  #shadowSection,#shadowSection .wrap{overflow-x:clip!important}
+  #shadowPlayerCard.transcript-mode{
+    overflow:visible!important;
+    padding-top:8px!important;
+  }
+  #shadowPlayerCard.transcript-mode>.shadow-main{
+    position:sticky;
+    top:8px;
+    z-index:30;
+    padding:6px;
+    border:1px solid var(--line);
+    border-radius:16px;
+    background:rgba(255,253,248,.98);
+    box-shadow:0 10px 28px rgba(38,56,47,.16);
+  }
+  #shadowPlayerCard.transcript-mode .video-frame{
+    width:min(88vw,360px)!important;
+    max-width:100%!important;
+    margin:0 auto!important;
+  }
+  #shadowPlayerCard.transcript-mode .shadow-controls,
+  #shadowPlayerCard.transcript-mode .shadow-live,
+  #shadowPlayerCard.transcript-mode .shadow-live-nav{display:none!important}
+  #shadowPlayerCard.transcript-mode .transcript-toggle{
+    margin:7px 0 0!important;
+    padding:9px 10px!important;
+    font-size:.95rem!important;
+  }
+  #shadowPlayerCard.transcript-mode #shadowTranscript:not([hidden]){
+    height:auto!important;
+    max-height:none!important;
+    margin-top:12px!important;
+    padding:0 2px 18px!important;
+    overflow:visible!important;
+  }
+  #shadowPlayerCard.transcript-mode #shadowTranscript .transcript-line.active{
+    outline:2px solid #718875;
+    outline-offset:1px;
+  }
+}
 </style>
 </head>
 <body>
@@ -637,7 +680,7 @@ if(demoCheck){
     </div>
 
     <div class="module-card shadow-grid" id="shadowPlayerCard" style="display:none">
-      <div>
+      <div class="shadow-main">
         <div class="video-frame">
           <div class="video-demo" id="youtubePlayer"></div>
         </div>
@@ -822,6 +865,7 @@ async function loadShadowVideo(videoId){
     shadowSegments = Array.isArray(j.segments) ? j.segments : [];
     shadowCurrentIndex = -1;
     repeatCurrentLine = false;
+    setShadowTranscriptOpen(false);
     document.getElementById('repeatLineBtn').textContent = '🔁 Lặp câu';
 
     renderShadowTranscript();
@@ -887,9 +931,32 @@ function renderShadowTranscript(){
         shadowPlayer.playVideo();
       }
       highlightShadowLine(i);
+      if(window.matchMedia('(max-width: 780px)').matches){
+        closeShadowTranscript(true);
+      }
     });
     box.appendChild(line);
   });
+}
+
+function setShadowTranscriptOpen(open){
+  const card = document.getElementById('shadowPlayerCard');
+  const btn = document.getElementById('toggleTranscriptBtn');
+  const box = document.getElementById('shadowTranscript');
+  if(!card || !btn || !box) return;
+  box.hidden = !open;
+  card.classList.toggle('transcript-mode', open);
+  btn.textContent = open ? '✕ Đóng danh sách' : '☰ Xem danh sách toàn bài';
+}
+
+function closeShadowTranscript(returnToVideo=false){
+  setShadowTranscriptOpen(false);
+  if(returnToVideo){
+    requestAnimationFrame(()=>{
+      const card = document.getElementById('shadowPlayerCard');
+      if(card) card.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  }
 }
 
 function renderShadowLive(index){
@@ -998,8 +1065,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   const transcriptBox = document.getElementById('shadowTranscript');
   if(transcriptBtn && transcriptBox){
     transcriptBtn.addEventListener('click', ()=>{
-      transcriptBox.hidden = !transcriptBox.hidden;
-      transcriptBtn.textContent = transcriptBox.hidden ? '☰ Xem danh sách toàn bài' : '✕ Đóng danh sách toàn bài';
+      setShadowTranscriptOpen(transcriptBox.hidden);
     });
   }
 
