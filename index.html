@@ -7,7 +7,6 @@
   <title>Tiếng Trung Aluni - Luyện viết chữ Hán</title>
   <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
   <script src="data.js"></script>
-  <script src="tts-config.js"></script>
   <style>
     :root{
       --bg:#f5f0e7; --paper:#fffdf8; --ink:#24372e; --muted:#6f776f;
@@ -136,7 +135,7 @@
     <div class="brand">TIẾNG TRUNG ALUNI</div>
     <h1>Luyện viết chữ Hán</h1>
     <p class="subtitle">Tìm từ trong khóa học, nghe phát âm và luyện viết từng chữ.</p>
-    <p class="hint" style="text-align:center;margin-top:8px">Bấm 🔊 để nghe. Khi Cloud TTS được bật, điện thoại và máy tính đều dùng cùng một giọng tiếng Trung.</p>
+    <p class="hint" style="text-align:center;margin-top:8px">Bấm 🔊 để nghe. Khả năng đọc phụ thuộc giọng tiếng Trung có sẵn trên thiết bị; phần luyện viết và bộ thủ không phụ thuộc âm thanh.</p>
   </header>
 
   <section class="card">
@@ -435,11 +434,12 @@ function escapeHtml(s){
 }
 
 let cachedVoices = [];
-let currentAudio = null;
+let voicesReady = false;
 
 function loadVoices(){
   if(!('speechSynthesis' in window)) return [];
   cachedVoices = window.speechSynthesis.getVoices() || [];
+  voicesReady = cachedVoices.length > 0;
   return cachedVoices;
 }
 
@@ -452,6 +452,8 @@ if('speechSynthesis' in window){
 
 function pickChineseVoice(){
   const voices = cachedVoices.length ? cachedVoices : loadVoices();
+
+  // Ưu tiên tiếng Trung phổ thông Trung Quốc đại lục.
   return (
     voices.find(v => /^zh-CN$/i.test(v.lang)) ||
     voices.find(v => /^zh-Hans/i.test(v.lang)) ||
@@ -461,71 +463,72 @@ function pickChineseVoice(){
   );
 }
 
-function speakLocal(text){
-  if(!('speechSynthesis' in window)) return false;
+function speak(text){
+  if(!('speechSynthesis' in window)){
+    alert('Thiết bị này chưa hỗ trợ chức năng đọc văn bản.');
+    return;
+  }
+
   const synth = window.speechSynthesis;
   synth.cancel();
 
-  const voice = pickChineseVoice();
-  const u = new SpeechSynthesisUtterance(String(text || ''));
-  u.lang = voice?.lang || 'zh-CN';
-  if(voice) u.voice = voice;
-  u.rate = 0.78;
-  u.pitch = 1;
-  u.volume = 1;
+  const trySpeak = (attempt = 0) => {
+    loadVoices();
+    const voice = pickChineseVoice();
+    const u = new SpeechSynthesisUtterance(String(text || ''));
 
-  try{
-    synth.speak(u);
-    return true;
-  }catch(e){
-    return false;
-  }
-}
+    u.lang = voice?.lang || 'zh-CN';
+    if(voice) u.voice = voice;
+    u.rate = 0.78;
+    u.pitch = 1;
+    u.volume = 1;
 
-function speak(text){
-  const endpoint = String(window.ALUNI_TTS_ENDPOINT || '').trim();
-  const content = String(text || '').trim();
-  if(!content) return;
+    let started = false;
 
-  // Nếu Cloud TTS đã cấu hình, ưu tiên tuyệt đối.
-  if(endpoint){
+    u.onstart = () => {
+      started = true;
+    };
+
+    u.onerror = (e) => {
+      // Một số điện thoại tải voice chậm. Thử lại vài lần trước khi báo lỗi.
+      if(attempt < 2){
+        setTimeout(() => trySpeak(attempt + 1), 450);
+        return;
+      }
+
+      const code = e && e.error ? e.error : '';
+      if(!voice){
+        alert(
+          'Điện thoại chưa có giọng đọc tiếng Trung phù hợp. ' +
+          'Hãy bật/cài giọng Tiếng Trung trong phần Ngôn ngữ / Chuyển văn bản thành giọng nói của máy, rồi mở lại trang.'
+        );
+      }else{
+        alert('Chưa phát được âm thanh trên thiết bị này. Hãy thử tăng âm lượng hoặc mở lại trình duyệt.');
+      }
+    };
+
     try{
-      if(currentAudio){
-        currentAudio.pause();
-        currentAudio.src = '';
-      }
+      synth.speak(u);
 
-      const sep = endpoint.includes('?') ? '&' : '?';
-      const url = `${endpoint}${sep}text=${encodeURIComponent(content)}`;
-      const audio = new Audio(url);
-      currentAudio = audio;
-      audio.preload = 'auto';
-
-      audio.onerror = () => {
-        // Cloud TTS lỗi thì vẫn có TTS cục bộ làm phương án dự phòng.
-        if(!speakLocal(content)){
-          alert('Chưa phát được âm thanh. Hãy kiểm tra kết nối mạng rồi thử lại.');
-        }
-      };
-
-      const p = audio.play();
-      if(p && typeof p.catch === 'function'){
-        p.catch(() => {
-          if(!speakLocal(content)){
-            alert('Trình duyệt đang chặn phát âm thanh. Hãy bấm lại nút loa.');
+      // Trên một số mobile, lần gọi đầu có thể không phát nếu voice chưa sẵn sàng.
+      if(!started && !voice && attempt < 2){
+        setTimeout(() => {
+          if(!synth.speaking && !synth.pending){
+            trySpeak(attempt + 1);
           }
-        });
+        }, 500);
       }
-      return;
-    }catch(e){
-      // fall through to local TTS
+    }catch(err){
+      if(attempt < 2){
+        setTimeout(() => trySpeak(attempt + 1), 450);
+      }else{
+        alert('Không thể phát âm thanh trên thiết bị này.');
+      }
     }
-  }
+  };
 
-  // Chưa cấu hình Cloud TTS: dùng giọng của thiết bị.
-  if(!speakLocal(content)){
-    alert('Thiết bị chưa có giọng Trung. Khi bật Cloud TTS, phần nghe sẽ hoạt động độc lập với thiết bị.');
-  }
+  // Bảo đảm thao tác phát xuất phát trực tiếp từ cú chạm của người dùng.
+  trySpeak(0);
 }
 
 function extractHanzi(text){
