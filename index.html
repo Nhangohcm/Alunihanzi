@@ -122,20 +122,34 @@ input,select{width:100%;border:1px solid var(--line);border-radius:13px;backgrou
   margin-bottom:16px;
 }
 .module-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.shadow-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
-.video-demo{
+.shadow-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:14px;max-width:100%;overflow:hidden}
+.shadow-grid>div{min-width:0;max-width:100%}
+.video-frame{
+  position:relative;
+  width:100%;
+  max-width:100%;
   aspect-ratio:16/9;
+  overflow:hidden;
+  border-radius:18px;
+  background:#202522;
+}
+.video-demo{
+  position:absolute;
+  inset:0;
+  width:100%!important;
+  height:100%!important;
   background:#202522;
   color:white;
-  border-radius:18px;
   display:flex;
   align-items:center;
   justify-content:center;
   font-weight:850;
   font-size:1.1rem;
 }
-.shadow-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.transcript-list{display:grid;gap:8px;max-height:430px;overflow:auto}
+.video-frame iframe{position:absolute;inset:0;width:100%!important;height:100%!important;border:0}
+.shadow-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;max-width:100%}
+.shadow-controls .btn{min-width:0;white-space:normal}
+.transcript-list{display:grid;gap:8px;max-height:430px;max-width:100%;min-width:0;overflow:auto;overflow-x:hidden}
 .transcript-line{
   border:1px solid var(--line);
   background:white;
@@ -198,11 +212,89 @@ input,select{width:100%;border:1px solid var(--line);border-radius:13px;backgrou
   .app-nav{width:100%}
   .module-grid,.shadow-grid,.grammar-grid{grid-template-columns:1fr}
   .app-nav-btn{padding:7px 10px;font-size:.86rem}
+  #shadowSection{width:100%;max-width:100%;overflow-x:hidden}
+  #shadowSection .wrap{width:calc(100% - 16px);max-width:100%;overflow-x:hidden}
+  #shadowPlayerCard{width:100%;max-width:100%;overflow:hidden;padding:12px 10px}
+  #shadowPlayerCard>div{width:100%;max-width:100%;min-width:0}
+  #shadowPlayerCard .video-frame{
+    width:82vw;
+    max-width:340px;
+    min-width:0;
+    margin:0 auto;
+    border-radius:14px;
+    contain:layout paint;
+  }
+  #shadowPlayerCard .video-frame iframe,
+  #shadowPlayerCard #youtubePlayer{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    height:100%!important;
+    display:block!important;
+  }
+  .shadow-controls{width:calc(100% - 12px);margin:12px auto 0}
+  .shadow-controls .btn{flex:1 1 calc(33.333% - 8px);padding:11px 8px;font-size:.96rem;line-height:1.25}
+  .transcript-list{max-height:none;margin-top:14px}
+  .transcript-line{padding:14px 13px;line-height:1.45}
+  .transcript-zh{font-size:1.38rem;line-height:1.4}
+  .transcript-py{font-size:1.08rem;line-height:1.45;margin-top:4px}
+  .transcript-vi{font-size:1.05rem;line-height:1.45;margin-top:4px}
 }
 
 footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
 @media(max-width:760px){.words{grid-template-columns:repeat(2,1fr)}.row,.hero-demo{grid-template-columns:1fr}.hero-demo{text-align:center}}
-@media(max-width:480px){.wrap{width:min(100% - 12px,1080px);padding-top:12px}.card{padding:14px;border-radius:18px}.searchrow{grid-template-columns:1fr}.words{gap:8px}.word{min-height:120px}.ri{grid-template-columns:86px 1fr}}
+@media(max-width:480px){.wrap{width:min(100% - 12px,1080px);padding-top:12px}.card{padding:14px;border-radius:18px}.module-card{padding:12px;border-radius:18px}.searchrow{grid-template-columns:1fr}.words{gap:8px}.word{min-height:120px}.ri{grid-template-columns:86px 1fr}#shadowSection .wrap{width:calc(100% - 12px)}#shadowPlayerCard{padding:10px 6px}#shadowPlayerCard .video-frame{width:78vw;max-width:320px;border-radius:12px}.shadow-controls{width:calc(100% - 16px)}.shadow-controls .btn{flex:1 1 calc(50% - 8px);font-size:1rem;padding:12px 8px}.shadow-controls .btn#repeatLineBtn{flex-basis:100%}.transcript-list{padding:0 2px}.transcript-zh{font-size:1.52rem}.transcript-py{font-size:1.16rem}.transcript-vi{font-size:1.14rem}}
+
+/* v29: mobile Shadowing is sized from the card, never from YouTube's iframe. */
+@media(max-width:780px){
+  html,body{width:100%;max-width:100%;overflow-x:hidden}
+  #shadowSection,#shadowSection .wrap,#shadowPlayerCard,
+  #shadowPlayerCard>div,#shadowTranscript{min-width:0!important;max-width:100%!important}
+  #shadowPlayerCard{display:block!important}
+  #shadowPlayerCard .video-frame{
+    width:min(68vw,260px)!important;
+    height:auto!important;
+    max-width:calc(100% - 32px)!important;
+    aspect-ratio:16/9!important;
+    margin:0 auto!important;
+  }
+  #shadowPlayerCard .video-frame>#youtubePlayer,
+  #shadowPlayerCard .video-frame>iframe,
+  #shadowPlayerCard iframe#youtubePlayer{
+    position:absolute!important;
+    inset:0!important;
+    width:100%!important;
+    height:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    min-height:0!important;
+    max-height:100%!important;
+  }
+  #shadowPlayerCard .shadow-controls{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:9px!important;
+    width:min(100%,340px)!important;
+    margin:14px auto 0!important;
+  }
+  #shadowPlayerCard .shadow-controls .btn{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    padding:12px 7px!important;
+    font-size:1.05rem!important;
+    white-space:normal!important;
+  }
+  #shadowPlayerCard #repeatLineBtn{grid-column:1/-1!important}
+  #shadowTranscript{width:100%!important;overflow-x:hidden!important}
+  #shadowTranscript .transcript-line{width:100%;min-width:0;overflow-wrap:anywhere}
+  #shadowTranscript .transcript-zh{font-size:1.58rem;line-height:1.4}
+  #shadowTranscript .transcript-py{font-size:1.2rem;line-height:1.45}
+  #shadowTranscript .transcript-vi{font-size:1.17rem;line-height:1.45}
+}
+@media(max-width:360px){
+  #shadowPlayerCard .video-frame{width:240px!important;max-width:calc(100% - 24px)!important}
+}
 </style>
 </head>
 <body>
@@ -493,7 +585,9 @@ if(demoCheck){
 
     <div class="module-card shadow-grid" id="shadowPlayerCard" style="display:none">
       <div>
-        <div class="video-demo" id="youtubePlayer"></div>
+        <div class="video-frame">
+          <div class="video-demo" id="youtubePlayer"></div>
+        </div>
         <div class="shadow-controls">
           <button class="btn ghost" data-speed="0.75">0.75×</button>
           <button class="btn ghost" data-speed="1">1×</button>
@@ -590,6 +684,21 @@ function youtubeIdFromUrl(url){
   return m ? m[1] : s;
 }
 
+function fitShadowYoutubePlayer(){
+  const frame = document.querySelector('#shadowPlayerCard .video-frame');
+  const iframe = document.querySelector('#shadowPlayerCard iframe#youtubePlayer');
+  if(!frame || !iframe) return;
+  const width = Math.round(frame.getBoundingClientRect().width);
+  const height = Math.round(width * 9 / 16);
+  iframe.setAttribute('width', String(width));
+  iframe.setAttribute('height', String(height));
+  iframe.style.setProperty('width', '100%', 'important');
+  iframe.style.setProperty('height', '100%', 'important');
+  iframe.style.setProperty('max-width', '100%', 'important');
+}
+
+window.addEventListener('resize', fitShadowYoutubePlayer);
+
 async function loadShadowCourses(){
   const courseSel = document.getElementById('shadowCourse');
   if(!courseSel) return;
@@ -660,15 +769,21 @@ async function loadShadowVideo(videoId){
       shadowPlayer.loadVideoById(ytId);
     } else {
       shadowPlayer = new YT.Player('youtubePlayer', {
+        width: '100%',
+        height: '100%',
         videoId: ytId,
         playerVars: { rel:0, playsinline:1 },
         events: {
-          onReady: startShadowSync,
+          onReady: () => {
+            fitShadowYoutubePlayer();
+            startShadowSync();
+          },
           onStateChange: startShadowSync
         }
       });
     }
 
+    requestAnimationFrame(fitShadowYoutubePlayer);
     startShadowSync();
   }catch(e){
     console.error('Shadowing load error:', e);
