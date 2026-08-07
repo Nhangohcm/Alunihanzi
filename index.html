@@ -164,6 +164,26 @@ input,select{width:100%;border:1px solid var(--line);border-radius:13px;backgrou
 .transcript-zh{font-size:1.15rem;font-weight:850}
 .transcript-py{color:var(--green);font-weight:700;margin-top:2px}
 .transcript-vi{color:var(--muted);font-size:.92rem;margin-top:2px}
+.shadow-live{
+  margin-top:14px;
+  border:2px solid #a9b8a7;
+  background:var(--green2);
+  border-radius:16px;
+  padding:14px;
+  min-height:132px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  text-align:center;
+  cursor:pointer;
+}
+.shadow-live-hint{margin-top:7px;color:var(--muted);font-size:.82rem;font-weight:750}
+.shadow-live .transcript-zh{font-size:1.42rem}
+.shadow-live-nav{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-top:9px}
+.shadow-live-nav .btn{padding:9px 8px;min-width:0}
+.shadow-counter{font-weight:850;color:var(--muted);white-space:nowrap}
+.transcript-toggle{width:100%;margin-top:10px}
+.transcript-list[hidden]{display:none!important}
 .grammar-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .grammar-box,.exercise-box{
   border:1px solid var(--line);
@@ -305,7 +325,7 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
     margin:0!important;
     border-radius:12px!important;
   }
-  #shadowTranscript{
+  #shadowTranscript:not([hidden]){
     display:grid!important;
     gap:8px!important;
     height:clamp(300px,44vh,480px)!important;
@@ -315,9 +335,12 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
     overflow-y:auto!important;
     overflow-x:hidden!important;
     overscroll-behavior:contain;
-    scroll-behavior:smooth;
     align-content:start;
   }
+  #shadowLive{min-height:158px;padding:14px 10px}
+  #shadowLive .transcript-zh{font-size:1.58rem;line-height:1.4}
+  #shadowLive .transcript-py{font-size:1.2rem;line-height:1.45;margin-top:4px}
+  #shadowLive .transcript-vi{font-size:1.17rem;line-height:1.45;margin-top:4px}
 }
 @media(max-width:360px){
   #shadowPlayerCard .video-frame{
@@ -625,8 +648,20 @@ if(demoCheck){
           <button class="btn ghost" id="togglePinyinBtn">Ẩn Pinyin</button>
           <button class="btn ghost" id="toggleViBtn">Ẩn nghĩa Việt</button>
         </div>
+        <div class="shadow-live" id="shadowLive" aria-live="polite">
+          <div class="transcript-zh">Video chạy đến đâu, câu hiện tại sẽ xuất hiện ở đây.</div>
+          <div class="transcript-py"></div>
+          <div class="transcript-vi"></div>
+          <div class="shadow-live-hint">Chạm vào ô để nghe lại câu này</div>
+        </div>
+        <div class="shadow-live-nav">
+          <button class="btn ghost" id="shadowPrevBtn">← Câu trước</button>
+          <span class="shadow-counter" id="shadowCounter">0 / 0</span>
+          <button class="btn ghost" id="shadowNextBtn">Câu sau →</button>
+        </div>
+        <button class="btn ghost transcript-toggle" id="toggleTranscriptBtn">☰ Xem danh sách toàn bài</button>
       </div>
-      <div class="transcript-list" id="shadowTranscript"></div>
+      <div class="transcript-list" id="shadowTranscript" hidden></div>
     </div>
   </div>
 </section>
@@ -790,6 +825,7 @@ async function loadShadowVideo(videoId){
     document.getElementById('repeatLineBtn').textContent = '🔁 Lặp câu';
 
     renderShadowTranscript();
+    renderShadowLive(0);
 
     const ytId = youtubeIdFromUrl(j.video.youtube_url);
     document.getElementById('shadowPlayerCard').style.display = 'grid';
@@ -856,32 +892,37 @@ function renderShadowTranscript(){
   });
 }
 
+function renderShadowLive(index){
+  const live = document.getElementById('shadowLive');
+  const counter = document.getElementById('shadowCounter');
+  const s = shadowSegments[index];
+  if(counter) counter.textContent = s ? `${index + 1} / ${shadowSegments.length}` : `0 / ${shadowSegments.length}`;
+  if(!live || !s) return;
+  live.innerHTML = `
+    <div class="transcript-zh">${shadowEsc(s.hanzi)}</div>
+    <div class="transcript-py" style="${showShadowPinyin?'':'display:none'}">${shadowEsc(s.pinyin || '')}</div>
+    <div class="transcript-vi" style="${showShadowVi?'':'display:none'}">${shadowEsc(s.vi || '')}</div>
+    <div class="shadow-live-hint">Chạm vào ô để nghe lại câu này</div>
+  `;
+}
+
+function goToShadowLine(index){
+  if(!shadowSegments.length) return;
+  const nextIndex = Math.max(0, Math.min(shadowSegments.length - 1, index));
+  const s = shadowSegments[nextIndex];
+  shadowCurrentIndex = nextIndex;
+  if(shadowPlayer && shadowPlayer.seekTo){
+    shadowPlayer.seekTo(Number(s.start_sec || 0), true);
+    shadowPlayer.playVideo();
+  }
+  highlightShadowLine(nextIndex);
+}
+
 function highlightShadowLine(index){
   document.querySelectorAll('#shadowTranscript .transcript-line').forEach((el,i)=>{
     el.classList.toggle('active', i===index);
   });
-  const active = document.querySelector(`#shadowTranscript .transcript-line[data-index="${index}"]`);
-  const box = document.getElementById('shadowTranscript');
-  if(active && box){
-    /*
-      Use coordinates relative to the transcript itself. On mobile, offsetTop
-      was relative to the larger player card (video + controls + transcript),
-      so that extra height made the list scroll roughly two rows too far.
-    */
-    const boxRect = box.getBoundingClientRect();
-    const activeRect = active.getBoundingClientRect();
-    const lineTop = box.scrollTop + (activeRect.top - boxRect.top);
-    const lineBottom = box.scrollTop + (activeRect.bottom - boxRect.top);
-    const visibleTop = box.scrollTop;
-    const visibleBottom = visibleTop + box.clientHeight;
-    const safeGap = 18;
-
-    if(lineTop < visibleTop + safeGap){
-      box.scrollTo({top:Math.max(0, lineTop - safeGap), behavior:'smooth'});
-    }else if(lineBottom > visibleBottom - safeGap){
-      box.scrollTo({top:lineBottom - box.clientHeight + safeGap, behavior:'smooth'});
-    }
-  }
+  renderShadowLive(index);
 }
 
 function syncShadow(){
@@ -941,6 +982,24 @@ document.addEventListener('DOMContentLoaded', ()=>{
     repeat.addEventListener('click', ()=>{
       repeatCurrentLine = !repeatCurrentLine;
       repeat.textContent = repeatCurrentLine ? '🔁 Đang lặp câu' : '🔁 Lặp câu';
+    });
+  }
+
+  const prevBtn = document.getElementById('shadowPrevBtn');
+  if(prevBtn) prevBtn.addEventListener('click', ()=>goToShadowLine((shadowCurrentIndex < 0 ? 0 : shadowCurrentIndex) - 1));
+
+  const nextBtn = document.getElementById('shadowNextBtn');
+  if(nextBtn) nextBtn.addEventListener('click', ()=>goToShadowLine((shadowCurrentIndex < 0 ? -1 : shadowCurrentIndex) + 1));
+
+  const liveBox = document.getElementById('shadowLive');
+  if(liveBox) liveBox.addEventListener('click', ()=>goToShadowLine(shadowCurrentIndex < 0 ? 0 : shadowCurrentIndex));
+
+  const transcriptBtn = document.getElementById('toggleTranscriptBtn');
+  const transcriptBox = document.getElementById('shadowTranscript');
+  if(transcriptBtn && transcriptBox){
+    transcriptBtn.addEventListener('click', ()=>{
+      transcriptBox.hidden = !transcriptBox.hidden;
+      transcriptBtn.textContent = transcriptBox.hidden ? '☰ Xem danh sách toàn bài' : '✕ Đóng danh sách toàn bài';
     });
   }
 
