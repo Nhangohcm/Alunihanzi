@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#f5f0e7">
 <title>Tiếng Trung Aluni - Luyện viết chữ Hán</title>
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+<script src="https://www.youtube.com/iframe_api"></script>
 <script src="data.js"></script>
 <script src="tts-config.js"></script>
 <script src="access-config.js"></script>
@@ -465,6 +466,7 @@ if(demoCheck){
 
 </section>
 
+
 <section class="aluni-section" id="shadowSection">
   <div class="wrap">
     <div class="module-header">
@@ -477,50 +479,30 @@ if(demoCheck){
       <div class="module-grid">
         <div>
           <label>Khóa học</label>
-          <select id="shadowCourse">
-            <option>50+ Phản xạ</option>
-          </select>
+          <select id="shadowCourse"><option value="">Chọn khóa học</option></select>
         </div>
         <div>
           <label>Bài / Video</label>
-          <select id="shadowVideo">
-            <option>Bài mẫu · Chào hỏi</option>
-          </select>
+          <select id="shadowVideo"><option value="">Chọn video</option></select>
         </div>
       </div>
-      <div class="module-note">
-        Đây là khung Shadowing đã sẵn sàng. Khi anh thêm link YouTube + SRT trong Admin, video và transcript sẽ được nạp tại đây.
+      <div class="module-note" id="shadowNote">
+        Chọn khóa và video để bắt đầu luyện Shadowing.
       </div>
     </div>
 
-    <div class="module-card shadow-grid">
+    <div class="module-card shadow-grid" id="shadowPlayerCard" style="display:none">
       <div>
-        <div class="video-demo">▶ VIDEO YOUTUBE</div>
+        <div class="video-demo" id="youtubePlayer"></div>
         <div class="shadow-controls">
-          <button class="btn ghost">0.75×</button>
-          <button class="btn ghost">1×</button>
-          <button class="btn primary">🔁 Lặp câu</button>
-          <button class="btn ghost">Ẩn Pinyin</button>
-          <button class="btn ghost">Ẩn nghĩa Việt</button>
+          <button class="btn ghost" data-speed="0.75">0.75×</button>
+          <button class="btn ghost" data-speed="1">1×</button>
+          <button class="btn primary" id="repeatLineBtn">🔁 Lặp câu</button>
+          <button class="btn ghost" id="togglePinyinBtn">Ẩn Pinyin</button>
+          <button class="btn ghost" id="toggleViBtn">Ẩn nghĩa Việt</button>
         </div>
       </div>
-      <div class="transcript-list">
-        <div class="transcript-line active">
-          <div class="transcript-zh">你今天去哪儿？</div>
-          <div class="transcript-py">Nǐ jīntiān qù nǎr?</div>
-          <div class="transcript-vi">Hôm nay bạn đi đâu?</div>
-        </div>
-        <div class="transcript-line">
-          <div class="transcript-zh">我去公司上班。</div>
-          <div class="transcript-py">Wǒ qù gōngsī shàngbān.</div>
-          <div class="transcript-vi">Tôi đến công ty làm việc.</div>
-        </div>
-        <div class="transcript-line">
-          <div class="transcript-zh">你几点上班？</div>
-          <div class="transcript-py">Nǐ jǐ diǎn shàngbān?</div>
-          <div class="transcript-vi">Bạn mấy giờ đi làm?</div>
-        </div>
-      </div>
+      <div class="transcript-list" id="shadowTranscript"></div>
     </div>
   </div>
 </section>
@@ -585,5 +567,236 @@ if(demoCheck){
     </div>
   </div>
 </section>
+<script>
+// ===== SHADOWING V22 =====
+let shadowCourses = [];
+let shadowVideos = [];
+let shadowSegments = [];
+let shadowPlayer = null;
+let shadowCurrentIndex = -1;
+let shadowTimer = null;
+let repeatCurrentLine = false;
+let showShadowPinyin = true;
+let showShadowVi = true;
+
+function shadowApi(path){
+  const base = String(window.ALUNI_API_BASE || '').replace(/\/+$/,'');
+  return base + path;
+}
+
+function youtubeIdFromUrl(url){
+  const s = String(url || '').trim();
+  const m = s.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{6,})/);
+  return m ? m[1] : s;
+}
+
+async function loadShadowCourses(){
+  const courseSel = document.getElementById('shadowCourse');
+  if(!courseSel) return;
+
+  try{
+    const r = await fetch(shadowApi('/shadowing/courses'), {cache:'no-store'});
+    if(!r.ok) throw new Error();
+    const j = await r.json();
+    shadowCourses = Array.isArray(j.courses) ? j.courses : [];
+
+    courseSel.innerHTML = '<option value="">Chọn khóa học</option>';
+    shadowCourses.forEach(c => courseSel.add(new Option(c.name, c.id)));
+
+    if(!shadowCourses.length){
+      document.getElementById('shadowNote').textContent = 'Chưa có video Shadowing. Hãy thêm video trong trang Admin.';
+    }
+  }catch(e){
+    document.getElementById('shadowNote').textContent = 'Chưa tải được dữ liệu Shadowing.';
+  }
+}
+
+async function loadShadowVideos(courseId){
+  const videoSel = document.getElementById('shadowVideo');
+  videoSel.innerHTML = '<option value="">Chọn video</option>';
+  document.getElementById('shadowPlayerCard').style.display = 'none';
+  if(!courseId) return;
+
+  try{
+    const r = await fetch(shadowApi('/shadowing/videos?course_id=' + encodeURIComponent(courseId)), {cache:'no-store'});
+    const j = await r.json();
+    shadowVideos = Array.isArray(j.videos) ? j.videos : [];
+
+    shadowVideos.forEach(v=>{
+      const lock = v.locked ? '🔒 ' : '';
+      videoSel.add(new Option(lock + v.title, v.id));
+    });
+
+    document.getElementById('shadowNote').textContent =
+      shadowVideos.length ? `Có ${shadowVideos.length} video.` : 'Khóa này chưa có video Shadowing.';
+  }catch(e){
+    document.getElementById('shadowNote').textContent = 'Chưa tải được danh sách video.';
+  }
+}
+
+async function loadShadowVideo(videoId){
+  if(!videoId) return;
+  try{
+    const r = await fetch(shadowApi('/shadowing/video?id=' + encodeURIComponent(videoId)), {cache:'no-store'});
+    const j = await r.json();
+
+    if(!r.ok){
+      document.getElementById('shadowNote').textContent = j.error || 'Chưa mở được video.';
+      return;
+    }
+
+    shadowSegments = Array.isArray(j.segments) ? j.segments : [];
+    shadowCurrentIndex = -1;
+    repeatCurrentLine = false;
+    document.getElementById('repeatLineBtn').textContent = '🔁 Lặp câu';
+
+    renderShadowTranscript();
+
+    const ytId = youtubeIdFromUrl(j.video.youtube_url);
+    document.getElementById('shadowPlayerCard').style.display = 'grid';
+    document.getElementById('shadowNote').textContent = j.video.title;
+
+    if(shadowPlayer && typeof shadowPlayer.loadVideoById === 'function'){
+      shadowPlayer.loadVideoById(ytId);
+    } else {
+      shadowPlayer = new YT.Player('youtubePlayer', {
+        videoId: ytId,
+        playerVars: { rel:0, playsinline:1 },
+        events: {
+          onReady: startShadowSync,
+          onStateChange: startShadowSync
+        }
+      });
+    }
+
+    startShadowSync();
+  }catch(e){
+    document.getElementById('shadowNote').textContent = 'Có lỗi khi tải video.';
+  }
+}
+
+function renderShadowTranscript(){
+  const box = document.getElementById('shadowTranscript');
+  box.innerHTML = '';
+
+  shadowSegments.forEach((s,i)=>{
+    const line = document.createElement('div');
+    line.className = 'transcript-line';
+    line.dataset.index = i;
+    line.innerHTML = `
+      <div class="transcript-zh">${escapeHtml ? escapeHtml(s.hanzi) : s.hanzi}</div>
+      <div class="transcript-py" style="${showShadowPinyin?'':'display:none'}">${s.pinyin || ''}</div>
+      <div class="transcript-vi" style="${showShadowVi?'':'display:none'}">${s.vi || ''}</div>
+    `;
+    line.addEventListener('click', ()=>{
+      shadowCurrentIndex = i;
+      if(shadowPlayer && shadowPlayer.seekTo){
+        shadowPlayer.seekTo(Number(s.start_sec || 0), true);
+        shadowPlayer.playVideo();
+      }
+      highlightShadowLine(i);
+    });
+    box.appendChild(line);
+  });
+}
+
+function highlightShadowLine(index){
+  document.querySelectorAll('#shadowTranscript .transcript-line').forEach((el,i)=>{
+    el.classList.toggle('active', i===index);
+  });
+  const active = document.querySelector(`#shadowTranscript .transcript-line[data-index="${index}"]`);
+  if(active) active.scrollIntoView({block:'nearest', behavior:'smooth'});
+}
+
+function syncShadow(){
+  if(!shadowPlayer || !shadowPlayer.getCurrentTime || !shadowSegments.length) return;
+  const t = shadowPlayer.getCurrentTime();
+
+  let found = -1;
+  for(let i=0;i<shadowSegments.length;i++){
+    const s = shadowSegments[i];
+    if(t >= Number(s.start_sec) && t < Number(s.end_sec)){
+      found = i; break;
+    }
+  }
+
+  if(found !== -1 && found !== shadowCurrentIndex){
+    shadowCurrentIndex = found;
+    highlightShadowLine(found);
+  }
+
+  if(repeatCurrentLine && shadowCurrentIndex >= 0){
+    const s = shadowSegments[shadowCurrentIndex];
+    if(t >= Number(s.end_sec)){
+      shadowPlayer.seekTo(Number(s.start_sec), true);
+    }
+  }
+}
+
+function startShadowSync(){
+  if(shadowTimer) clearInterval(shadowTimer);
+  shadowTimer = setInterval(syncShadow, 120);
+}
+
+function setShadowSpeed(speed){
+  if(shadowPlayer && shadowPlayer.setPlaybackRate){
+    shadowPlayer.setPlaybackRate(Number(speed));
+  }
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  const courseSel = document.getElementById('shadowCourse');
+  const videoSel = document.getElementById('shadowVideo');
+
+  if(courseSel){
+    courseSel.addEventListener('change', ()=>loadShadowVideos(courseSel.value));
+  }
+
+  if(videoSel){
+    videoSel.addEventListener('change', ()=>loadShadowVideo(videoSel.value));
+  }
+
+  document.querySelectorAll('#shadowSection [data-speed]').forEach(btn=>{
+    btn.addEventListener('click', ()=>setShadowSpeed(btn.dataset.speed));
+  });
+
+  const repeat = document.getElementById('repeatLineBtn');
+  if(repeat){
+    repeat.addEventListener('click', ()=>{
+      repeatCurrentLine = !repeatCurrentLine;
+      repeat.textContent = repeatCurrentLine ? '🔁 Đang lặp câu' : '🔁 Lặp câu';
+    });
+  }
+
+  const pinyinBtn = document.getElementById('togglePinyinBtn');
+  if(pinyinBtn){
+    pinyinBtn.addEventListener('click', ()=>{
+      showShadowPinyin = !showShadowPinyin;
+      pinyinBtn.textContent = showShadowPinyin ? 'Ẩn Pinyin' : 'Hiện Pinyin';
+      renderShadowTranscript();
+      if(shadowCurrentIndex>=0) highlightShadowLine(shadowCurrentIndex);
+    });
+  }
+
+  const viBtn = document.getElementById('toggleViBtn');
+  if(viBtn){
+    viBtn.addEventListener('click', ()=>{
+      showShadowVi = !showShadowVi;
+      viBtn.textContent = showShadowVi ? 'Ẩn nghĩa Việt' : 'Hiện nghĩa Việt';
+      renderShadowTranscript();
+      if(shadowCurrentIndex>=0) highlightShadowLine(shadowCurrentIndex);
+    });
+  }
+
+  // Chỉ tải dữ liệu khi người dùng thực sự bấm tab Shadowing.
+  document.querySelectorAll('.app-nav-btn').forEach(btn=>{
+    if(btn.dataset.section === 'shadowSection'){
+      btn.addEventListener('click', ()=>{
+        if(!shadowCourses.length) loadShadowCourses();
+      });
+    }
+  });
+});
+</script>
 </body>
 </html>

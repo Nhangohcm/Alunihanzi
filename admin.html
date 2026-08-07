@@ -60,6 +60,7 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
     <div class="tabs">
       <button class="tab active" data-pane="codesPane">🔑 Mã kích hoạt</button>
       <button class="tab" data-pane="contentPane">📚 Nội dung khóa học</button>
+<button class="tab" data-pane="shadowPane">🎥 Video Shadowing</button>
     </div>
   </div>
 
@@ -131,6 +132,51 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
       </div>
     </div>
   </section>
+
+  <section class="pane" id="shadowPane">
+    <div class="card">
+      <h2>Thêm video Shadowing</h2>
+      <div class="grid">
+        <div><label>Khóa học</label><select id="shadowAdminCourse"></select></div>
+        <div><label>Số bài</label><input id="shadowLessonNumber" type="number" min="1" value="1"></div>
+        <div><label>Tiêu đề video</label><input id="shadowTitle" placeholder="Ví dụ: Bài 01 - Chào hỏi"></div>
+      </div>
+      <div class="grid2" style="margin-top:10px">
+        <div><label>Link YouTube</label><input id="shadowYoutube" placeholder="https://www.youtube.com/watch?v=..."></div>
+        <div><label>Miễn phí?</label>
+          <select id="shadowFree"><option value="1">Có - xem miễn phí</option><option value="0">Không - cần quyền khóa học</option></select>
+        </div>
+      </div>
+      <div class="status" id="shadowStatus"></div>
+    </div>
+
+    <div class="card">
+      <h2>Nhập timing & transcript</h2>
+      <div class="grid2">
+        <div><label>File SRT từ CapCut</label><input id="shadowSrt" type="file" accept=".srt"></div>
+        <div><label>Transcript CSV/XLSX</label><input id="shadowTranscriptFile" type="file" accept=".csv,.xlsx,.xls"></div>
+      </div>
+      <p class="muted">Transcript cần đúng 3 cột: <strong>hanzi | pinyin | vi</strong>. Số dòng phải khớp số câu trong SRT.</p>
+      <div class="sample">hanzi,pinyin,vi
+你今天去哪儿？,Nǐ jīntiān qù nǎr?,Hôm nay bạn đi đâu?
+我去公司上班。,Wǒ qù gōngsī shàngbān.,Tôi đến công ty làm việc.</div>
+      <div class="row" style="margin-top:10px">
+        <button class="primary" id="saveShadowVideo">Lưu video Shadowing</button>
+        <button class="ghost" id="shadowTemplateBtn">⬇ Tải file mẫu transcript</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Danh sách video</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Khóa</th><th>Bài</th><th>Tiêu đề</th><th>YouTube</th><th>Free</th><th>Số câu</th></tr></thead>
+          <tbody id="shadowVideoBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
 </div>
 
 </div>
@@ -185,6 +231,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   b.classList.add('active');
   $(b.dataset.pane).classList.add('active');
   if(b.dataset.pane==='contentPane') loadCourses();
+  if(b.dataset.pane==='shadowPane'){ loadCourses(); loadShadowAdminVideos(); }
 });
 
 async function refreshCodes(){
@@ -229,9 +276,11 @@ async function loadCourses(){
     courses=j.courses||[];
     $('courseBody').innerHTML='';
     $('importCourse').innerHTML='';
+    $('shadowAdminCourse').innerHTML='';
     $('codeCourse').innerHTML='';
     courses.forEach(c=>{
       $('importCourse').add(new Option(c.name,c.id));
+      $('shadowAdminCourse').add(new Option(c.name,c.id));
       $('codeCourse').add(new Option(c.name,c.id));
       const tr=document.createElement('tr');
       tr.innerHTML=`<td>${c.id}</td><td>${c.name}</td><td>${c.free_lessons}</td><td>${c.lesson_count||0}</td>`;
@@ -291,6 +340,109 @@ $('saveCourse').onclick=saveCourse;
 $('loadCourses').onclick=loadCourses;
 $('importBtn').onclick=doImport;
 $('templateBtn').onclick=template;
+$('saveShadowVideo').onclick=saveShadowVideo;
+$('shadowTemplateBtn').onclick=downloadShadowTemplate;
+
+async function parseSrtFile(file){
+  const text = await file.text();
+  const blocks = text.replace(/\r/g,'').trim().split(/\n{2,}/);
+  const rows = [];
+  for(const block of blocks){
+    const lines = block.split('\n').filter(Boolean);
+    if(lines.length < 3) continue;
+    const timeLine = lines[1];
+    const m = timeLine.match(/(\d{2}):(\d{2}):(\d{2}),(\d{3})\s*-->\s*(\d{2}):(\d{2}):(\d{2}),(\d{3})/);
+    if(!m) continue;
+    const start = (+m[1])*3600 + (+m[2])*60 + (+m[3]) + (+m[4])/1000;
+    const end = (+m[5])*3600 + (+m[6])*60 + (+m[7]) + (+m[8])/1000;
+    rows.push({start_sec:start,end_sec:end,srt_text:lines.slice(2).join(' ')});
+  }
+  return rows;
+}
+
+async function parseTranscriptFile(file){
+  const n=file.name.toLowerCase();
+  if(n.endsWith('.csv')){
+    const t=await file.text();
+    const wb=XLSX.read(t,{type:'string'});
+    return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+  }
+  const buf=await file.arrayBuffer();
+  const wb=XLSX.read(buf,{type:'array'});
+  return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+}
+
+async function loadShadowAdminVideos(){
+  try{
+    const j=await api('/admin/shadowing/videos');
+    const rows=j.videos||[];
+    $('shadowVideoBody').innerHTML='';
+    rows.forEach(v=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${v.course_id}</td><td>${v.lesson_number}</td><td>${v.title}</td>
+        <td><a href="${v.youtube_url}" target="_blank">Mở</a></td>
+        <td>${v.is_free?'Có':'Không'}</td><td>${v.segment_count||0}</td>`;
+      $('shadowVideoBody').appendChild(tr);
+    });
+  }catch(e){
+    $('shadowStatus').textContent=e.message;
+  }
+}
+
+async function saveShadowVideo(){
+  const srtFile=$('shadowSrt').files[0];
+  const trFile=$('shadowTranscriptFile').files[0];
+
+  if(!srtFile || !trFile){
+    $('shadowStatus').textContent='Chọn đủ file SRT và transcript.';
+    return;
+  }
+
+  try{
+    const timings=await parseSrtFile(srtFile);
+    const transcript=await parseTranscriptFile(trFile);
+
+    if(timings.length !== transcript.length){
+      $('shadowStatus').textContent=`SRT có ${timings.length} câu nhưng transcript có ${transcript.length} dòng. Hai số phải bằng nhau.`;
+      return;
+    }
+
+    const segments=timings.map((t,i)=>({
+      start_sec:t.start_sec,
+      end_sec:t.end_sec,
+      hanzi:String(transcript[i].hanzi || t.srt_text || ''),
+      pinyin:String(transcript[i].pinyin || ''),
+      vi:String(transcript[i].vi || '')
+    }));
+
+    await api('/admin/shadowing/save',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        course_id:$('shadowAdminCourse').value,
+        lesson_number:Number($('shadowLessonNumber').value||1),
+        title:$('shadowTitle').value.trim(),
+        youtube_url:$('shadowYoutube').value.trim(),
+        is_free:Number($('shadowFree').value||0),
+        segments
+      })
+    });
+
+    $('shadowStatus').textContent=`Đã lưu video với ${segments.length} câu.`;
+    loadShadowAdminVideos();
+  }catch(e){
+    $('shadowStatus').textContent=e.message;
+  }
+}
+
+function downloadShadowTemplate(){
+  const t='\uFEFFhanzi,pinyin,vi\r\n你今天去哪儿？,Nǐ jīntiān qù nǎr?,Hôm nay bạn đi đâu?\r\n我去公司上班。,Wǒ qù gōngsī shàngbān.,Tôi đến công ty làm việc.\r\n';
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));
+  a.download='mau-shadowing-transcript.csv';
+  a.click();
+}
+
 </script>
 </body>
 </html>
