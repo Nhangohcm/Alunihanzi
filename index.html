@@ -863,8 +863,15 @@ function highlightShadowLine(index){
   const active = document.querySelector(`#shadowTranscript .transcript-line[data-index="${index}"]`);
   const box = document.getElementById('shadowTranscript');
   if(active && box){
-    const lineTop = active.offsetTop;
-    const lineBottom = lineTop + active.offsetHeight;
+    /*
+      Use coordinates relative to the transcript itself. On mobile, offsetTop
+      was relative to the larger player card (video + controls + transcript),
+      so that extra height made the list scroll roughly two rows too far.
+    */
+    const boxRect = box.getBoundingClientRect();
+    const activeRect = active.getBoundingClientRect();
+    const lineTop = box.scrollTop + (activeRect.top - boxRect.top);
+    const lineBottom = box.scrollTop + (activeRect.bottom - boxRect.top);
     const visibleTop = box.scrollTop;
     const visibleBottom = visibleTop + box.clientHeight;
     const safeGap = 18;
