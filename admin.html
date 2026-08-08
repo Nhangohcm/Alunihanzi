@@ -32,7 +32,7 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
 .badge{display:inline-block;background:var(--soft);padding:5px 9px;border-radius:999px;font-size:.82rem;font-weight:800}
 .course-manager-head{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.course-manager-head>div{flex:1;min-width:220px}
 .lesson-admin{border:1px solid var(--line);border-radius:14px;margin-top:10px;overflow:hidden}.lesson-admin summary{cursor:pointer;padding:12px 14px;background:#f7f3eb;font-weight:850;display:flex;justify-content:space-between;gap:10px}.lesson-admin-body{padding:12px}
-.item-admin{display:grid;grid-template-columns:1fr 2fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.item-admin:last-child{border-bottom:0}.danger{background:#fff4f2;color:#a24d46;border:1px solid #e8c8c2}.mini-title{font-weight:850;margin:12px 0 5px}
+.item-admin{display:grid;grid-template-columns:1fr 2fr auto auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.item-admin:last-child{border-bottom:0}.danger{background:#fff4f2;color:#a24d46;border:1px solid #e8c8c2}.mini-title{font-weight:850;margin:12px 0 5px}.order-buttons{display:flex;gap:5px}.order-buttons button{padding:8px 10px}
 @media(max-width:760px){.grid,.grid2{grid-template-columns:1fr}.login-row{grid-template-columns:1fr}}
 @media(max-width:760px){.item-admin{grid-template-columns:1fr}.item-admin button{width:100%}}
 </style>
@@ -164,10 +164,7 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
         <div><label>Chọn khóa học</label><select id="manageLearningCourse"></select></div>
         <button class="ghost" id="refreshLearningContent">Làm mới nội dung</button>
       </div>
-      <div class="grid2" style="margin-top:12px">
-        <div><label>Số bài (nhận cả 00)</label><input id="newLessonNumber" type="number" min="0" placeholder="00"></div>
-        <div><label>Tên bài</label><input id="newLessonTitle" placeholder="Giới thiệu khóa học"></div>
-      </div>
+      <div style="margin-top:12px"><label>Tên bài mới</label><input id="newLessonTitle" placeholder="Hệ thống tự đánh số tiếp theo"></div>
       <div class="row" style="margin-top:10px"><button class="primary" id="addLearningLesson">＋ Thêm bài mới</button></div>
       <div class="status" id="learningContentStatus"></div>
       <div id="learningLessonList"></div>
@@ -482,10 +479,10 @@ async function loadLearningContent(){
         <div class="grid2"><div><label>Số bài</label><input class="editLessonNumber" data-id="${esc(l.id)}" type="number" min="0" value="${Number(l.lesson_number)}"></div><div><label>Tên bài</label><input class="editLessonTitle" data-id="${esc(l.id)}" value="${esc(l.title)}"></div></div>
         <div class="row" style="margin-top:8px"><button class="ghost saveLesson" data-id="${esc(l.id)}">Lưu tên/số bài</button><button class="danger deleteLesson" data-id="${esc(l.id)}">Xóa bài</button></div>
         <div class="mini-title">Video YouTube</div>
-        ${(l.videos||[]).map(v=>`<div class="item-admin"><input class="videoTitle" data-id="${v.id}" value="${esc(v.title)}"><input class="videoUrl" data-id="${v.id}" value="${esc(v.youtube_url)}"><button class="danger deleteItem" data-kind="video" data-id="${v.id}">Xóa</button></div>`).join('')||'<div class="muted">Chưa có video.</div>'}
+        ${(l.videos||[]).map((v,i,a)=>`<div class="item-admin"><input class="videoTitle" data-id="${v.id}" value="${esc(v.title)}"><input class="videoUrl" data-id="${v.id}" value="${esc(v.youtube_url)}"><span class="order-buttons"><button class="ghost reorderItem" data-kind="video" data-id="${v.id}" data-direction="up" ${i===0?'disabled':''}>↑</button><button class="ghost reorderItem" data-kind="video" data-id="${v.id}" data-direction="down" ${i===a.length-1?'disabled':''}>↓</button></span><button class="danger deleteItem" data-kind="video" data-id="${v.id}">Xóa</button></div>`).join('')||'<div class="muted">Chưa có video.</div>'}
         <div class="grid2" style="margin-top:8px"><input class="newVideoTitle" data-lesson="${esc(l.id)}" placeholder="Tên video"><input class="newVideoUrl" data-lesson="${esc(l.id)}" placeholder="Link YouTube"></div><button class="ghost addVideo" data-lesson="${esc(l.id)}" style="margin-top:8px">＋ Thêm video</button>
         <div class="mini-title">Bài tập / tài liệu</div>
-        ${(l.resources||[]).map(r=>`<div class="item-admin"><input class="resourceTitle" data-id="${r.id}" value="${esc(r.title)}"><input class="resourceUrl" data-id="${r.id}" value="${esc(r.resource_url)}"><button class="danger deleteItem" data-kind="resource" data-id="${r.id}">Xóa</button></div>`).join('')||'<div class="muted">Chưa có tài liệu.</div>'}
+        ${(l.resources||[]).map((r,i,a)=>`<div class="item-admin"><input class="resourceTitle" data-id="${r.id}" value="${esc(r.title)}"><input class="resourceUrl" data-id="${r.id}" value="${esc(r.resource_url)}"><span class="order-buttons"><button class="ghost reorderItem" data-kind="resource" data-id="${r.id}" data-direction="up" ${i===0?'disabled':''}>↑</button><button class="ghost reorderItem" data-kind="resource" data-id="${r.id}" data-direction="down" ${i===a.length-1?'disabled':''}>↓</button></span><button class="danger deleteItem" data-kind="resource" data-id="${r.id}">Xóa</button></div>`).join('')||'<div class="muted">Chưa có tài liệu.</div>'}
         <div class="grid2" style="margin-top:8px"><input class="newResourceTitle" data-lesson="${esc(l.id)}" placeholder="Tên tài liệu, ví dụ: Bài tập"><input class="newResourceUrl" data-lesson="${esc(l.id)}" placeholder="Link PDF/Word/Drive..."></div><button class="ghost addResource" data-lesson="${esc(l.id)}" style="margin-top:8px">＋ Thêm tài liệu</button>
       </div></details>`).join('');
     bindLearningContentActions();
@@ -502,13 +499,14 @@ function bindLearningContentActions(){
   document.querySelectorAll('.addVideo').forEach(b=>b.onclick=()=>learningPost('/admin/learning/video',{lesson_id:b.dataset.lesson,title:document.querySelector(`.newVideoTitle[data-lesson="${b.dataset.lesson}"]`).value,youtube_url:document.querySelector(`.newVideoUrl[data-lesson="${b.dataset.lesson}"]`).value}));
   document.querySelectorAll('.addResource').forEach(b=>b.onclick=()=>learningPost('/admin/learning/resource',{lesson_id:b.dataset.lesson,title:document.querySelector(`.newResourceTitle[data-lesson="${b.dataset.lesson}"]`).value,resource_url:document.querySelector(`.newResourceUrl[data-lesson="${b.dataset.lesson}"]`).value}));
   document.querySelectorAll('.deleteItem').forEach(b=>b.onclick=()=>{if(confirm('Xóa mục này?'))learningPost('/admin/learning/delete',{kind:b.dataset.kind,id:Number(b.dataset.id)})});
+  document.querySelectorAll('.reorderItem').forEach(b=>b.onclick=()=>learningPost('/admin/learning/reorder',{kind:b.dataset.kind,id:Number(b.dataset.id),direction:b.dataset.direction}));
   document.querySelectorAll('.videoTitle,.videoUrl').forEach(x=>x.onchange=()=>learningPost('/admin/learning/video',{id:Number(x.dataset.id),title:document.querySelector(`.videoTitle[data-id="${x.dataset.id}"]`).value,youtube_url:document.querySelector(`.videoUrl[data-id="${x.dataset.id}"]`).value}));
   document.querySelectorAll('.resourceTitle,.resourceUrl').forEach(x=>x.onchange=()=>learningPost('/admin/learning/resource',{id:Number(x.dataset.id),title:document.querySelector(`.resourceTitle[data-id="${x.dataset.id}"]`).value,resource_url:document.querySelector(`.resourceUrl[data-id="${x.dataset.id}"]`).value}));
 }
 async function addLearningLesson(){
-  const lesson_number=Number($('newLessonNumber').value),title=$('newLessonTitle').value.trim();
-  if(!Number.isInteger(lesson_number)||lesson_number<0||!title){$('learningContentStatus').textContent='Nhập đúng số bài và tên bài.';return}
-  try{await learningPost('/admin/learning/lesson',{course_id:$('manageLearningCourse').value,lesson_number,title});$('newLessonTitle').value=''}catch(e){$('learningContentStatus').textContent=e.message}
+  const title=$('newLessonTitle').value.trim();
+  if(!title){$('learningContentStatus').textContent='Anh nhập tên bài mới.';return}
+  try{await learningPost('/admin/learning/lesson',{course_id:$('manageLearningCourse').value,title,auto_number:true});$('newLessonTitle').value=''}catch(e){$('learningContentStatus').textContent=e.message}
 }
 
 $('loginBtn').onclick=login;
