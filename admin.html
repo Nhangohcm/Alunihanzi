@@ -30,7 +30,11 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
 .sample{background:#f7f3eb;border:1px dashed var(--line);padding:12px;border-radius:12px;font-family:ui-monospace,monospace;font-size:.82rem;white-space:pre-wrap}
 .login-box{width:min(620px,100%);margin:0 auto}.login-row{display:grid;grid-template-columns:1fr auto;gap:8px}
 .badge{display:inline-block;background:var(--soft);padding:5px 9px;border-radius:999px;font-size:.82rem;font-weight:800}
+.course-manager-head{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.course-manager-head>div{flex:1;min-width:220px}
+.lesson-admin{border:1px solid var(--line);border-radius:14px;margin-top:10px;overflow:hidden}.lesson-admin summary{cursor:pointer;padding:12px 14px;background:#f7f3eb;font-weight:850;display:flex;justify-content:space-between;gap:10px}.lesson-admin-body{padding:12px}
+.item-admin{display:grid;grid-template-columns:1fr 2fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.item-admin:last-child{border-bottom:0}.danger{background:#fff4f2;color:#a24d46;border:1px solid #e8c8c2}.mini-title{font-weight:850;margin:12px 0 5px}
 @media(max-width:760px){.grid,.grid2{grid-template-columns:1fr}.login-row{grid-template-columns:1fr}}
+@media(max-width:760px){.item-admin{grid-template-columns:1fr}.item-admin button{width:100%}}
 </style>
 </head>
 <body>
@@ -59,7 +63,7 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
     </div>
     <div class="tabs">
       <button class="tab active" data-pane="codesPane">🔑 Mã kích hoạt</button>
-      <button class="tab" data-pane="contentPane">📚 Nội dung khóa học</button>
+      <button class="tab" data-pane="contentPane">✍️ Viết chữ Hán</button>
       <button class="tab" data-pane="learningPane">🎓 Khóa học video</button>
 <button class="tab" data-pane="shadowPane">🎥 Video Shadowing</button>
     </div>
@@ -151,6 +155,22 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
       <div style="margin-top:10px"><label>Mô tả khóa học</label><input id="learningDescription" placeholder="Mô tả ngắn hiển thị trên thẻ khóa học"></div>
       <div class="row" style="margin-top:10px"><button class="primary" id="saveLearningCourse">Lưu khóa học</button><button class="ghost" id="clearLearningForm">Tạo khóa mới</button></div>
       <div class="status" id="learningStatus"></div>
+    </div>
+
+    <div class="card">
+      <h2>Quản lý nội dung từng bài</h2>
+      <p class="muted">Dùng phần này để thêm hoặc sửa lẻ từng bài, video và tài liệu mà không phải nhập lại toàn bộ file.</p>
+      <div class="course-manager-head">
+        <div><label>Chọn khóa học</label><select id="manageLearningCourse"></select></div>
+        <button class="ghost" id="refreshLearningContent">Làm mới nội dung</button>
+      </div>
+      <div class="grid2" style="margin-top:12px">
+        <div><label>Số bài (nhận cả 00)</label><input id="newLessonNumber" type="number" min="0" placeholder="00"></div>
+        <div><label>Tên bài</label><input id="newLessonTitle" placeholder="Giới thiệu khóa học"></div>
+      </div>
+      <div class="row" style="margin-top:10px"><button class="primary" id="addLearningLesson">＋ Thêm bài mới</button></div>
+      <div class="status" id="learningContentStatus"></div>
+      <div id="learningLessonList"></div>
     </div>
 
     <div class="card">
@@ -337,6 +357,7 @@ async function generate(){
   }catch(e){$('codeStatus').textContent=e.message}
 }
 function csvEsc(v){return '"'+String(v??'').replace(/"/g,'""')+'"'}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function downloadCodes(){
   if(!codes.length){$('codeStatus').textContent='Chưa có dữ liệu để tải.';return}
   const rows=[['Mã','Khóa','Trạng thái','Người dùng','Kích hoạt','Hết hạn'],...codes.map(x=>[x.code,x.course_id,x.status,x.identity||'',x.activated_at||'',x.expires_at||''])];
@@ -407,15 +428,19 @@ function template(){
 async function loadLearningCourses(){
   try{
     const j=await api('/admin/learning/courses');learningCourses=j.courses||[];
-    $('learningImportCourse').innerHTML='';$('learningCourseBody').innerHTML='';
+    const selected=$('manageLearningCourse').value;
+    $('learningImportCourse').innerHTML='';$('manageLearningCourse').innerHTML='';$('learningCourseBody').innerHTML='';
     learningCourses.forEach(c=>{
       $('learningImportCourse').add(new Option(c.title,c.id));
+      $('manageLearningCourse').add(new Option(c.title,c.id));
       const tr=document.createElement('tr');
       tr.innerHTML=`<td>${Number(c.sort_order||0)}</td><td><b>${c.title}</b><br><span class="muted">${c.id}</span></td><td>${c.access==='paid'?'Có phí':'Miễn phí'}</td><td>${c.lesson_count||0}</td><td>${Number(c.published)?'<span class="badge">Đã xuất bản</span>':'Lưu nháp'}</td><td><button class="ghost editLearning" data-id="${c.id}">Sửa</button></td>`;
       $('learningCourseBody').appendChild(tr);
     });
     document.querySelectorAll('.editLearning').forEach(b=>b.onclick=()=>editLearningCourse(b.dataset.id));
+    if(selected&&learningCourses.some(c=>c.id===selected))$('manageLearningCourse').value=selected;
     $('learningStatus').textContent=`Có ${learningCourses.length} khóa học video.`;
+    if(learningCourses.length)await loadLearningContent();else $('learningLessonList').innerHTML='';
   }catch(e){$('learningStatus').textContent=e.message}
 }
 function editLearningCourse(id){
@@ -444,6 +469,48 @@ function learningTemplate(){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download='mau-khoa-hoc-video-aluni.csv';a.click();
 }
 
+async function loadLearningContent(){
+  const courseId=$('manageLearningCourse').value;
+  if(!courseId)return;
+  $('learningContentStatus').textContent='Đang tải nội dung...';
+  try{
+    const j=await api('/admin/learning/course-content?course_id='+encodeURIComponent(courseId));
+    const lessons=j.lessons||[];
+    $('learningLessonList').innerHTML=lessons.map(l=>`<details class="lesson-admin">
+      <summary><span>Bài ${String(l.lesson_number).padStart(2,'0')} — ${esc(l.title)}</span><span>${l.videos.length} video · ${l.resources.length} tài liệu</span></summary>
+      <div class="lesson-admin-body">
+        <div class="grid2"><div><label>Số bài</label><input class="editLessonNumber" data-id="${esc(l.id)}" type="number" min="0" value="${Number(l.lesson_number)}"></div><div><label>Tên bài</label><input class="editLessonTitle" data-id="${esc(l.id)}" value="${esc(l.title)}"></div></div>
+        <div class="row" style="margin-top:8px"><button class="ghost saveLesson" data-id="${esc(l.id)}">Lưu tên/số bài</button><button class="danger deleteLesson" data-id="${esc(l.id)}">Xóa bài</button></div>
+        <div class="mini-title">Video YouTube</div>
+        ${(l.videos||[]).map(v=>`<div class="item-admin"><input class="videoTitle" data-id="${v.id}" value="${esc(v.title)}"><input class="videoUrl" data-id="${v.id}" value="${esc(v.youtube_url)}"><button class="danger deleteItem" data-kind="video" data-id="${v.id}">Xóa</button></div>`).join('')||'<div class="muted">Chưa có video.</div>'}
+        <div class="grid2" style="margin-top:8px"><input class="newVideoTitle" data-lesson="${esc(l.id)}" placeholder="Tên video"><input class="newVideoUrl" data-lesson="${esc(l.id)}" placeholder="Link YouTube"></div><button class="ghost addVideo" data-lesson="${esc(l.id)}" style="margin-top:8px">＋ Thêm video</button>
+        <div class="mini-title">Bài tập / tài liệu</div>
+        ${(l.resources||[]).map(r=>`<div class="item-admin"><input class="resourceTitle" data-id="${r.id}" value="${esc(r.title)}"><input class="resourceUrl" data-id="${r.id}" value="${esc(r.resource_url)}"><button class="danger deleteItem" data-kind="resource" data-id="${r.id}">Xóa</button></div>`).join('')||'<div class="muted">Chưa có tài liệu.</div>'}
+        <div class="grid2" style="margin-top:8px"><input class="newResourceTitle" data-lesson="${esc(l.id)}" placeholder="Tên tài liệu, ví dụ: Bài tập"><input class="newResourceUrl" data-lesson="${esc(l.id)}" placeholder="Link PDF/Word/Drive..."></div><button class="ghost addResource" data-lesson="${esc(l.id)}" style="margin-top:8px">＋ Thêm tài liệu</button>
+      </div></details>`).join('');
+    bindLearningContentActions();
+    $('learningContentStatus').textContent=`Có ${lessons.length} bài. Bấm vào một bài để quản lý.`;
+  }catch(e){$('learningContentStatus').textContent=e.message}
+}
+async function learningPost(path,body){
+  try{await api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});await loadLearningCourses()}
+  catch(e){$('learningContentStatus').textContent=e.message;throw e}
+}
+function bindLearningContentActions(){
+  document.querySelectorAll('.saveLesson').forEach(b=>b.onclick=()=>learningPost('/admin/learning/lesson',{id:b.dataset.id,course_id:$('manageLearningCourse').value,lesson_number:Number(document.querySelector(`.editLessonNumber[data-id="${b.dataset.id}"]`).value),title:document.querySelector(`.editLessonTitle[data-id="${b.dataset.id}"]`).value}));
+  document.querySelectorAll('.deleteLesson').forEach(b=>b.onclick=()=>{if(confirm('Xóa bài này cùng toàn bộ video và tài liệu?'))learningPost('/admin/learning/delete',{kind:'lesson',id:b.dataset.id})});
+  document.querySelectorAll('.addVideo').forEach(b=>b.onclick=()=>learningPost('/admin/learning/video',{lesson_id:b.dataset.lesson,title:document.querySelector(`.newVideoTitle[data-lesson="${b.dataset.lesson}"]`).value,youtube_url:document.querySelector(`.newVideoUrl[data-lesson="${b.dataset.lesson}"]`).value}));
+  document.querySelectorAll('.addResource').forEach(b=>b.onclick=()=>learningPost('/admin/learning/resource',{lesson_id:b.dataset.lesson,title:document.querySelector(`.newResourceTitle[data-lesson="${b.dataset.lesson}"]`).value,resource_url:document.querySelector(`.newResourceUrl[data-lesson="${b.dataset.lesson}"]`).value}));
+  document.querySelectorAll('.deleteItem').forEach(b=>b.onclick=()=>{if(confirm('Xóa mục này?'))learningPost('/admin/learning/delete',{kind:b.dataset.kind,id:Number(b.dataset.id)})});
+  document.querySelectorAll('.videoTitle,.videoUrl').forEach(x=>x.onchange=()=>learningPost('/admin/learning/video',{id:Number(x.dataset.id),title:document.querySelector(`.videoTitle[data-id="${x.dataset.id}"]`).value,youtube_url:document.querySelector(`.videoUrl[data-id="${x.dataset.id}"]`).value}));
+  document.querySelectorAll('.resourceTitle,.resourceUrl').forEach(x=>x.onchange=()=>learningPost('/admin/learning/resource',{id:Number(x.dataset.id),title:document.querySelector(`.resourceTitle[data-id="${x.dataset.id}"]`).value,resource_url:document.querySelector(`.resourceUrl[data-id="${x.dataset.id}"]`).value}));
+}
+async function addLearningLesson(){
+  const lesson_number=Number($('newLessonNumber').value),title=$('newLessonTitle').value.trim();
+  if(!Number.isInteger(lesson_number)||lesson_number<0||!title){$('learningContentStatus').textContent='Nhập đúng số bài và tên bài.';return}
+  try{await learningPost('/admin/learning/lesson',{course_id:$('manageLearningCourse').value,lesson_number,title});$('newLessonTitle').value=''}catch(e){$('learningContentStatus').textContent=e.message}
+}
+
 $('loginBtn').onclick=login;
 $('adminKey').onkeydown=e=>{if(e.key==='Enter')login()};
 $('logoutBtn').onclick=logout;
@@ -458,6 +525,9 @@ $('saveLearningCourse').onclick=saveLearningCourse;
 $('clearLearningForm').onclick=clearLearningForm;
 $('importLearningBtn').onclick=importLearning;
 $('learningTemplateBtn').onclick=learningTemplate;
+$('manageLearningCourse').onchange=loadLearningContent;
+$('refreshLearningContent').onclick=loadLearningContent;
+$('addLearningLesson').onclick=addLearningLesson;
 $('saveShadowVideo').onclick=saveShadowVideo;
 $('saveShadowRule').onclick=saveShadowRule;
 $('shadowTemplateBtn').onclick=downloadShadowTemplate;
