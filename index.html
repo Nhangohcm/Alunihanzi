@@ -865,7 +865,7 @@ if(demoCheck){
       const id=youtubeId(v.youtube||v.url);
       return id?`<div class="lesson-video"><button class="lesson-video-toggle" type="button" aria-expanded="false"><span class="lesson-video-icon">▻</span><span class="lesson-video-title">${courseEsc(v.title||('Video '+(i+1)))}</span><span class="lesson-video-state">⌄</span></button><div class="lesson-video-player"><div class="lesson-video-frame" data-youtube-id="${id}"></div></div></div>`:'';
     }).join('');
-    const resourceHtml=resources.length?`<div class="lesson-resources">${resources.map(r=>`<a class="btn soft" href="${courseEsc(r.url)}" target="_blank" rel="noopener noreferrer" download>📄 ${courseEsc(r.title||'Tải tài liệu')}</a>`).join('')}</div>`:'';
+    const resourceHtml=resources.length?`<div class="lesson-resources">${resources.map(r=>{const canDownload=r.access_mode!=='view';return `<a class="btn soft" href="${courseEsc(r.url)}" target="_blank" rel="noopener noreferrer" ${canDownload?'download':''}>${canDownload?'⬇':'👁'} ${courseEsc(r.title||(canDownload?'Tải tài liệu':'Xem tài liệu'))}</a>`}).join('')}</div>`:'';
     return `${videoHtml||'<div class="lesson-empty">Nội dung video và tài liệu của bài này đang được cập nhật.</div>'}${resourceHtml}<div class="lesson-actions"><span class="hint">Học xong bài, hãy đánh dấu để lưu tiến độ.</span><button class="btn ghost complete-btn" data-complete="${courseEsc(lesson.id)}">✓ Đánh dấu đã học</button></div>`;
   }
   function renderLessons(query=''){
