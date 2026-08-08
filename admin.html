@@ -440,7 +440,7 @@ async function importLearning(){
   try{const rows=await parseFile(file);const j=await api('/admin/learning/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:courseId,rows})});$('learningStatus').textContent=`Đã nhập ${j.lesson_count} bài. Nếu khóa đã xuất bản, trang học viên sẽ tự cập nhật.`;await loadLearningCourses()}catch(e){$('learningStatus').textContent=e.message}
 }
 function learningTemplate(){
-  const t='\uFEFFlesson_number,lesson_title,video_title,youtube_url,resource_title,resource_url\r\n1,Làm quen Pinyin,Video 1,https://youtu.be/...,Sách Pinyin,https://example.com/sach.pdf\r\n1,Làm quen Pinyin,Video 2,https://youtu.be/...,,\r\n2,Bốn thanh điệu,Video 1,https://youtu.be/...,Bài tập,https://example.com/bai-tap.pdf\r\n';
+  const t='\uFEFFlesson_number,lesson_title,video_title,youtube_url,resource_title,resource_url\r\n00,Giới thiệu khóa học,Video 1,https://youtu.be/...,Giới thiệu,https://example.com/gioi-thieu.pdf\r\n01,Làm quen Pinyin,Video 1,https://youtu.be/...,Sách Pinyin,https://example.com/sach.pdf\r\n01,Làm quen Pinyin,Video 2,https://youtu.be/...,,\r\n02,Bốn thanh điệu,Video 1,https://youtu.be/...,Bài tập,https://example.com/bai-tap.pdf\r\n';
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download='mau-khoa-hoc-video-aluni.csv';a.click();
 }
 
