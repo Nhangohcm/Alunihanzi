@@ -121,6 +121,21 @@ input,select{width:100%;border:1px solid var(--line);border-radius:13px;backgrou
   padding:18px;
   margin-bottom:16px;
 }
+.shadow-suggestions{margin-top:16px}
+.shadow-suggestions-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.shadow-suggestions-head h2{font-size:1.02rem;margin:0}
+.shadow-suggestions-head span{font-size:.8rem;color:var(--muted);font-weight:750}
+.shadow-suggestion-row{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 10px;scroll-snap-type:x proximity;scrollbar-width:thin}
+.shadow-suggestion{position:relative;flex:0 0 176px;scroll-snap-align:start;border:1px solid var(--line);border-radius:15px;background:white;padding:0;overflow:hidden;text-align:left;color:var(--ink);box-shadow:0 6px 16px rgba(46,58,50,.07)}
+.shadow-suggestion:hover{transform:translateY(-2px);box-shadow:0 9px 20px rgba(46,58,50,.12)}
+.shadow-suggestion-thumb{position:relative;display:block;aspect-ratio:16/9;background:var(--green2);overflow:hidden}
+.shadow-suggestion-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.shadow-suggestion-play{position:absolute;inset:50% auto auto 50%;translate:-50% -50%;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(255,253,248,.92);color:var(--green);font-size:.86rem;box-shadow:0 3px 12px rgba(0,0,0,.18)}
+.shadow-suggestion-lock{position:absolute;top:6px;right:6px;border-radius:999px;background:rgba(38,56,47,.88);color:white;padding:4px 7px;font-size:.68rem;font-weight:850}
+.shadow-suggestion-copy{display:block;padding:9px 10px 10px}
+.shadow-suggestion-course{display:block;color:var(--green);font-size:.68rem;font-weight:900;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shadow-suggestion-title{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:3px;font-size:.82rem;line-height:1.35;font-weight:850;min-height:2.7em}
+.shadow-suggestion-empty{color:var(--muted);font-size:.88rem;padding:8px 2px}
 .module-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .shadow-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:14px;max-width:100%;overflow:hidden}
 .shadow-grid>div{min-width:0;max-width:100%}
@@ -264,6 +279,7 @@ input,select{width:100%;border:1px solid var(--line);border-radius:13px;backgrou
 footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
 @media(max-width:760px){.words{grid-template-columns:repeat(2,1fr)}.row,.hero-demo{grid-template-columns:1fr}.hero-demo{text-align:center}}
 @media(max-width:480px){.wrap{width:min(100% - 12px,1080px);padding-top:12px}.card{padding:14px;border-radius:18px}.module-card{padding:12px;border-radius:18px}.searchrow{grid-template-columns:1fr}.words{gap:8px}.word{min-height:120px}.ri{grid-template-columns:86px 1fr}#shadowSection .wrap{width:calc(100% - 12px)}#shadowPlayerCard{padding:10px 6px}#shadowPlayerCard .video-frame{width:78vw;max-width:320px;border-radius:12px}.shadow-controls{width:calc(100% - 16px)}.shadow-controls .btn{flex:1 1 calc(50% - 8px);font-size:1rem;padding:12px 8px}.shadow-controls .btn#repeatLineBtn{flex-basis:100%}.transcript-list{padding:0 2px}.transcript-zh{font-size:1.52rem}.transcript-py{font-size:1.16rem}.transcript-vi{font-size:1.14rem}}
+@media(max-width:480px){.shadow-suggestion{flex-basis:148px}.shadow-suggestions{margin-top:13px}.shadow-suggestion-copy{padding:8px 9px 9px}}
 
 /* v29: mobile Shadowing is sized from the card, never from YouTube's iframe. */
 @media(max-width:780px){
@@ -742,6 +758,13 @@ if(demoCheck){
       <div class="module-note" id="shadowNote">
         Chọn khóa và video để bắt đầu luyện Shadowing.
       </div>
+      <div class="shadow-suggestions" id="shadowSuggestions" hidden>
+        <div class="shadow-suggestions-head">
+          <h2>Video gợi ý</h2>
+          <span>Vuốt ngang để xem thêm</span>
+        </div>
+        <div class="shadow-suggestion-row" id="shadowSuggestionRow"></div>
+      </div>
     </div>
 
     <div class="module-card shadow-grid" id="shadowPlayerCard" style="display:none">
@@ -854,6 +877,7 @@ let shadowTimer = null;
 let repeatCurrentLine = false;
 let showShadowPinyin = true;
 let showShadowVi = true;
+let shadowSuggestionsLoaded = false;
 
 function shadowApi(path){
   const base = String(window.ALUNI_API_BASE || '').replace(/\/+$/,'');
@@ -864,6 +888,72 @@ function youtubeIdFromUrl(url){
   const s = String(url || '').trim();
   const m = s.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{6,})/);
   return m ? m[1] : s;
+}
+
+function shadowThumbnail(url){
+  const id = youtubeIdFromUrl(url);
+  return id ? `https://i.ytimg.com/vi/${encodeURIComponent(id)}/mqdefault.jpg` : '';
+}
+
+function renderShadowSuggestions(videos){
+  const area = document.getElementById('shadowSuggestions');
+  const row = document.getElementById('shadowSuggestionRow');
+  if(!area || !row) return;
+  row.innerHTML = '';
+  if(!videos.length){
+    row.innerHTML = '<div class="shadow-suggestion-empty">Chưa có video để gợi ý.</div>';
+    area.hidden = false;
+    return;
+  }
+  videos.slice(0,6).forEach(v=>{
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'shadow-suggestion';
+    button.setAttribute('aria-label', `Mở ${v.title}`);
+    button.innerHTML = `
+      <span class="shadow-suggestion-thumb">
+        <img src="${shadowEsc(shadowThumbnail(v.youtube_url))}" alt="" loading="lazy">
+        <span class="shadow-suggestion-play">▶</span>
+        ${v.locked ? '<span class="shadow-suggestion-lock">🔒</span>' : ''}
+      </span>
+      <span class="shadow-suggestion-copy">
+        <span class="shadow-suggestion-course">${shadowEsc(v.course_name || '')}</span>
+        <span class="shadow-suggestion-title">${shadowEsc(v.title || 'Video Shadowing')}</span>
+      </span>`;
+    button.addEventListener('click', async()=>{
+      const courseSel = document.getElementById('shadowCourse');
+      const videoSel = document.getElementById('shadowVideo');
+      courseSel.value = String(v.course_id);
+      await loadShadowVideos(v.course_id);
+      videoSel.value = String(v.id);
+      await loadShadowVideo(v.id);
+      document.getElementById('shadowPlayerCard')?.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+    row.appendChild(button);
+  });
+  area.hidden = false;
+}
+
+async function loadShadowSuggestions(){
+  if(shadowSuggestionsLoaded || !shadowCourses.length) return;
+  shadowSuggestionsLoaded = true;
+  try{
+    const results = await Promise.all(shadowCourses.slice(0,4).map(async course=>{
+      const r = await fetch(shadowApi('/shadowing/videos?course_id=' + encodeURIComponent(course.id)), {cache:'no-store'});
+      if(!r.ok) return [];
+      const j = await r.json();
+      return (Array.isArray(j.videos) ? j.videos : []).slice(0,3).map(v=>({...v,course_name:course.name}));
+    }));
+    const mixed = [];
+    for(let i=0; mixed.length<6; i++){
+      let added = false;
+      results.forEach(list=>{ if(list[i] && mixed.length<6){ mixed.push(list[i]); added=true; } });
+      if(!added) break;
+    }
+    renderShadowSuggestions(mixed);
+  }catch(e){
+    shadowSuggestionsLoaded = false;
+  }
 }
 
 function fitShadowYoutubePlayer(){
@@ -897,6 +987,7 @@ async function loadShadowCourses(){
     if(!shadowCourses.length){
       document.getElementById('shadowNote').textContent = 'Chưa có video Shadowing. Hãy thêm video trong trang Admin.';
     }
+    loadShadowSuggestions();
   }catch(e){
     document.getElementById('shadowNote').textContent = 'Chưa tải được dữ liệu Shadowing.';
   }
