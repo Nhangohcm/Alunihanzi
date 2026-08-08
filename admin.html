@@ -32,7 +32,8 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
 .badge{display:inline-block;background:var(--soft);padding:5px 9px;border-radius:999px;font-size:.82rem;font-weight:800}
 .course-manager-head{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.course-manager-head>div{flex:1;min-width:220px}
 .lesson-admin{border:1px solid var(--line);border-radius:14px;margin-top:10px;overflow:hidden}.lesson-admin summary{cursor:pointer;padding:12px 14px;background:#f7f3eb;font-weight:850;display:flex;justify-content:space-between;gap:10px}.lesson-admin-body{padding:12px}
-.item-admin{display:grid;grid-template-columns:1fr 2fr auto auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.item-admin:last-child{border-bottom:0}.danger{background:#fff4f2;color:#a24d46;border:1px solid #e8c8c2}.mini-title{font-weight:850;margin:12px 0 5px}.order-buttons{display:flex;gap:5px}.order-buttons button{padding:8px 10px}
+.item-admin{display:grid;grid-template-columns:auto 1fr 2fr auto auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.item-admin:last-child{border-bottom:0}.danger{background:#fff4f2;color:#a24d46;border:1px solid #e8c8c2}.mini-title{font-weight:850;margin:12px 0 5px}.order-buttons{display:flex;gap:5px}.order-buttons button{padding:8px 10px}
+.drag-handle{cursor:grab;user-select:none;touch-action:none;color:var(--muted);padding:4px 7px;border:1px dashed var(--line);border-radius:8px;background:white}.drag-handle:active{cursor:grabbing}.dragging{opacity:.42}.drag-over{outline:2px solid var(--green);outline-offset:-2px}.lesson-summary-main{display:flex;align-items:center;gap:8px}.sortable-list{min-height:4px}
 @media(max-width:760px){.grid,.grid2{grid-template-columns:1fr}.login-row{grid-template-columns:1fr}}
 @media(max-width:760px){.item-admin{grid-template-columns:1fr}.item-admin button{width:100%}}
 </style>
@@ -473,16 +474,16 @@ async function loadLearningContent(){
   try{
     const j=await api('/admin/learning/course-content?course_id='+encodeURIComponent(courseId));
     const lessons=j.lessons||[];
-    $('learningLessonList').innerHTML=lessons.map(l=>`<details class="lesson-admin">
-      <summary><span>Bài ${String(l.lesson_number).padStart(2,'0')} — ${esc(l.title)}</span><span>${l.videos.length} video · ${l.resources.length} tài liệu</span></summary>
+    $('learningLessonList').innerHTML=lessons.map(l=>`<details class="lesson-admin" data-kind="lesson" data-id="${esc(l.id)}">
+      <summary><span class="lesson-summary-main"><span class="drag-handle" draggable="true" title="Giữ và kéo để đổi vị trí">⋮⋮</span><span>Bài ${String(l.lesson_number).padStart(2,'0')} — ${esc(l.title)}</span></span><span>${l.videos.length} video · ${l.resources.length} tài liệu</span></summary>
       <div class="lesson-admin-body">
         <div class="grid2"><div><label>Số bài</label><input class="editLessonNumber" data-id="${esc(l.id)}" type="number" min="0" value="${Number(l.lesson_number)}"></div><div><label>Tên bài</label><input class="editLessonTitle" data-id="${esc(l.id)}" value="${esc(l.title)}"></div></div>
         <div class="row" style="margin-top:8px"><button class="ghost saveLesson" data-id="${esc(l.id)}">Lưu tên/số bài</button><button class="danger deleteLesson" data-id="${esc(l.id)}">Xóa bài</button></div>
         <div class="mini-title">Video YouTube</div>
-        ${(l.videos||[]).map((v,i,a)=>`<div class="item-admin"><input class="videoTitle" data-id="${v.id}" value="${esc(v.title)}"><input class="videoUrl" data-id="${v.id}" value="${esc(v.youtube_url)}"><span class="order-buttons"><button class="ghost reorderItem" data-kind="video" data-id="${v.id}" data-direction="up" ${i===0?'disabled':''}>↑</button><button class="ghost reorderItem" data-kind="video" data-id="${v.id}" data-direction="down" ${i===a.length-1?'disabled':''}>↓</button></span><button class="danger deleteItem" data-kind="video" data-id="${v.id}">Xóa</button></div>`).join('')||'<div class="muted">Chưa có video.</div>'}
+        <div class="sortable-list" data-kind="video">${(l.videos||[]).map((v,i,a)=>`<div class="item-admin" data-kind="video" data-id="${v.id}"><span class="drag-handle" draggable="true" title="Giữ và kéo để đổi vị trí">⋮⋮</span><input class="videoTitle" data-id="${v.id}" value="${esc(v.title)}"><input class="videoUrl" data-id="${v.id}" value="${esc(v.youtube_url)}"><span class="order-buttons"><button class="ghost reorderItem" data-kind="video" data-id="${v.id}" data-direction="up" ${i===0?'disabled':''}>↑</button><button class="ghost reorderItem" data-kind="video" data-id="${v.id}" data-direction="down" ${i===a.length-1?'disabled':''}>↓</button></span><button class="danger deleteItem" data-kind="video" data-id="${v.id}">Xóa</button></div>`).join('')||'<div class="muted">Chưa có video.</div>'}</div>
         <div class="grid2" style="margin-top:8px"><input class="newVideoTitle" data-lesson="${esc(l.id)}" placeholder="Tên video"><input class="newVideoUrl" data-lesson="${esc(l.id)}" placeholder="Link YouTube"></div><button class="ghost addVideo" data-lesson="${esc(l.id)}" style="margin-top:8px">＋ Thêm video</button>
         <div class="mini-title">Bài tập / tài liệu</div>
-        ${(l.resources||[]).map((r,i,a)=>`<div class="item-admin"><input class="resourceTitle" data-id="${r.id}" value="${esc(r.title)}"><input class="resourceUrl" data-id="${r.id}" value="${esc(r.resource_url)}"><span class="order-buttons"><button class="ghost reorderItem" data-kind="resource" data-id="${r.id}" data-direction="up" ${i===0?'disabled':''}>↑</button><button class="ghost reorderItem" data-kind="resource" data-id="${r.id}" data-direction="down" ${i===a.length-1?'disabled':''}>↓</button></span><button class="danger deleteItem" data-kind="resource" data-id="${r.id}">Xóa</button></div>`).join('')||'<div class="muted">Chưa có tài liệu.</div>'}
+        <div class="sortable-list" data-kind="resource">${(l.resources||[]).map((r,i,a)=>`<div class="item-admin" data-kind="resource" data-id="${r.id}"><span class="drag-handle" draggable="true" title="Giữ và kéo để đổi vị trí">⋮⋮</span><input class="resourceTitle" data-id="${r.id}" value="${esc(r.title)}"><input class="resourceUrl" data-id="${r.id}" value="${esc(r.resource_url)}"><span class="order-buttons"><button class="ghost reorderItem" data-kind="resource" data-id="${r.id}" data-direction="up" ${i===0?'disabled':''}>↑</button><button class="ghost reorderItem" data-kind="resource" data-id="${r.id}" data-direction="down" ${i===a.length-1?'disabled':''}>↓</button></span><button class="danger deleteItem" data-kind="resource" data-id="${r.id}">Xóa</button></div>`).join('')||'<div class="muted">Chưa có tài liệu.</div>'}</div>
         <div class="grid2" style="margin-top:8px"><input class="newResourceTitle" data-lesson="${esc(l.id)}" placeholder="Tên tài liệu, ví dụ: Bài tập"><input class="newResourceUrl" data-lesson="${esc(l.id)}" placeholder="Link PDF/Word/Drive..."></div><button class="ghost addResource" data-lesson="${esc(l.id)}" style="margin-top:8px">＋ Thêm tài liệu</button>
       </div></details>`).join('');
     bindLearningContentActions();
@@ -490,8 +491,31 @@ async function loadLearningContent(){
   }catch(e){$('learningContentStatus').textContent=e.message}
 }
 async function learningPost(path,body){
-  try{await api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});await loadLearningCourses()}
+  const opened=[...document.querySelectorAll('.lesson-admin[open]')].map(x=>x.dataset.id);
+  try{await api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});await loadLearningCourses();opened.forEach(id=>{const d=document.querySelector(`.lesson-admin[data-id="${CSS.escape(id)}"]`);if(d)d.open=true})}
   catch(e){$('learningContentStatus').textContent=e.message;throw e}
+}
+async function saveVisibleOrder(container,kind){
+  const ids=[...container.children].filter(x=>x.dataset&&x.dataset.id).map(x=>x.dataset.id);
+  await api('/admin/learning/reorder-list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind,ids,course_id:$('manageLearningCourse').value})});
+  $('learningContentStatus').textContent='Đã lưu thứ tự mới.';
+  refreshOrderButtons(container);
+}
+function refreshOrderButtons(container){
+  const rows=[...container.children].filter(x=>x.dataset&&x.dataset.id);
+  rows.forEach((row,i)=>{const up=row.querySelector('[data-direction="up"]'),down=row.querySelector('[data-direction="down"]');if(up)up.disabled=i===0;if(down)down.disabled=i===rows.length-1});
+}
+function enableDragSort(){
+  let dragged=null,source=null;
+  document.querySelectorAll('.drag-handle').forEach(handle=>{
+    handle.ondragstart=e=>{dragged=handle.closest('[data-kind][data-id]');source=dragged.parentElement;dragged.classList.add('dragging');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',dragged.dataset.id)};
+    handle.ondragend=()=>{if(dragged)dragged.classList.remove('dragging');document.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over'));dragged=null;source=null};
+  });
+  document.querySelectorAll('#learningLessonList,.sortable-list').forEach(container=>{
+    container.ondragover=e=>{if(!dragged||source!==container)return;e.preventDefault();const target=e.target.closest('[data-kind][data-id]');if(!target||target===dragged||target.parentElement!==container)return;target.classList.add('drag-over');const r=target.getBoundingClientRect();container.insertBefore(dragged,e.clientY<r.top+r.height/2?target:target.nextSibling)};
+    container.ondragleave=e=>{const t=e.target.closest('.drag-over');if(t)t.classList.remove('drag-over')};
+    container.ondrop=async e=>{if(!dragged||source!==container)return;e.preventDefault();document.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over'));await saveVisibleOrder(container,container.id==='learningLessonList'?'lesson':container.dataset.kind)};
+  });
 }
 function bindLearningContentActions(){
   document.querySelectorAll('.saveLesson').forEach(b=>b.onclick=()=>learningPost('/admin/learning/lesson',{id:b.dataset.id,course_id:$('manageLearningCourse').value,lesson_number:Number(document.querySelector(`.editLessonNumber[data-id="${b.dataset.id}"]`).value),title:document.querySelector(`.editLessonTitle[data-id="${b.dataset.id}"]`).value}));
@@ -499,9 +523,10 @@ function bindLearningContentActions(){
   document.querySelectorAll('.addVideo').forEach(b=>b.onclick=()=>learningPost('/admin/learning/video',{lesson_id:b.dataset.lesson,title:document.querySelector(`.newVideoTitle[data-lesson="${b.dataset.lesson}"]`).value,youtube_url:document.querySelector(`.newVideoUrl[data-lesson="${b.dataset.lesson}"]`).value}));
   document.querySelectorAll('.addResource').forEach(b=>b.onclick=()=>learningPost('/admin/learning/resource',{lesson_id:b.dataset.lesson,title:document.querySelector(`.newResourceTitle[data-lesson="${b.dataset.lesson}"]`).value,resource_url:document.querySelector(`.newResourceUrl[data-lesson="${b.dataset.lesson}"]`).value}));
   document.querySelectorAll('.deleteItem').forEach(b=>b.onclick=()=>{if(confirm('Xóa mục này?'))learningPost('/admin/learning/delete',{kind:b.dataset.kind,id:Number(b.dataset.id)})});
-  document.querySelectorAll('.reorderItem').forEach(b=>b.onclick=()=>learningPost('/admin/learning/reorder',{kind:b.dataset.kind,id:Number(b.dataset.id),direction:b.dataset.direction}));
+  document.querySelectorAll('.reorderItem').forEach(b=>b.onclick=async()=>{const row=b.closest('[data-kind][data-id]'),box=row.parentElement,sibling=b.dataset.direction==='up'?row.previousElementSibling:row.nextElementSibling;if(!sibling)return;box.insertBefore(row,b.dataset.direction==='up'?sibling:sibling.nextSibling);await saveVisibleOrder(box,b.dataset.kind)});
   document.querySelectorAll('.videoTitle,.videoUrl').forEach(x=>x.onchange=()=>learningPost('/admin/learning/video',{id:Number(x.dataset.id),title:document.querySelector(`.videoTitle[data-id="${x.dataset.id}"]`).value,youtube_url:document.querySelector(`.videoUrl[data-id="${x.dataset.id}"]`).value}));
   document.querySelectorAll('.resourceTitle,.resourceUrl').forEach(x=>x.onchange=()=>learningPost('/admin/learning/resource',{id:Number(x.dataset.id),title:document.querySelector(`.resourceTitle[data-id="${x.dataset.id}"]`).value,resource_url:document.querySelector(`.resourceUrl[data-id="${x.dataset.id}"]`).value}));
+  enableDragSort();
 }
 async function addLearningLesson(){
   const title=$('newLessonTitle').value.trim();
