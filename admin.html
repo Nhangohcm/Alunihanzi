@@ -60,6 +60,7 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
     <div class="tabs">
       <button class="tab active" data-pane="codesPane">🔑 Mã kích hoạt</button>
       <button class="tab" data-pane="contentPane">📚 Nội dung khóa học</button>
+      <button class="tab" data-pane="learningPane">🎓 Khóa học video</button>
 <button class="tab" data-pane="shadowPane">🎥 Video Shadowing</button>
     </div>
   </div>
@@ -130,6 +131,45 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
           <tbody id="courseBody"></tbody>
         </table>
       </div>
+    </div>
+  </section>
+
+  <section class="pane" id="learningPane">
+    <div class="card">
+      <h2>Tạo / cập nhật khóa học video</h2>
+      <p class="muted">Khóa chỉ xuất hiện ở trang học viên khi anh bật <b>Xuất bản</b>. Dùng lại đúng mã khóa để cập nhật, không tạo trùng.</p>
+      <div class="grid">
+        <div><label>Mã khóa</label><input id="learningId" placeholder="Ví dụ: pinyin-48"></div>
+        <div><label>Tên khóa</label><input id="learningTitle" placeholder="Pinyin tiếng Trung từ cơ bản"></div>
+        <div><label>Biểu tượng ngắn</label><input id="learningIcon" value="拼" maxlength="4"></div>
+      </div>
+      <div class="grid" style="margin-top:10px">
+        <div><label>Loại khóa</label><select id="learningAccess"><option value="free">Miễn phí</option><option value="paid">Có phí</option></select></div>
+        <div><label>Thứ tự hiển thị</label><input id="learningSort" type="number" value="0"></div>
+        <div><label>Trạng thái</label><select id="learningPublished"><option value="0">Lưu nháp / Ẩn</option><option value="1">Xuất bản</option></select></div>
+      </div>
+      <div style="margin-top:10px"><label>Mô tả khóa học</label><input id="learningDescription" placeholder="Mô tả ngắn hiển thị trên thẻ khóa học"></div>
+      <div class="row" style="margin-top:10px"><button class="primary" id="saveLearningCourse">Lưu khóa học</button><button class="ghost" id="clearLearningForm">Tạo khóa mới</button></div>
+      <div class="status" id="learningStatus"></div>
+    </div>
+
+    <div class="card">
+      <h2>Nhập bài, video YouTube và tài liệu</h2>
+      <div class="grid2">
+        <div><label>Chọn khóa</label><select id="learningImportCourse"></select></div>
+        <div><label>File CSV hoặc XLSX</label><input id="learningFile" type="file" accept=".csv,.xlsx,.xls"></div>
+      </div>
+      <p class="muted">Mỗi video hoặc tài liệu là một dòng. Một bài có bao nhiêu video cũng được. Khi nhập lại, danh sách bài cũ của khóa này sẽ được thay bằng file mới.</p>
+      <div class="sample">lesson_number,lesson_title,video_title,youtube_url,resource_title,resource_url
+1,Làm quen Pinyin,Video 1,https://youtu.be/...,Sách Pinyin,https://...pdf
+1,Làm quen Pinyin,Video 2,https://youtu.be/...,,
+2,Bốn thanh điệu,Video 1,https://youtu.be/...,Bài tập,https://...pdf</div>
+      <div class="row" style="margin-top:10px"><button class="primary" id="importLearningBtn">⬆ Nhập nội dung khóa</button><button class="ghost" id="learningTemplateBtn">⬇ Tải file mẫu CSV</button></div>
+    </div>
+
+    <div class="card">
+      <h2>Các khóa học video</h2>
+      <div class="tablewrap"><table><thead><tr><th>Thứ tự</th><th>Khóa học</th><th>Loại</th><th>Số bài</th><th>Trạng thái</th><th></th></tr></thead><tbody id="learningCourseBody"></tbody></table></div>
     </div>
   </section>
 
@@ -216,7 +256,7 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
 <script>
 const base=String(window.ALUNI_API_BASE||'').replace(/\/+$/,'');
 const $=id=>document.getElementById(id);
-let codes=[],courses=[],adminSecret='';
+let codes=[],courses=[],learningCourses=[],adminSecret='';
 
 function fmt(v){return v?new Date(v).toLocaleString('vi-VN'):'—'}
 async function api(path,opts={}){
@@ -243,6 +283,7 @@ async function login(){
     $('loginCard').style.display='none';
     $('adminApp').classList.add('show');
     await loadCourses();
+    await loadLearningCourses();
     await refreshCodes();
   }catch(e){
     $('loginStatus').textContent='Sai mã quản trị.';
@@ -263,6 +304,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   b.classList.add('active');
   $(b.dataset.pane).classList.add('active');
   if(b.dataset.pane==='contentPane') loadCourses();
+  if(b.dataset.pane==='learningPane') loadLearningCourses();
   if(b.dataset.pane==='shadowPane'){ loadCourses().then(()=>{loadShadowRule();loadShadowAdminVideos();}); }
 });
 
@@ -362,6 +404,46 @@ function template(){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download='mau-noi-dung-aluni.csv';a.click();
 }
 
+async function loadLearningCourses(){
+  try{
+    const j=await api('/admin/learning/courses');learningCourses=j.courses||[];
+    $('learningImportCourse').innerHTML='';$('learningCourseBody').innerHTML='';
+    learningCourses.forEach(c=>{
+      $('learningImportCourse').add(new Option(c.title,c.id));
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${Number(c.sort_order||0)}</td><td><b>${c.title}</b><br><span class="muted">${c.id}</span></td><td>${c.access==='paid'?'Có phí':'Miễn phí'}</td><td>${c.lesson_count||0}</td><td>${Number(c.published)?'<span class="badge">Đã xuất bản</span>':'Lưu nháp'}</td><td><button class="ghost editLearning" data-id="${c.id}">Sửa</button></td>`;
+      $('learningCourseBody').appendChild(tr);
+    });
+    document.querySelectorAll('.editLearning').forEach(b=>b.onclick=()=>editLearningCourse(b.dataset.id));
+    $('learningStatus').textContent=`Có ${learningCourses.length} khóa học video.`;
+  }catch(e){$('learningStatus').textContent=e.message}
+}
+function editLearningCourse(id){
+  const c=learningCourses.find(x=>x.id===id);if(!c)return;
+  $('learningId').value=c.id;$('learningId').readOnly=true;$('learningTitle').value=c.title||'';$('learningIcon').value=c.icon||'课';$('learningAccess').value=c.access||'free';$('learningSort').value=Number(c.sort_order||0);$('learningPublished').value=Number(c.published)?'1':'0';$('learningDescription').value=c.description||'';
+  $('learningStatus').textContent='Đang sửa khóa '+c.title+'.';window.scrollTo({top:0,behavior:'smooth'});
+}
+function clearLearningForm(){
+  $('learningId').value='';$('learningId').readOnly=false;$('learningTitle').value='';$('learningIcon').value='拼';$('learningAccess').value='free';$('learningSort').value='0';$('learningPublished').value='0';$('learningDescription').value='';
+}
+async function saveLearningCourse(){
+  try{
+    const id=$('learningId').value.trim(),title=$('learningTitle').value.trim();
+    if(!id||!title){$('learningStatus').textContent='Nhập mã khóa và tên khóa.';return}
+    const j=await api('/admin/learning/course',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,title,icon:$('learningIcon').value.trim(),access:$('learningAccess').value,sort_order:Number($('learningSort').value||0),published:$('learningPublished').value==='1',description:$('learningDescription').value.trim()})});
+    $('learningStatus').textContent=$('learningPublished').value==='1'?'Đã lưu và xuất bản khóa học.':'Đã lưu bản nháp.';$('learningId').value=j.id;await loadLearningCourses();
+  }catch(e){$('learningStatus').textContent=e.message}
+}
+async function importLearning(){
+  const file=$('learningFile').files[0],courseId=$('learningImportCourse').value;
+  if(!courseId||!file){$('learningStatus').textContent='Chọn khóa và file CSV/XLSX.';return}
+  try{const rows=await parseFile(file);const j=await api('/admin/learning/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:courseId,rows})});$('learningStatus').textContent=`Đã nhập ${j.lesson_count} bài. Nếu khóa đã xuất bản, trang học viên sẽ tự cập nhật.`;await loadLearningCourses()}catch(e){$('learningStatus').textContent=e.message}
+}
+function learningTemplate(){
+  const t='\uFEFFlesson_number,lesson_title,video_title,youtube_url,resource_title,resource_url\r\n1,Làm quen Pinyin,Video 1,https://youtu.be/...,Sách Pinyin,https://example.com/sach.pdf\r\n1,Làm quen Pinyin,Video 2,https://youtu.be/...,,\r\n2,Bốn thanh điệu,Video 1,https://youtu.be/...,Bài tập,https://example.com/bai-tap.pdf\r\n';
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download='mau-khoa-hoc-video-aluni.csv';a.click();
+}
+
 $('loginBtn').onclick=login;
 $('adminKey').onkeydown=e=>{if(e.key==='Enter')login()};
 $('logoutBtn').onclick=logout;
@@ -372,6 +454,10 @@ $('saveCourse').onclick=saveCourse;
 $('loadCourses').onclick=loadCourses;
 $('importBtn').onclick=doImport;
 $('templateBtn').onclick=template;
+$('saveLearningCourse').onclick=saveLearningCourse;
+$('clearLearningForm').onclick=clearLearningForm;
+$('importLearningBtn').onclick=importLearning;
+$('learningTemplateBtn').onclick=learningTemplate;
 $('saveShadowVideo').onclick=saveShadowVideo;
 $('saveShadowRule').onclick=saveShadowRule;
 $('shadowTemplateBtn').onclick=downloadShadowTemplate;

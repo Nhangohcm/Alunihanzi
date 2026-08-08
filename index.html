@@ -801,9 +801,18 @@ if(demoCheck){
   const grid=document.getElementById('courseCatalogGrid');
   const lessonList=document.getElementById('courseLessonList');
   let activeCourse=null;
+  let managedCourses=null;
 
   function courseEsc(value){return String(value??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-  function allCourses(){return Array.isArray(window.ALUNI_COURSES)?window.ALUNI_COURSES:[]}
+  function allCourses(){return Array.isArray(managedCourses)?managedCourses:(Array.isArray(window.ALUNI_COURSES)?window.ALUNI_COURSES:[])}
+  async function loadManagedCourses(){
+    const base=String(window.ALUNI_API_BASE||'').replace(/\/+$/,'');
+    if(!base)return;
+    try{
+      const r=await fetch(base+'/learning-courses',{cache:'no-store'});const j=await r.json();
+      if(r.ok&&Array.isArray(j.courses)&&j.managed){managedCourses=j.courses;renderCatalog()}
+    }catch(e){/* Giữ dữ liệu mẫu khi mạng chưa sẵn sàng. */}
+  }
   function loadProgress(){try{return JSON.parse(localStorage.getItem(COURSE_PROGRESS_KEY)||'{}')||{}}catch(e){return{}}}
   function saveProgress(value){localStorage.setItem(COURSE_PROGRESS_KEY,JSON.stringify(value))}
   function completed(courseId){const p=loadProgress();return Array.isArray(p[courseId]?.completed)?p[courseId].completed:[]}
@@ -905,6 +914,7 @@ if(demoCheck){
   document.getElementById('courseLessonSearch')?.addEventListener('input',e=>renderLessons(e.target.value));
   document.getElementById('continueCourseBtn')?.addEventListener('click',continueCourse);
   renderCatalog();
+  loadManagedCourses();
 })();
 </script>
 
