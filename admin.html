@@ -471,18 +471,26 @@ function learningTemplate(){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download='mau-khoa-hoc-video-aluni.csv';a.click();
 }
 
+let shadowLibraryVideos=[];
+function shadowLibraryOptions(selected){
+  return '<option value="">— Chưa liên kết —</option>'+shadowLibraryVideos.map(v=>`<option value="${Number(v.id)}" ${Number(selected)===Number(v.id)?'selected':''}>${esc(v.course_id)} · Bài ${Number(v.lesson_number)} · ${esc(v.title)}</option>`).join('');
+}
 async function loadLearningContent(){
   const courseId=$('manageLearningCourse').value;
   if(!courseId)return;
   $('learningContentStatus').textContent='Đang tải nội dung...';
   try{
-    const j=await api('/admin/learning/course-content?course_id='+encodeURIComponent(courseId));
+    const [j,shadowData]=await Promise.all([api('/admin/learning/course-content?course_id='+encodeURIComponent(courseId)),api('/admin/shadowing/videos')]);
+    shadowLibraryVideos=shadowData.videos||[];
     const lessons=j.lessons||[];
     $('learningLessonList').innerHTML=lessons.map(l=>`<details class="lesson-admin" data-kind="lesson" data-id="${esc(l.id)}">
       <summary><span class="lesson-summary-main"><span class="drag-handle" draggable="true" title="Giữ và kéo để đổi vị trí">⋮⋮</span><span>Bài ${String(l.lesson_number).padStart(2,'0')} — ${esc(l.title)}</span></span><span>${l.videos.length} video · ${l.resources.length} tài liệu</span></summary>
       <div class="lesson-admin-body">
         <div class="grid2"><div><label>Số bài</label><input class="editLessonNumber" data-id="${esc(l.id)}" type="number" min="0" value="${Number(l.lesson_number)}"></div><div><label>Tên bài</label><input class="editLessonTitle" data-id="${esc(l.id)}" value="${esc(l.title)}"></div></div>
         <div class="row" style="margin-top:8px"><button class="ghost saveLesson" data-id="${esc(l.id)}">Lưu tên/số bài</button><button class="danger deleteLesson" data-id="${esc(l.id)}">Xóa bài</button></div>
+        <div class="mini-title">Liên kết Thư viện Shadowing</div>
+        <div class="grid2"><select class="lessonShadowLink" data-lesson="${esc(l.id)}">${shadowLibraryOptions(l.shadow_video_id)}</select><button class="ghost saveShadowLink" data-lesson="${esc(l.id)}">🎧 Lưu liên kết Shadowing</button></div>
+        <div class="file-note">Chọn một video đã nhập trong tab Video Shadowing. Video và transcript không bị sao chép; có thể dùng lại cho nhiều bài.</div>
         <div class="mini-title">Video YouTube</div>
         <div class="sortable-list" data-kind="video">${(l.videos||[]).map((v,i,a)=>`<div class="item-admin" data-kind="video" data-id="${v.id}"><span class="drag-handle" draggable="true" title="Giữ và kéo để đổi vị trí">⋮⋮</span><input class="videoTitle" data-id="${v.id}" value="${esc(v.title)}"><input class="videoUrl" data-id="${v.id}" value="${esc(v.youtube_url)}"><select class="videoAspect" data-id="${v.id}"><option value="auto" ${v.video_aspect==='auto'?'selected':''}>Tự động</option><option value="landscape" ${v.video_aspect==='landscape'?'selected':''}>16:9</option><option value="portrait" ${v.video_aspect==='portrait'?'selected':''}>9:16</option></select><span class="order-buttons"><button class="ghost reorderItem" data-kind="video" data-id="${v.id}" data-direction="up" ${i===0?'disabled':''}>↑</button><button class="ghost reorderItem" data-kind="video" data-id="${v.id}" data-direction="down" ${i===a.length-1?'disabled':''}>↓</button></span><button class="danger deleteItem" data-kind="video" data-id="${v.id}">Xóa</button></div>`).join('')||'<div class="muted">Chưa có video.</div>'}</div>
         <div class="grid" style="margin-top:8px"><input class="newVideoTitle" data-lesson="${esc(l.id)}" placeholder="Tên video"><input class="newVideoUrl" data-lesson="${esc(l.id)}" placeholder="Link YouTube"><select class="newVideoAspect" data-lesson="${esc(l.id)}"><option value="auto">Tự động</option><option value="landscape">Ngang 16:9</option><option value="portrait">Dọc 9:16</option></select></div><button class="ghost addVideo" data-lesson="${esc(l.id)}" style="margin-top:8px">＋ Thêm video</button>
@@ -526,6 +534,7 @@ function bindLearningContentActions(){
   document.querySelectorAll('.saveLesson').forEach(b=>b.onclick=()=>learningPost('/admin/learning/lesson',{id:b.dataset.id,course_id:$('manageLearningCourse').value,lesson_number:Number(document.querySelector(`.editLessonNumber[data-id="${b.dataset.id}"]`).value),title:document.querySelector(`.editLessonTitle[data-id="${b.dataset.id}"]`).value}));
   document.querySelectorAll('.deleteLesson').forEach(b=>b.onclick=()=>{if(confirm('Xóa bài này cùng toàn bộ video và tài liệu?'))learningPost('/admin/learning/delete',{kind:'lesson',id:b.dataset.id})});
   document.querySelectorAll('.addVideo').forEach(b=>b.onclick=()=>learningPost('/admin/learning/video',{lesson_id:b.dataset.lesson,title:document.querySelector(`.newVideoTitle[data-lesson="${b.dataset.lesson}"]`).value,youtube_url:document.querySelector(`.newVideoUrl[data-lesson="${b.dataset.lesson}"]`).value,video_aspect:document.querySelector(`.newVideoAspect[data-lesson="${b.dataset.lesson}"]`).value}));
+  document.querySelectorAll('.saveShadowLink').forEach(b=>b.onclick=()=>learningPost('/admin/learning/shadow-link',{lesson_id:b.dataset.lesson,shadow_video_id:document.querySelector(`.lessonShadowLink[data-lesson="${CSS.escape(b.dataset.lesson)}"]`).value||null}));
   document.querySelectorAll('.addResource').forEach(b=>b.onclick=()=>learningPost('/admin/learning/resource',{lesson_id:b.dataset.lesson,title:document.querySelector(`.newResourceTitle[data-lesson="${b.dataset.lesson}"]`).value,resource_url:document.querySelector(`.newResourceUrl[data-lesson="${b.dataset.lesson}"]`).value,access_mode:document.querySelector(`.newResourceMode[data-lesson="${b.dataset.lesson}"]`).value}));
   document.querySelectorAll('.uploadResource').forEach(b=>b.onclick=async()=>{
     const lesson=b.dataset.lesson,fileInput=document.querySelector(`.uploadResourceFile[data-lesson="${lesson}"]`),file=fileInput.files[0];

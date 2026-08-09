@@ -957,7 +957,8 @@ if(demoCheck){
       return id?`<div class="lesson-video"><button class="lesson-video-toggle" type="button" aria-expanded="false"><span class="lesson-video-icon">▻</span><span class="lesson-video-title">${courseEsc(v.title||('Video '+(i+1)))}</span><span class="lesson-video-state">⌄</span></button><div class="lesson-video-player"><div class="lesson-video-frame ${aspect==='portrait'?'video-portrait':''}" data-youtube-id="${id}"></div></div></div>`:'';
     }).join('');
     const resourceHtml=resources.length?`<div class="lesson-resources">${resources.map(r=>{const canDownload=r.access_mode!=='view';return `<a class="btn soft" href="${courseEsc(r.url)}" target="_blank" rel="noopener noreferrer" ${canDownload?'download':''}>${canDownload?'⬇':'👁'} ${courseEsc(r.title||(canDownload?'Tải tài liệu':'Xem tài liệu'))}</a>`}).join('')}</div>`:'';
-    return `${videoHtml||'<div class="lesson-empty">Nội dung video và tài liệu của bài này đang được cập nhật.</div>'}${resourceHtml}<div class="lesson-actions"><span class="hint">Học xong bài, hãy đánh dấu để lưu tiến độ.</span><button class="btn ghost complete-btn" data-complete="${courseEsc(lesson.id)}">✓ Đánh dấu đã học</button></div>`;
+    const shadowHtml=lesson.shadow_video_id?`<div class="lesson-resources"><button class="btn course-shadow-btn" data-open-linked-shadow="${Number(lesson.shadow_video_id)}" data-shadow-course="${courseEsc(lesson.shadow_course_id||'')}">🎧 Luyện Shadowing bài này${lesson.shadow_title?' · '+courseEsc(lesson.shadow_title):''}</button></div>`:'';
+    return `${videoHtml||'<div class="lesson-empty">Nội dung video và tài liệu của bài này đang được cập nhật.</div>'}${resourceHtml}${shadowHtml}<div class="lesson-actions"><span class="hint">Học xong bài, hãy đánh dấu để lưu tiến độ.</span><button class="btn ghost complete-btn" data-complete="${courseEsc(lesson.id)}">✓ Đánh dấu đã học</button></div>`;
   }
   function renderLessons(query=''){
     if(!activeCourse)return;
@@ -969,7 +970,7 @@ if(demoCheck){
       return `<article class="course-lesson" data-lesson-id="${courseEsc(l.id)}">
         <button class="lesson-head" aria-expanded="false">
           <span class="lesson-number">${String(l.number).padStart(2,'0')}</span>
-          <span class="lesson-title">${isDone?'✓ ':''}${courseEsc(l.title)}<span class="lesson-summary">${videoCount?videoCount+' video':'Đang cập nhật nội dung'}${l.resources?.length?' · '+l.resources.length+' tài liệu':''}</span></span>
+          <span class="lesson-title">${isDone?'✓ ':''}${courseEsc(l.title)}<span class="lesson-summary">${videoCount?videoCount+' video':'Đang cập nhật nội dung'}${l.resources?.length?' · '+l.resources.length+' tài liệu':''}${l.shadow_video_id?' · 🎧 Shadowing':''}</span></span>
           <span class="lesson-state">⌄</span>
         </button><div class="lesson-body">${lessonBody(l)}</div>
       </article>`;
@@ -1013,6 +1014,7 @@ if(demoCheck){
     const card=lessonList.querySelector(`[data-lesson-id="${target}"]`)||lessonList.querySelector('.course-lesson');if(card)toggleLesson(card);
   }
   document.addEventListener('click',e=>{
+    const linkedShadow=e.target.closest('[data-open-linked-shadow]');if(linkedShadow){openLinkedShadowing(linkedShadow.dataset.openLinkedShadow,linkedShadow.dataset.shadowCourse);return}
     const shadow=e.target.closest('[data-open-shadow-course]');if(shadow){openCompanionShadowing(shadow.dataset.openShadowCourse);return}
     const mine=e.target.closest('[data-open-my-course]');if(mine){document.querySelector('.app-nav-btn[data-section="coursesSection"]')?.click();openCourse(mine.dataset.openMyCourse);return}
     const open=e.target.closest('[data-open-course]');if(open){openCourse(open.dataset.openCourse);return}
@@ -1207,6 +1209,20 @@ async function openCompanionShadowing(courseId){
   courseSel.value=String(courseId||'');
   await loadShadowVideos(courseSel.value);
   document.getElementById('shadowSection')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+async function openLinkedShadowing(videoId,courseId){
+  const nav=document.querySelector('.app-nav-btn[data-section="shadowSection"]');
+  nav?.click();
+  if(!shadowCourses.length)await loadShadowCourses();
+  const courseSel=document.getElementById('shadowCourse');
+  const videoSel=document.getElementById('shadowVideo');
+  if(!courseSel||!videoSel)return;
+  courseSel.value=String(courseId||'');
+  await loadShadowVideos(courseSel.value);
+  videoSel.value=String(videoId||'');
+  await loadShadowVideo(videoSel.value);
+  document.getElementById('shadowPlayerCard')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 function youtubeIdFromUrl(url){
