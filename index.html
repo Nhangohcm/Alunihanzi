@@ -491,6 +491,40 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
 .lesson-video-player{display:none;padding:0 4px 12px}.lesson-video.playing .lesson-video-player{display:block}
 @media(max-width:780px){.app-topbar{gap:7px}.app-mini-brand{align-self:center}.app-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;overflow:visible}.app-nav-btn{width:100%;padding:8px 6px;font-size:.8rem;overflow:hidden;text-overflow:ellipsis}.module-header{padding-top:10px}}
 @media(max-width:480px){.lesson-list{gap:6px}.course-lesson{border-radius:12px}.lesson-head{grid-template-columns:auto minmax(0,1fr) auto;gap:8px;padding:9px 10px}.lesson-number{width:31px;height:31px;border-radius:9px;font-size:.83rem}.lesson-title{font-size:.9rem;font-weight:790;line-height:1.25}.lesson-summary{font-size:.72rem;margin-top:2px}.lesson-body{padding:4px 10px 10px}.lesson-video-toggle{padding:10px 2px}.lesson-video-toggle .lesson-video-title{font-size:.86rem;font-weight:700}.course-detail-head h2{font-size:1.3rem}.course-detail-head p{font-size:.9rem}.course-tools{margin:10px 0}.course-progress{margin:12px 0 10px}}
+.lesson-video-frame.video-portrait{aspect-ratio:9/16!important;max-width:360px;margin-inline:auto}.video-frame.video-portrait{aspect-ratio:9/16!important;max-width:430px;margin-inline:auto}
+@media(max-width:760px){#shadowPlayerCard .video-frame.video-portrait{width:min(76vw,330px)!important;max-width:calc(100% - 12px)!important;aspect-ratio:9/16!important}.lesson-video-frame.video-portrait{width:min(78vw,330px);aspect-ratio:9/16!important}}
+/* v32-R1: keep portrait video compact on phones so Shadowing text remains visible. */
+@media(max-width:760px){
+  #shadowPlayerCard .video-frame.video-portrait{
+    width:auto!important;
+    height:min(44dvh,390px)!important;
+    max-width:calc(100% - 12px)!important;
+    max-height:44dvh!important;
+    aspect-ratio:9/16!important;
+    margin-inline:auto!important;
+  }
+  .lesson-video-frame.video-portrait{
+    width:auto!important;
+    height:min(46dvh,410px)!important;
+    max-width:100%!important;
+    max-height:46dvh!important;
+    aspect-ratio:9/16!important;
+    margin-inline:auto!important;
+  }
+  #shadowPlayerCard.transcript-mode .video-frame.video-portrait{
+    width:auto!important;
+    height:min(34dvh,300px)!important;
+    max-width:100%!important;
+    max-height:34dvh!important;
+  }
+}
+@supports not (height:1dvh){
+  @media(max-width:760px){
+    #shadowPlayerCard .video-frame.video-portrait{height:min(44vh,390px)!important;max-height:44vh!important}
+    .lesson-video-frame.video-portrait{height:min(46vh,410px)!important;max-height:46vh!important}
+    #shadowPlayerCard.transcript-mode .video-frame.video-portrait{height:min(34vh,300px)!important;max-height:34vh!important}
+  }
+}
 </style>
 </head>
 <body>
@@ -919,7 +953,8 @@ if(demoCheck){
     const resources=Array.isArray(lesson.resources)?lesson.resources:[];
     const videoHtml=videos.map((v,i)=>{
       const id=youtubeId(v.youtube||v.url);
-      return id?`<div class="lesson-video"><button class="lesson-video-toggle" type="button" aria-expanded="false"><span class="lesson-video-icon">▻</span><span class="lesson-video-title">${courseEsc(v.title||('Video '+(i+1)))}</span><span class="lesson-video-state">⌄</span></button><div class="lesson-video-player"><div class="lesson-video-frame" data-youtube-id="${id}"></div></div></div>`:'';
+      const aspect=resolveVideoAspect(v.video_aspect,v.youtube||v.url);
+      return id?`<div class="lesson-video"><button class="lesson-video-toggle" type="button" aria-expanded="false"><span class="lesson-video-icon">▻</span><span class="lesson-video-title">${courseEsc(v.title||('Video '+(i+1)))}</span><span class="lesson-video-state">⌄</span></button><div class="lesson-video-player"><div class="lesson-video-frame ${aspect==='portrait'?'video-portrait':''}" data-youtube-id="${id}"></div></div></div>`:'';
     }).join('');
     const resourceHtml=resources.length?`<div class="lesson-resources">${resources.map(r=>{const canDownload=r.access_mode!=='view';return `<a class="btn soft" href="${courseEsc(r.url)}" target="_blank" rel="noopener noreferrer" ${canDownload?'download':''}>${canDownload?'⬇':'👁'} ${courseEsc(r.title||(canDownload?'Tải tài liệu':'Xem tài liệu'))}</a>`}).join('')}</div>`:'';
     return `${videoHtml||'<div class="lesson-empty">Nội dung video và tài liệu của bài này đang được cập nhật.</div>'}${resourceHtml}<div class="lesson-actions"><span class="hint">Học xong bài, hãy đánh dấu để lưu tiến độ.</span><button class="btn ghost complete-btn" data-complete="${courseEsc(lesson.id)}">✓ Đánh dấu đã học</button></div>`;
@@ -1180,6 +1215,11 @@ function youtubeIdFromUrl(url){
   return m ? m[1] : s;
 }
 
+function resolveVideoAspect(value,url){
+  if(value==='portrait'||value==='landscape') return value;
+  return /youtube\.com\/shorts\//i.test(String(url||'')) ? 'portrait' : 'landscape';
+}
+
 function shadowThumbnail(url){
   const id = youtubeIdFromUrl(url);
   return id ? `https://i.ytimg.com/vi/${encodeURIComponent(id)}/mqdefault.jpg` : '';
@@ -1251,7 +1291,7 @@ function fitShadowYoutubePlayer(){
   const iframe = document.querySelector('#shadowPlayerCard iframe#youtubePlayer');
   if(!frame || !iframe) return;
   const width = Math.round(frame.getBoundingClientRect().width);
-  const height = Math.round(width * 9 / 16);
+  const height = Math.round(width * (frame.classList.contains('video-portrait') ? 16 / 9 : 9 / 16));
   iframe.setAttribute('width', String(width));
   iframe.setAttribute('height', String(height));
   iframe.style.setProperty('width', '100%', 'important');
@@ -1328,6 +1368,8 @@ async function loadShadowVideo(videoId){
     renderShadowLive(0);
 
     const ytId = youtubeIdFromUrl(j.video.youtube_url);
+    const shadowFrame=document.querySelector('#shadowPlayerCard .video-frame');
+    shadowFrame?.classList.toggle('video-portrait',resolveVideoAspect(j.video.video_aspect,j.video.youtube_url)==='portrait');
     document.getElementById('shadowPlayerCard').style.display = 'grid';
     document.getElementById('shadowNote').textContent = j.video.title;
 
