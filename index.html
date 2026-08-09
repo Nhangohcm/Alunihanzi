@@ -478,7 +478,7 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
 .course-hero{background:linear-gradient(135deg,#e8efe5,#fff8ec);border:1px solid var(--line);border-radius:24px;padding:22px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;gap:18px}
 .course-hero h2{margin:5px 0 7px;font-size:clamp(1.45rem,4vw,2.05rem)}.course-hero p{margin:0;color:var(--muted);line-height:1.55}
 .catalog-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}.catalog-card{background:white;border:1px solid var(--line);border-radius:19px;padding:16px;display:flex;flex-direction:column;min-height:205px}
-.catalog-icon{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:var(--green2);font-size:1.45rem}.catalog-card h3{margin:12px 0 5px}.catalog-card p{color:var(--muted);line-height:1.5;margin:0 0 13px;font-size:.92rem}.catalog-meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}.course-badge{font-size:.76rem;font-weight:850;padding:5px 8px;border-radius:999px;background:var(--warm);color:var(--muted)}.course-badge.free{background:#e2efe3;color:#39734d}.course-badge.paid{background:#f3ead9;color:var(--lock)}.catalog-card .btn{margin-top:auto;width:100%}
+.catalog-icon{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:var(--green2);font-size:1.45rem}.catalog-card h3{margin:12px 0 5px}.catalog-card p{color:var(--muted);line-height:1.5;margin:0 0 13px;font-size:.92rem}.catalog-meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}.course-badge{font-size:.76rem;font-weight:850;padding:5px 8px;border-radius:999px;background:var(--warm);color:var(--muted)}.course-badge.free{background:#e2efe3;color:#39734d}.course-badge.paid{background:#f3ead9;color:var(--lock)}.catalog-card .btn{margin-top:auto;width:100%}.course-card-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:auto}.catalog-card .course-card-actions .btn{margin-top:0}.course-shadow-btn{background:#fff8ec;border-color:#e7cfa7;color:#7b5b22}@media(max-width:420px){.course-card-actions{grid-template-columns:1fr}}
 .course-detail[hidden],.course-catalog[hidden]{display:none!important}.course-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}.course-detail-head h2{margin:3px 0 5px}.course-detail-head p{margin:0;color:var(--muted)}
 .course-progress{margin:16px 0 13px}.course-progress-row{display:flex;justify-content:space-between;gap:10px;font-size:.88rem;font-weight:800;margin-bottom:7px}.progress-track{height:10px;border-radius:999px;background:#e9e5dd;overflow:hidden}.progress-fill{height:100%;width:0;background:var(--green);border-radius:inherit;transition:width .25s ease}
 .course-tools{display:grid;grid-template-columns:1fr auto;gap:8px;margin:14px 0}.lesson-list{display:grid;gap:9px}.course-lesson{border:1px solid var(--line);background:white;border-radius:17px;overflow:hidden}.lesson-head{width:100%;border:0;background:white;color:var(--ink);display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:11px;padding:14px;text-align:left}.lesson-head:hover{background:#faf8f2}.lesson-number{width:38px;height:38px;border-radius:12px;background:var(--green2);display:grid;place-items:center;font-weight:900;color:#526856}.lesson-title{font-weight:880;line-height:1.35}.lesson-summary{display:block;color:var(--muted);font-size:.8rem;font-weight:650;margin-top:3px}.lesson-state{font-weight:900;color:var(--muted)}.course-lesson.open .lesson-head{background:#f4f7f1}.lesson-body{display:none;border-top:1px solid var(--line);padding:14px;background:#fffdf9}.course-lesson.open .lesson-body{display:block}.lesson-empty{padding:16px;border-radius:13px;background:var(--warm);color:var(--muted);line-height:1.5;text-align:center}.lesson-video{margin-bottom:14px}.lesson-video:last-child{margin-bottom:0}.lesson-video-title{font-weight:850;margin:0 0 8px}.lesson-video-frame{aspect-ratio:16/9;background:#202522;border-radius:14px;overflow:hidden}.lesson-video-frame iframe{width:100%;height:100%;border:0;display:block}.lesson-resources{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px;padding-top:13px;border-top:1px solid var(--line)}.lesson-actions{display:flex;justify-content:space-between;align-items:center;gap:9px;margin-top:13px}.complete-btn.done{background:#e2efe3;color:#39734d;border-color:#b8d0bc}
@@ -501,6 +501,7 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
     <button class="app-nav-btn" data-section="shadowSection">🎥 Shadowing</button>
     <button class="app-nav-btn" data-section="grammarSection">📚 Ngữ pháp & Bài tập</button>
     <button class="app-nav-btn" data-section="coursesSection">🎓 Khóa học</button>
+    <button class="app-nav-btn" data-section="myCoursesSection">👤 Khóa học của tôi</button>
   </nav>
 </div>
 
@@ -800,15 +801,35 @@ if(demoCheck){
   </div>
 </section>
 
+
+<section class="aluni-section" id="myCoursesSection">
+  <div class="wrap">
+    <div class="module-header">
+      <div class="brand">TIẾNG TRUNG ALUNI</div>
+      <h1>Khóa học của tôi</h1>
+      <p>Các khóa học miễn phí và khóa anh/chị đã kích hoạt.</p>
+    </div>
+    <div class="module-card">
+      <div class="catalog-grid" id="myCourseGrid"></div>
+      <div class="lesson-empty" id="myCourseEmpty" hidden>
+        Chưa có khóa học nào. Hãy vào tab Khóa học để học thử, mua khóa hoặc nhập mã kích hoạt.
+      </div>
+    </div>
+  </div>
+</section>
+
 <script>
 (function(){
   const COURSE_PROGRESS_KEY='aluni_course_progress_v1';
   const catalog=document.getElementById('courseCatalog');
   const detail=document.getElementById('courseDetail');
   const grid=document.getElementById('courseCatalogGrid');
+  const myGrid=document.getElementById('myCourseGrid');
+  const myEmpty=document.getElementById('myCourseEmpty');
   const lessonList=document.getElementById('courseLessonList');
   let activeCourse=null;
   let managedCourses=null;
+  let companionShadowCourseIds=new Set();
 
   function courseEsc(value){return String(value??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
   function allCourses(){return Array.isArray(managedCourses)?managedCourses:(Array.isArray(window.ALUNI_COURSES)?window.ALUNI_COURSES:[])}
@@ -816,8 +837,11 @@ if(demoCheck){
     const base=String(window.ALUNI_API_BASE||'').replace(/\/+$/,'');
     if(!base)return;
     try{
-      const r=await fetch(base+'/learning-courses',{cache:'no-store'});const j=await r.json();
-      if(r.ok&&Array.isArray(j.courses)&&j.managed){managedCourses=j.courses;renderCatalog()}
+      const [r,sr]=await Promise.all([fetch(base+'/learning-courses',{cache:'no-store'}),fetch(base+'/shadowing/courses',{cache:'no-store'})]);
+      const j=await r.json();const sj=sr.ok?await sr.json():{courses:[]};
+      companionShadowCourseIds=new Set((Array.isArray(sj.courses)?sj.courses:[]).map(c=>String(c.id)));
+      if(r.ok&&Array.isArray(j.courses)&&j.managed)managedCourses=j.courses;
+      renderCatalog();renderMyCourses();
     }catch(e){/* Giữ dữ liệu mẫu khi mạng chưa sẵn sàng. */}
   }
   function loadProgress(){try{return JSON.parse(localStorage.getItem(COURSE_PROGRESS_KEY)||'{}')||{}}catch(e){return{}}}
@@ -838,7 +862,39 @@ if(demoCheck){
         <h3>${courseEsc(c.title)}</h3>
         <p>${courseEsc(c.description)}</p>
         <div class="catalog-meta"><span class="course-badge ${free?'free':'paid'}">${free?'Miễn phí':'Có phí'}</span><span class="course-badge">${c.lessons?.length||0} bài</span></div>
-        <button class="btn ${free?'primary':'ghost'}" data-open-course="${courseEsc(c.id)}">${free?'Vào học ngay':'Xem khóa học'}</button>
+        <button class="btn ${free?'primary':'ghost'}" data-open-course="${courseEsc(c.id)}">${free?'Bắt đầu học':'Xem khóa học'} →</button>
+      </article>`;
+    }).join('');
+  }
+  function hasStoredEntitlement(courseId){
+    for(let i=0;i<localStorage.length;i++){
+      const key=localStorage.key(i);
+      if(!key||!key.startsWith('aluni_entitlement_'))continue;
+      try{
+        const value=JSON.parse(localStorage.getItem(key)||'null');
+        if(!value?.token)continue;
+        if(String(value.course_id||'')===String(courseId||''))return true;
+        const payload=JSON.parse(atob(value.token.split('.')[0].replace(/-/g,'+').replace(/_/g,'/')));
+        if(String(payload.course_id||'')===String(courseId||''))return true;
+      }catch(e){}
+    }
+    return false;
+  }
+  function ownsCourse(course){
+    return course.access==='free'||hasStoredEntitlement(course.id);
+  }
+  function renderMyCourses(){
+    if(!myGrid||!myEmpty)return;
+    const mine=allCourses().filter(ownsCourse);
+    myEmpty.hidden=mine.length>0;
+    myGrid.innerHTML=mine.map(c=>{
+      const hasShadow=companionShadowCourseIds.has(String(c.id));
+      return `<article class="catalog-card">
+        <div class="catalog-icon">${courseEsc(c.icon||'课')}</div>
+        <h3>${courseEsc(c.title)}</h3>
+        <p>${courseEsc(c.description)}</p>
+        <div class="catalog-meta"><span class="course-badge free">Đã có quyền học</span><span class="course-badge">${c.lessons?.length||0} bài</span></div>
+        <div class="course-card-actions"><button class="btn primary" data-open-my-course="${courseEsc(c.id)}">📘 Vào học khóa chính</button>${hasShadow?`<button class="btn course-shadow-btn" data-open-shadow-course="${courseEsc(c.id)}">🎧 Luyện Shadowing</button>`:''}</div>
       </article>`;
     }).join('');
   }
@@ -922,6 +978,8 @@ if(demoCheck){
     const card=lessonList.querySelector(`[data-lesson-id="${target}"]`)||lessonList.querySelector('.course-lesson');if(card)toggleLesson(card);
   }
   document.addEventListener('click',e=>{
+    const shadow=e.target.closest('[data-open-shadow-course]');if(shadow){openCompanionShadowing(shadow.dataset.openShadowCourse);return}
+    const mine=e.target.closest('[data-open-my-course]');if(mine){document.querySelector('.app-nav-btn[data-section="coursesSection"]')?.click();openCourse(mine.dataset.openMyCourse);return}
     const open=e.target.closest('[data-open-course]');if(open){openCourse(open.dataset.openCourse);return}
     const head=e.target.closest('#courseLessonList .lesson-head');if(head){toggleLesson(head.closest('.course-lesson'));return}
     const video=e.target.closest('#courseLessonList .lesson-video-toggle');if(video){toggleVideo(video.closest('.lesson-video'));return}
@@ -930,7 +988,7 @@ if(demoCheck){
   document.getElementById('backToCourses')?.addEventListener('click',()=>{closeAllLessons();detail.hidden=true;catalog.hidden=false;activeCourse=null;window.scrollTo({top:0,behavior:'smooth'})});
   document.getElementById('courseLessonSearch')?.addEventListener('input',e=>renderLessons(e.target.value));
   document.getElementById('continueCourseBtn')?.addEventListener('click',continueCourse);
-  renderCatalog();
+  renderCatalog();renderMyCourses();
   loadManagedCourses();
 })();
 </script>
@@ -1084,6 +1142,38 @@ function shadowApi(path){
   return base + path;
 }
 
+function entitlementForCourse(courseId){
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(!key||!key.startsWith('aluni_entitlement_'))continue;
+    try{
+      const value=JSON.parse(localStorage.getItem(key)||'null');
+      if(value?.token&&String(value.course_id||'')===String(courseId||''))return value;
+      if(value?.token){
+        const payload=JSON.parse(atob(value.token.split('.')[0].replace(/-/g,'+').replace(/_/g,'/')));
+        if(String(payload.course_id||'')===String(courseId||''))return value;
+      }
+    }catch(e){}
+  }
+  return null;
+}
+
+function shadowFetchOptions(courseId){
+  const entitlement=entitlementForCourse(courseId);
+  return entitlement?.token?{cache:'no-store',headers:{Authorization:`Bearer ${entitlement.token}`}}:{cache:'no-store'};
+}
+
+async function openCompanionShadowing(courseId){
+  const nav=document.querySelector('.app-nav-btn[data-section="shadowSection"]');
+  nav?.click();
+  if(!shadowCourses.length)await loadShadowCourses();
+  const courseSel=document.getElementById('shadowCourse');
+  if(!courseSel)return;
+  courseSel.value=String(courseId||'');
+  await loadShadowVideos(courseSel.value);
+  document.getElementById('shadowSection')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
 function youtubeIdFromUrl(url){
   const s = String(url || '').trim();
   const m = s.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{6,})/);
@@ -1200,7 +1290,7 @@ async function loadShadowVideos(courseId){
   if(!courseId) return;
 
   try{
-    const r = await fetch(shadowApi('/shadowing/videos?course_id=' + encodeURIComponent(courseId)), {cache:'no-store'});
+    const r = await fetch(shadowApi('/shadowing/videos?course_id=' + encodeURIComponent(courseId)), shadowFetchOptions(courseId));
     const j = await r.json();
     shadowVideos = Array.isArray(j.videos) ? j.videos : [];
 
@@ -1219,7 +1309,8 @@ async function loadShadowVideos(courseId){
 async function loadShadowVideo(videoId){
   if(!videoId) return;
   try{
-    const r = await fetch(shadowApi('/shadowing/video?id=' + encodeURIComponent(videoId)), {cache:'no-store'});
+    const courseId=document.getElementById('shadowCourse')?.value||'';
+    const r = await fetch(shadowApi('/shadowing/video?id=' + encodeURIComponent(videoId)), shadowFetchOptions(courseId));
     const j = await r.json();
 
     if(!r.ok){
