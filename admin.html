@@ -15,7 +15,7 @@ body{margin:0;background:linear-gradient(180deg,#f8f4ec,#f2ede3);color:var(--ink
 h1,h2{margin-top:0}.brand{font-weight:900;letter-spacing:.1em;color:var(--green)}
 .muted{color:var(--muted);line-height:1.5}
 input,select,button{font:inherit}
-input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:white}
+input,select,textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:white;font:inherit}textarea{min-height:96px;resize:vertical;line-height:1.45}
 button{padding:11px 14px;border-radius:12px;border:0;font-weight:850;cursor:pointer}
 .primary{background:var(--green);color:white}.ghost{background:white;border:1px solid var(--line)}
 .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -170,6 +170,19 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
       <div class="row" style="margin-top:10px"><button class="primary" id="addLearningLesson">＋ Thêm bài mới</button></div>
       <div class="status" id="learningContentStatus"></div>
       <div id="learningLessonList"></div>
+    </div>
+
+    <div class="card">
+      <h2>Nhập ngữ pháp & bài tập hàng loạt</h2>
+      <p class="muted">Một file XLSX có thể chứa nhiều khóa, nhiều bài và cả ba sheet. Khi chỉ muốn thay bài tập, file chỉ cần sheet <b>BAI_TAP</b> và chọn “Chỉ bài tập”; phần ngữ pháp, giải thích và ví dụ được giữ nguyên.</p>
+      <div class="grid">
+        <div><label>File XLSX chuẩn</label><input id="grammarImportFile" type="file" accept=".xlsx,.xls"></div>
+        <div><label>Phạm vi cập nhật</label><select id="grammarImportScope"><option value="auto">Tự nhận theo sheet có trong file</option><option value="all">Cả ngữ pháp và bài tập</option><option value="theory">Chỉ ngữ pháp & ví dụ</option><option value="exercises">Chỉ bài tập</option></select></div>
+        <div><label>Trạng thái sau khi nhập</label><select id="grammarImportPublished"><option value="file">Theo cột published trong file</option><option value="1">Hiện cho học viên</option><option value="0">Lưu nháp / Ẩn</option></select></div>
+      </div>
+      <div class="row" style="margin-top:10px"><button class="ghost" id="previewGrammarImport">👁 Xem trước</button><button class="primary" id="runGrammarImport" disabled>⬆ Nhập dữ liệu</button><button class="ghost" id="grammarXlsxTemplate">⬇ Tải file XLSX mẫu</button></div>
+      <div class="status" id="grammarImportStatus"></div>
+      <div class="tablewrap" id="grammarImportPreview" hidden></div>
     </div>
 
     <div class="card">
@@ -471,10 +484,55 @@ function learningTemplate(){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download='mau-khoa-hoc-video-aluni.csv';a.click();
 }
 
+let grammarImportData=null;
+function normalizeImportRow(row){const out={};Object.entries(row||{}).forEach(([k,v])=>out[String(k).trim().toLowerCase()]=v);return out}
+function importKey(row){return `${String(row.course_id||'').trim()}|${Number(row.lesson_number)}`}
+function sheetRows(wb,name){const actual=wb.SheetNames.find(x=>x.trim().toUpperCase()===name);return actual?XLSX.utils.sheet_to_json(wb.Sheets[actual],{defval:''}).map(normalizeImportRow):[]}
+function publishedValue(v){const s=String(v??'').trim().toLowerCase();return !['0','false','no','ẩn','an','nháp','nhap'].includes(s)}
+function correctIndex(v,options){const s=String(v??'').trim().toUpperCase();let n=/^[A-Z]$/.test(s)?s.charCodeAt(0)-65:Number(s)-1;if(!Number.isInteger(n)||n<0||n>=options.length)throw new Error(`Đáp án “${v}” không hợp lệ.`);return n}
+async function readGrammarWorkbook(file){
+  const wb=XLSX.read(await file.arrayBuffer(),{type:'array'}),theory=sheetRows(wb,'NGU_PHAP'),examples=sheetRows(wb,'VI_DU'),questions=sheetRows(wb,'BAI_TAP');
+  if(!theory.length&&!examples.length&&!questions.length)throw new Error('Không thấy sheet NGU_PHAP, VI_DU hoặc BAI_TAP.');
+  const groups=new Map();
+  const get=r=>{if(!String(r.course_id||'').trim()||r.lesson_number==='')throw new Error('Mỗi dòng cần course_id và lesson_number.');const k=importKey(r);if(!groups.has(k))groups.set(k,{course_id:String(r.course_id).trim(),lesson_number:Number(r.lesson_number),theory:null,examples:[],questions:[]});return groups.get(k)};
+  theory.forEach(r=>{const g=get(r);if(!String(r.title||'').trim())throw new Error(`NGU_PHAP ${g.course_id} bài ${g.lesson_number} thiếu title.`);g.theory={title:String(r.title).trim(),pinyin:String(r.pinyin||''),explanation:String(r.explanation||''),formula:String(r.formula||''),published:publishedValue(r.published)}});
+  examples.sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0)).forEach(r=>{const g=get(r);if(String(r.hanzi||'').trim())g.examples.push({hanzi:String(r.hanzi).trim(),pinyin:String(r.pinyin||''),vi:String(r.vi||'')})});
+  questions.sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0)).forEach(r=>{const g=get(r),options=['option_a','option_b','option_c','option_d'].map(k=>String(r[k]||'').trim()).filter(Boolean);if(!String(r.prompt||'').trim()||options.length<2)throw new Error(`BAI_TAP ${g.course_id} bài ${g.lesson_number} cần câu hỏi và ít nhất 2 lựa chọn.`);g.questions.push({prompt:String(r.prompt).trim(),options,correct_index:correctIndex(r.correct,options),explanation:String(r.explanation||'')})});
+  return {groups:[...groups.values()],hasTheory:theory.length>0||examples.length>0,hasExercises:questions.length>0,sheets:wb.SheetNames};
+}
+async function resolveGrammarLessons(data){
+  const courseIds=[...new Set(data.groups.map(g=>g.course_id))],maps={};
+  for(const id of courseIds){const j=await api('/admin/learning/course-content?course_id='+encodeURIComponent(id));maps[id]=new Map((j.lessons||[]).map(l=>[Number(l.lesson_number),l]));}
+  data.groups.forEach(g=>{g.lesson=maps[g.course_id]?.get(Number(g.lesson_number))||null});
+  return data;
+}
+function chosenGrammarScope(data){const selected=$('grammarImportScope').value;if(selected!=='auto')return selected;if(data.hasTheory&&data.hasExercises)return'all';if(data.hasTheory)return'theory';return'exercises'}
+async function previewGrammarWorkbook(){
+  const file=$('grammarImportFile').files[0];if(!file){$('grammarImportStatus').textContent='Hãy chọn file XLSX.';return}
+  try{let data=await readGrammarWorkbook(file);data=await resolveGrammarLessons(data);const scope=chosenGrammarScope(data),missing=data.groups.filter(g=>!g.lesson);grammarImportData=data;$('grammarImportPreview').hidden=false;$('grammarImportPreview').innerHTML=`<table><thead><tr><th>Khóa</th><th>Bài</th><th>Ngữ pháp</th><th>Ví dụ</th><th>Bài tập</th><th>Kiểm tra</th></tr></thead><tbody>${data.groups.map(g=>`<tr><td>${esc(g.course_id)}</td><td>${g.lesson_number}</td><td>${esc(g.theory?.title||'—')}</td><td>${g.examples.length}</td><td>${g.questions.length}</td><td>${g.lesson?'<span class="ok">Sẵn sàng</span>':'<span class="err">Không tìm thấy bài</span>'}</td></tr>`).join('')}</tbody></table>`;$('runGrammarImport').disabled=!!missing.length;$('grammarImportStatus').textContent=missing.length?`Có ${missing.length} bài không tồn tại trên Aluni. Hãy sửa course_id hoặc lesson_number trong file.`:`Sẵn sàng nhập ${data.groups.length} bài · phạm vi: ${scope==='all'?'cả hai':scope==='theory'?'ngữ pháp & ví dụ':'chỉ bài tập'}.`;}
+  catch(e){grammarImportData=null;$('runGrammarImport').disabled=true;$('grammarImportStatus').textContent=e.message}
+}
+async function runGrammarWorkbookImport(){
+  if(!grammarImportData)return;const scope=chosenGrammarScope(grammarImportData),publishMode=$('grammarImportPublished').value,btn=$('runGrammarImport');btn.disabled=true;
+  try{let done=0;for(const g of grammarImportData.groups){if(!g.lesson)throw new Error(`Không tìm thấy ${g.course_id} bài ${g.lesson_number}.`);if(scope!=='exercises'&&!g.theory)throw new Error(`${g.course_id} bài ${g.lesson_number} thiếu dòng NGU_PHAP.`);const published=publishMode==='file'?(g.theory?.published??true):publishMode==='1';await api('/admin/grammar/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lesson_id:g.lesson.id,update_scope:scope,title:g.theory?.title||'',pinyin:g.theory?.pinyin||'',formula:g.theory?.formula||'',explanation:g.theory?.explanation||'',examples:g.examples,questions:g.questions,published})});done++;$('grammarImportStatus').textContent=`Đang nhập ${done}/${grammarImportData.groups.length} bài...`;}$('grammarImportStatus').textContent=`Đã nhập thành công ${done} bài. ${scope==='exercises'?'Phần ngữ pháp cũ được giữ nguyên.':scope==='theory'?'Bài tập cũ được giữ nguyên.':'Ngữ pháp và bài tập đã được cập nhật.'}`;await loadLearningContent();}
+  catch(e){$('grammarImportStatus').textContent='Dừng nhập: '+e.message}finally{btn.disabled=false}
+}
+function downloadGrammarXlsxTemplate(){
+  const wb=XLSX.utils.book_new();
+  const grammar=[{course_id:'pinyin-48',lesson_number:1,title:'Vị ngữ tính từ',pinyin:'xíngróngcí wèiyǔ',explanation:'Tính từ có thể trực tiếp làm vị ngữ. Thường không dùng 是 trước tính từ.',formula:'Chủ ngữ + 很 + tính từ',published:1},{course_id:'pinyin-48',lesson_number:2,title:'Câu hỏi với 吗',pinyin:'ma',explanation:'Thêm 吗 cuối câu trần thuật để tạo câu hỏi Có/Không.',formula:'Câu trần thuật + 吗？',published:0}];
+  const examples=[{course_id:'pinyin-48',lesson_number:1,hanzi:'他很好。',pinyin:'Tā hěn hǎo.',vi:'Anh ấy rất khỏe.',sort_order:1},{course_id:'pinyin-48',lesson_number:1,hanzi:'今天很冷。',pinyin:'Jīntiān hěn lěng.',vi:'Hôm nay rất lạnh.',sort_order:2},{course_id:'pinyin-48',lesson_number:2,hanzi:'你忙吗？',pinyin:'Nǐ máng ma?',vi:'Bạn bận không?',sort_order:1}];
+  const exercises=[{course_id:'pinyin-48',lesson_number:1,prompt:'Chọn câu đúng.',option_a:'他很好。',option_b:'他是很好。',option_c:'很他好。',option_d:'他好很。',correct:'A',explanation:'Vị ngữ tính từ thường không dùng 是.',sort_order:1},{course_id:'pinyin-48',lesson_number:2,prompt:'“Bạn bận không?” nói thế nào?',option_a:'你吗忙？',option_b:'你忙吗？',option_c:'吗你忙？',option_d:'你很忙。',correct:'B',explanation:'吗 đặt ở cuối câu.',sort_order:1}];
+  [['NGU_PHAP',grammar],['VI_DU',examples],['BAI_TAP',exercises]].forEach(([name,rows])=>XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),name));XLSX.writeFile(wb,'mau-ngu-phap-bai-tap-aluni.xlsx');
+}
+
 let shadowLibraryVideos=[];
 function shadowLibraryOptions(selected){
   return '<option value="">— Chưa liên kết —</option>'+shadowLibraryVideos.map(v=>`<option value="${Number(v.id)}" ${Number(selected)===Number(v.id)?'selected':''}>${esc(v.course_id)} · Bài ${Number(v.lesson_number)} · ${esc(v.title)}</option>`).join('');
 }
+function grammarExamplesText(items){return (items||[]).map(x=>[x.hanzi||'',x.pinyin||'',x.vi||''].join(' | ')).join('\n')}
+function grammarQuestionsText(items){return (items||[]).map(q=>[q.prompt||'',...(q.options||[]),Number(q.correct_index||0)+1,q.explanation||''].join(' | ')).join('\n')}
+function parseGrammarExamples(text){return String(text||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map(line=>{const p=line.split('|').map(x=>x.trim());return{hanzi:p[0]||'',pinyin:p[1]||'',vi:p[2]||''}})}
+function parseGrammarQuestions(text){return String(text||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map((line,row)=>{const p=line.split('|').map(x=>x.trim());if(p.length<4)throw new Error(`Câu hỏi dòng ${row+1} chưa đủ dữ liệu.`);let answerPos=-1;for(let i=p.length-1;i>=2;i--){if(/^\d+$/.test(p[i])){answerPos=i;break}}if(answerPos<2)throw new Error(`Câu hỏi dòng ${row+1} thiếu số đáp án đúng.`);const options=p.slice(1,answerPos),correct=Number(p[answerPos])-1;if(options.length<2||correct<0||correct>=options.length)throw new Error(`Đáp án đúng ở dòng ${row+1} không hợp lệ.`);return{prompt:p[0],options,correct_index:correct,explanation:p.slice(answerPos+1).join(' | ')}})}
 async function loadLearningContent(){
   const courseId=$('manageLearningCourse').value;
   if(!courseId)return;
@@ -491,6 +549,12 @@ async function loadLearningContent(){
         <div class="mini-title">Liên kết Thư viện Shadowing</div>
         <div class="grid2"><select class="lessonShadowLink" data-lesson="${esc(l.id)}">${shadowLibraryOptions(l.shadow_video_id)}</select><button class="ghost saveShadowLink" data-lesson="${esc(l.id)}">🎧 Lưu liên kết Shadowing</button></div>
         <div class="file-note">Chọn một video đã nhập trong tab Video Shadowing. Video và transcript không bị sao chép; có thể dùng lại cho nhiều bài.</div>
+        <div class="mini-title">Ngữ pháp & bài tập trắc nghiệm</div>
+        <div class="grid"><input class="grammarTitle" data-lesson="${esc(l.id)}" value="${esc(l.grammar?.title||'')}" placeholder="Tên điểm ngữ pháp, ví dụ: 了 · le"><input class="grammarPinyin" data-lesson="${esc(l.id)}" value="${esc(l.grammar?.pinyin||'')}" placeholder="Pinyin / cách đọc"><input class="grammarFormula" data-lesson="${esc(l.id)}" value="${esc(l.grammar?.formula||'')}" placeholder="Công thức, ví dụ: S + V + 了"></div>
+        <textarea class="grammarExplanation" data-lesson="${esc(l.id)}" placeholder="Giải thích ngắn gọn" style="margin-top:8px">${esc(l.grammar?.explanation||'')}</textarea>
+        <label class="file-note">Ví dụ: mỗi dòng ghi <b>Hán tự | pinyin | nghĩa Việt</b></label><textarea class="grammarExamples" data-lesson="${esc(l.id)}" placeholder="我吃饭了。 | Wǒ chīfàn le. | Tôi ăn cơm rồi.">${esc(grammarExamplesText(l.grammar?.examples))}</textarea>
+        <label class="file-note">Câu hỏi: mỗi dòng ghi <b>Câu hỏi | lựa chọn 1 | lựa chọn 2 | lựa chọn 3 | số đáp án đúng | lời giải</b></label><textarea class="grammarQuestions" data-lesson="${esc(l.id)}" placeholder="“Tôi ăn cơm rồi” nói thế nào? | 我吃饭。 | 我吃饭了。 | 我了吃饭。 | 2 | 了 đặt sau động từ.">${esc(grammarQuestionsText(l.grammar?.questions))}</textarea>
+        <div class="row" style="margin-top:8px"><button class="primary saveGrammar" data-lesson="${esc(l.id)}">📚 Lưu ngữ pháp & bài tập</button>${l.grammar?`<button class="danger deleteGrammar" data-lesson="${esc(l.id)}">Xóa bộ bài tập</button>`:''}<label style="display:flex;align-items:center;gap:7px"><input class="grammarPublished" data-lesson="${esc(l.id)}" type="checkbox" style="width:auto" ${!l.grammar||Number(l.grammar.published)!==0?'checked':''}> Hiện cho học viên</label></div>
         <div class="mini-title">Video YouTube</div>
         <div class="sortable-list" data-kind="video">${(l.videos||[]).map((v,i,a)=>`<div class="item-admin" data-kind="video" data-id="${v.id}"><span class="drag-handle" draggable="true" title="Giữ và kéo để đổi vị trí">⋮⋮</span><input class="videoTitle" data-id="${v.id}" value="${esc(v.title)}"><input class="videoUrl" data-id="${v.id}" value="${esc(v.youtube_url)}"><select class="videoAspect" data-id="${v.id}"><option value="auto" ${v.video_aspect==='auto'?'selected':''}>Tự động</option><option value="landscape" ${v.video_aspect==='landscape'?'selected':''}>16:9</option><option value="portrait" ${v.video_aspect==='portrait'?'selected':''}>9:16</option></select><span class="order-buttons"><button class="ghost reorderItem" data-kind="video" data-id="${v.id}" data-direction="up" ${i===0?'disabled':''}>↑</button><button class="ghost reorderItem" data-kind="video" data-id="${v.id}" data-direction="down" ${i===a.length-1?'disabled':''}>↓</button></span><button class="danger deleteItem" data-kind="video" data-id="${v.id}">Xóa</button></div>`).join('')||'<div class="muted">Chưa có video.</div>'}</div>
         <div class="grid" style="margin-top:8px"><input class="newVideoTitle" data-lesson="${esc(l.id)}" placeholder="Tên video"><input class="newVideoUrl" data-lesson="${esc(l.id)}" placeholder="Link YouTube"><select class="newVideoAspect" data-lesson="${esc(l.id)}"><option value="auto">Tự động</option><option value="landscape">Ngang 16:9</option><option value="portrait">Dọc 9:16</option></select></div><button class="ghost addVideo" data-lesson="${esc(l.id)}" style="margin-top:8px">＋ Thêm video</button>
@@ -535,6 +599,8 @@ function bindLearningContentActions(){
   document.querySelectorAll('.deleteLesson').forEach(b=>b.onclick=()=>{if(confirm('Xóa bài này cùng toàn bộ video và tài liệu?'))learningPost('/admin/learning/delete',{kind:'lesson',id:b.dataset.id})});
   document.querySelectorAll('.addVideo').forEach(b=>b.onclick=()=>learningPost('/admin/learning/video',{lesson_id:b.dataset.lesson,title:document.querySelector(`.newVideoTitle[data-lesson="${b.dataset.lesson}"]`).value,youtube_url:document.querySelector(`.newVideoUrl[data-lesson="${b.dataset.lesson}"]`).value,video_aspect:document.querySelector(`.newVideoAspect[data-lesson="${b.dataset.lesson}"]`).value}));
   document.querySelectorAll('.saveShadowLink').forEach(b=>b.onclick=()=>learningPost('/admin/learning/shadow-link',{lesson_id:b.dataset.lesson,shadow_video_id:document.querySelector(`.lessonShadowLink[data-lesson="${CSS.escape(b.dataset.lesson)}"]`).value||null}));
+  document.querySelectorAll('.saveGrammar').forEach(b=>b.onclick=async()=>{const lesson=b.dataset.lesson;try{await learningPost('/admin/grammar/save',{lesson_id:lesson,title:document.querySelector(`.grammarTitle[data-lesson="${CSS.escape(lesson)}"]`).value,pinyin:document.querySelector(`.grammarPinyin[data-lesson="${CSS.escape(lesson)}"]`).value,formula:document.querySelector(`.grammarFormula[data-lesson="${CSS.escape(lesson)}"]`).value,explanation:document.querySelector(`.grammarExplanation[data-lesson="${CSS.escape(lesson)}"]`).value,examples:parseGrammarExamples(document.querySelector(`.grammarExamples[data-lesson="${CSS.escape(lesson)}"]`).value),questions:parseGrammarQuestions(document.querySelector(`.grammarQuestions[data-lesson="${CSS.escape(lesson)}"]`).value),published:document.querySelector(`.grammarPublished[data-lesson="${CSS.escape(lesson)}"]`).checked});$('learningContentStatus').textContent='Đã lưu ngữ pháp và bài tập.'}catch(e){$('learningContentStatus').textContent=e.message}});
+  document.querySelectorAll('.deleteGrammar').forEach(b=>b.onclick=()=>{if(confirm('Xóa bộ ngữ pháp và toàn bộ câu hỏi của bài này?'))learningPost('/admin/grammar/delete',{lesson_id:b.dataset.lesson})});
   document.querySelectorAll('.addResource').forEach(b=>b.onclick=()=>learningPost('/admin/learning/resource',{lesson_id:b.dataset.lesson,title:document.querySelector(`.newResourceTitle[data-lesson="${b.dataset.lesson}"]`).value,resource_url:document.querySelector(`.newResourceUrl[data-lesson="${b.dataset.lesson}"]`).value,access_mode:document.querySelector(`.newResourceMode[data-lesson="${b.dataset.lesson}"]`).value}));
   document.querySelectorAll('.uploadResource').forEach(b=>b.onclick=async()=>{
     const lesson=b.dataset.lesson,fileInput=document.querySelector(`.uploadResourceFile[data-lesson="${lesson}"]`),file=fileInput.files[0];
@@ -569,6 +635,11 @@ $('saveLearningCourse').onclick=saveLearningCourse;
 $('clearLearningForm').onclick=clearLearningForm;
 $('importLearningBtn').onclick=importLearning;
 $('learningTemplateBtn').onclick=learningTemplate;
+$('previewGrammarImport').onclick=previewGrammarWorkbook;
+$('runGrammarImport').onclick=runGrammarWorkbookImport;
+$('grammarXlsxTemplate').onclick=downloadGrammarXlsxTemplate;
+$('grammarImportFile').onchange=()=>{grammarImportData=null;$('runGrammarImport').disabled=true;$('grammarImportPreview').hidden=true;$('grammarImportStatus').textContent='Bấm “Xem trước” để kiểm tra file.'};
+$('grammarImportScope').onchange=()=>{if(grammarImportData)previewGrammarWorkbook()};
 $('manageLearningCourse').onchange=loadLearningContent;
 $('refreshLearningContent').onclick=loadLearningContent;
 $('addLearningLesson').onclick=addLearningLesson;

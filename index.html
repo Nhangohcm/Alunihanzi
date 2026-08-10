@@ -225,6 +225,7 @@ input,select{width:100%;border:1px solid var(--line);border-radius:13px;backgrou
   margin:10px 0;
 }
 .grammar-example{padding:8px 0;border-bottom:1px dashed var(--line)}
+.grammar-empty{text-align:center;padding:28px;color:var(--muted)}.grammar-question{border:1px solid var(--line);border-radius:15px;padding:14px;margin:12px 0}.grammar-question h3{margin:0 0 10px;font-size:1rem}.exercise-option{display:block;padding:10px;border:1px solid var(--line);border-radius:11px;margin:7px 0;cursor:pointer}.exercise-option.correct{background:#e2efe3;border-color:#94b59a}.exercise-option.wrong{background:#fff0ed;border-color:#d9a19a}.question-explain{margin-top:9px;color:var(--muted);font-size:.9rem}.grammar-score{font-size:1.2rem;font-weight:900;margin:12px 0}.grammar-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
 .exercise-option{
   display:block;
   border:1px solid var(--line);
@@ -958,7 +959,8 @@ if(demoCheck){
     }).join('');
     const resourceHtml=resources.length?`<div class="lesson-resources">${resources.map(r=>{const canDownload=r.access_mode!=='view';return `<a class="btn soft" href="${courseEsc(r.url)}" target="_blank" rel="noopener noreferrer" ${canDownload?'download':''}>${canDownload?'⬇':'👁'} ${courseEsc(r.title||(canDownload?'Tải tài liệu':'Xem tài liệu'))}</a>`}).join('')}</div>`:'';
     const shadowHtml=lesson.shadow_video_id?`<div class="lesson-resources"><button class="btn course-shadow-btn" data-open-linked-shadow="${Number(lesson.shadow_video_id)}" data-shadow-course="${courseEsc(lesson.shadow_course_id||'')}">🎧 Luyện Shadowing bài này${lesson.shadow_title?' · '+courseEsc(lesson.shadow_title):''}</button></div>`:'';
-    return `${videoHtml||'<div class="lesson-empty">Nội dung video và tài liệu của bài này đang được cập nhật.</div>'}${resourceHtml}${shadowHtml}<div class="lesson-actions"><span class="hint">Học xong bài, hãy đánh dấu để lưu tiến độ.</span><button class="btn ghost complete-btn" data-complete="${courseEsc(lesson.id)}">✓ Đánh dấu đã học</button></div>`;
+    const grammarHtml=lesson.grammar_set_id?`<div class="lesson-resources"><button class="btn soft" data-open-grammar="${Number(lesson.grammar_set_id)}">📚 Học ngữ pháp & làm bài tập${lesson.grammar_title?' · '+courseEsc(lesson.grammar_title):''}</button></div>`:'';
+    return `${videoHtml||'<div class="lesson-empty">Nội dung video và tài liệu của bài này đang được cập nhật.</div>'}${resourceHtml}${shadowHtml}${grammarHtml}<div class="lesson-actions"><span class="hint">Học xong bài, hãy đánh dấu để lưu tiến độ.</span><button class="btn ghost complete-btn" data-complete="${courseEsc(lesson.id)}">✓ Đánh dấu đã học</button></div>`;
   }
   function renderLessons(query=''){
     if(!activeCourse)return;
@@ -970,7 +972,7 @@ if(demoCheck){
       return `<article class="course-lesson" data-lesson-id="${courseEsc(l.id)}">
         <button class="lesson-head" aria-expanded="false">
           <span class="lesson-number">${String(l.number).padStart(2,'0')}</span>
-          <span class="lesson-title">${isDone?'✓ ':''}${courseEsc(l.title)}<span class="lesson-summary">${videoCount?videoCount+' video':'Đang cập nhật nội dung'}${l.resources?.length?' · '+l.resources.length+' tài liệu':''}${l.shadow_video_id?' · 🎧 Shadowing':''}</span></span>
+          <span class="lesson-title">${isDone?'✓ ':''}${courseEsc(l.title)}<span class="lesson-summary">${videoCount?videoCount+' video':'Đang cập nhật nội dung'}${l.resources?.length?' · '+l.resources.length+' tài liệu':''}${l.shadow_video_id?' · 🎧 Shadowing':''}${l.grammar_set_id?' · 📚 Bài tập':''}</span></span>
           <span class="lesson-state">⌄</span>
         </button><div class="lesson-body">${lessonBody(l)}</div>
       </article>`;
@@ -1020,6 +1022,7 @@ if(demoCheck){
     const open=e.target.closest('[data-open-course]');if(open){openCourse(open.dataset.openCourse);return}
     const head=e.target.closest('#courseLessonList .lesson-head');if(head){toggleLesson(head.closest('.course-lesson'));return}
     const video=e.target.closest('#courseLessonList .lesson-video-toggle');if(video){toggleVideo(video.closest('.lesson-video'));return}
+    const grammar=e.target.closest('[data-open-grammar]');if(grammar){openGrammarSet(Number(grammar.dataset.openGrammar));return}
     const complete=e.target.closest('[data-complete]');if(complete){toggleComplete(complete.dataset.complete)}
   });
   document.getElementById('backToCourses')?.addEventListener('click',()=>{closeAllLessons();detail.hidden=true;catalog.hidden=false;activeCourse=null;window.scrollTo({top:0,behavior:'smooth'})});
@@ -1113,55 +1116,60 @@ if(demoCheck){
       <div class="module-grid">
         <div>
           <label>Khóa học</label>
-          <select id="grammarCourse">
-            <option>HSK 1</option>
-            <option>50+ Phản xạ</option>
-          </select>
+          <select id="grammarCourse"><option value="">Đang tải...</option></select>
         </div>
         <div>
           <label>Bài học</label>
-          <select id="grammarLesson">
-            <option>Bài mẫu · Sinh hoạt hằng ngày</option>
-          </select>
+          <select id="grammarLesson"><option value="">Chọn bài học</option></select>
         </div>
       </div>
-      <div class="module-note">
-        Đây là khung Ngữ pháp & Bài tập. Sau này dữ liệu sẽ được nhập từ Admin giống cách anh đang nhập từ vựng.
-      </div>
+      <div class="module-note">Chọn khóa và bài. Kết quả chỉ tính trên thiết bị hiện tại, không ảnh hưởng tiến độ khóa học.</div>
     </div>
-
-    <div class="module-card grammar-grid">
-      <div class="grammar-box">
-        <span class="grammar-tag">NGỮ PHÁP MẪU</span>
-        <h2>了 · le</h2>
-        <p>Dùng để biểu thị hành động đã hoàn thành hoặc tình huống đã thay đổi.</p>
-        <div class="grammar-formula">S + V + 了</div>
-        <div class="grammar-example">
-          <strong>我吃饭了。</strong><br>
-          <span class="pinyin">Wǒ chīfàn le.</span><br>
-          <span class="meaning">Tôi ăn cơm rồi.</span>
-        </div>
-        <div class="grammar-example">
-          <strong>他回家了。</strong><br>
-          <span class="pinyin">Tā huí jiā le.</span><br>
-          <span class="meaning">Anh ấy về nhà rồi.</span>
-        </div>
-      </div>
-
-      <div class="exercise-box">
-        <span class="grammar-tag">BÀI TẬP MẪU</span>
-        <h2>Câu 1</h2>
-        <p>“Tôi ăn cơm rồi.” nói thế nào?</p>
-        <label class="exercise-option"><input type="radio" name="demoQ" value="a"> 我吃饭。</label>
-        <label class="exercise-option"><input type="radio" name="demoQ" value="b"> 我吃饭了。</label>
-        <label class="exercise-option"><input type="radio" name="demoQ" value="c"> 我了吃饭。</label>
-        <button class="btn primary" id="checkDemoExercise">Kiểm tra đáp án</button>
-        <div class="exercise-result" id="demoExerciseResult"></div>
-      </div>
+    <div class="module-card grammar-empty" id="grammarEmpty">Chưa chọn bài ngữ pháp.</div>
+    <div class="module-card grammar-grid" id="grammarContent" hidden>
+      <div class="grammar-box" id="grammarTheory"></div>
+      <div class="exercise-box"><span class="grammar-tag">BÀI TẬP</span><div id="grammarQuestions"></div><div class="grammar-toolbar"><button class="btn primary" id="checkGrammarAnswers">Chấm điểm</button><button class="btn ghost" id="resetGrammarAnswers">Làm lại</button></div><div class="grammar-score" id="grammarScore"></div></div>
     </div>
   </div>
 </section>
 <script>
+// ===== GRAMMAR & EXERCISES V34 =====
+let grammarCatalog=[];
+let activeGrammar=null;
+function grammarEsc(value){return String(value??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+async function loadGrammarCatalog(){
+  const course=document.getElementById('grammarCourse'),lesson=document.getElementById('grammarLesson');
+  if(!course||grammarCatalog.length)return;
+  try{const r=await fetch(shadowApi('/grammar/catalog'),{cache:'no-store'}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được bài tập.');grammarCatalog=Array.isArray(j.sets)?j.sets:[];const groups=[...new Map(grammarCatalog.map(x=>[String(x.course_id),x.course_title])).entries()];course.innerHTML='<option value="">Chọn khóa học</option>'+groups.map(([id,title])=>`<option value="${grammarEsc(id)}">${grammarEsc(title)}</option>`).join('');lesson.innerHTML='<option value="">Chọn bài học</option>';if(!grammarCatalog.length)document.getElementById('grammarEmpty').textContent='Chưa có bộ ngữ pháp nào được xuất bản.'}catch(e){document.getElementById('grammarEmpty').textContent=e.message}
+}
+function fillGrammarLessons(courseId,selectedId){
+  const lesson=document.getElementById('grammarLesson'),items=grammarCatalog.filter(x=>String(x.course_id)===String(courseId));
+  lesson.innerHTML='<option value="">Chọn bài học</option>'+items.map(x=>`<option value="${Number(x.id)}">Bài ${String(x.lesson_number).padStart(2,'0')} · ${grammarEsc(x.lesson_title)} · ${grammarEsc(x.title)}</option>`).join('');
+  if(selectedId)lesson.value=String(selectedId);
+}
+async function openGrammarSet(id){
+  document.querySelector('.app-nav-btn[data-section="grammarSection"]')?.click();await loadGrammarCatalog();
+  const meta=grammarCatalog.find(x=>Number(x.id)===Number(id));if(meta){document.getElementById('grammarCourse').value=String(meta.course_id);fillGrammarLessons(meta.course_id,id)}
+  const empty=document.getElementById('grammarEmpty'),content=document.getElementById('grammarContent');empty.hidden=false;content.hidden=true;empty.textContent='Đang tải bài ngữ pháp...';
+  try{const r=await fetch(shadowApi('/grammar/set?id='+encodeURIComponent(id)),{cache:'no-store'}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được bài tập.');activeGrammar=j;renderGrammarSet()}catch(e){empty.textContent=e.message}
+}
+function renderGrammarSet(){
+  const set=activeGrammar?.set,questions=activeGrammar?.questions||[],empty=document.getElementById('grammarEmpty'),content=document.getElementById('grammarContent');if(!set)return;
+  document.getElementById('grammarTheory').innerHTML=`<span class="grammar-tag">NGỮ PHÁP</span><h2>${grammarEsc(set.title)}${set.pinyin?' · '+grammarEsc(set.pinyin):''}</h2><p>${grammarEsc(set.explanation||'')}</p>${set.formula?`<div class="grammar-formula">${grammarEsc(set.formula)}</div>`:''}${(set.examples||[]).map(x=>`<div class="grammar-example"><strong>${grammarEsc(x.hanzi)}</strong>${x.pinyin?`<br><span class="pinyin">${grammarEsc(x.pinyin)}</span>`:''}${x.vi?`<br><span class="meaning">${grammarEsc(x.vi)}</span>`:''}</div>`).join('')}`;
+  document.getElementById('grammarQuestions').innerHTML=questions.length?questions.map((q,i)=>`<div class="grammar-question" data-question="${i}"><h3>Câu ${i+1}. ${grammarEsc(q.prompt)}</h3>${(q.options||[]).map((o,k)=>`<label class="exercise-option"><input type="radio" name="grammarQ${i}" value="${k}"> ${grammarEsc(o)}</label>`).join('')}<div class="question-explain" hidden></div></div>`).join(''):'<p class="muted">Bài này chưa có câu hỏi trắc nghiệm.</p>';
+  document.getElementById('checkGrammarAnswers').hidden=!questions.length;document.getElementById('resetGrammarAnswers').hidden=!questions.length;document.getElementById('grammarScore').textContent='';empty.hidden=true;content.hidden=false;content.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function checkGrammarAnswers(){
+  const questions=activeGrammar?.questions||[];let correct=0,answered=0;
+  questions.forEach((q,i)=>{const box=document.querySelector(`.grammar-question[data-question="${i}"]`),chosen=box?.querySelector('input:checked');if(chosen)answered++;box?.querySelectorAll('.exercise-option').forEach((label,k)=>{label.classList.toggle('correct',k===Number(q.correct_index));label.classList.toggle('wrong',chosen&&Number(chosen.value)===k&&k!==Number(q.correct_index));label.querySelector('input').disabled=true});if(chosen&&Number(chosen.value)===Number(q.correct_index))correct++;const explain=box?.querySelector('.question-explain');if(explain){explain.hidden=false;explain.textContent=q.explanation||`Đáp án đúng: ${(q.options||[])[Number(q.correct_index)]||''}`}});
+  const pct=questions.length?Math.round(correct/questions.length*100):0;document.getElementById('grammarScore').textContent=`Kết quả: ${correct}/${questions.length} câu đúng · ${pct}%${answered<questions.length?' · Còn câu chưa trả lời':''}`;
+}
+document.getElementById('grammarCourse')?.addEventListener('change',e=>{fillGrammarLessons(e.target.value);document.getElementById('grammarContent').hidden=true;document.getElementById('grammarEmpty').hidden=false;document.getElementById('grammarEmpty').textContent='Chọn một bài học để bắt đầu.'});
+document.getElementById('grammarLesson')?.addEventListener('change',e=>{if(e.target.value)openGrammarSet(Number(e.target.value))});
+document.getElementById('checkGrammarAnswers')?.addEventListener('click',checkGrammarAnswers);
+document.getElementById('resetGrammarAnswers')?.addEventListener('click',renderGrammarSet);
+document.querySelector('.app-nav-btn[data-section="grammarSection"]')?.addEventListener('click',loadGrammarCatalog);
+
 // ===== SHADOWING V22 =====
 let shadowCourses = [];
 let shadowVideos = [];
