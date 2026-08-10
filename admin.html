@@ -64,14 +64,15 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
       <button class="ghost" id="logoutBtn">Đăng xuất</button>
     </div>
     <div class="tabs">
-      <button class="tab active" data-pane="codesPane">🔑 Mã kích hoạt</button>
-      <button class="tab" data-pane="contentPane">✍️ Viết chữ Hán</button>
+      <button class="tab active" data-pane="contentPane">✍️ Viết chữ Hán</button>
+      <button class="tab" data-pane="shadowPane">🎥 Video Shadowing</button>
+      <button class="tab" data-pane="grammarPane">📚 Ngữ pháp &amp; Bài tập</button>
       <button class="tab" data-pane="learningPane">🎓 Khóa học video</button>
-<button class="tab" data-pane="shadowPane">🎥 Video Shadowing</button>
+      <button class="tab" data-pane="codesPane">🔑 Mã kích hoạt</button>
     </div>
   </div>
 
-  <section class="pane active" id="codesPane">
+  <section class="pane" id="codesPane">
     <div class="card">
       <h2>Mã kích hoạt</h2>
       <div class="grid">
@@ -97,7 +98,7 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
     </div>
   </section>
 
-  <section class="pane" id="contentPane">
+  <section class="pane active" id="contentPane">
     <div class="card">
       <h2>Tạo / cập nhật khóa học</h2>
       <div class="grid">
@@ -173,19 +174,6 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
     </div>
 
     <div class="card">
-      <h2>Nhập ngữ pháp & bài tập hàng loạt</h2>
-      <p class="muted">Một file XLSX có thể chứa nhiều khóa, nhiều bài và cả ba sheet. Khi chỉ muốn thay bài tập, file chỉ cần sheet <b>BAI_TAP</b> và chọn “Chỉ bài tập”; phần ngữ pháp, giải thích và ví dụ được giữ nguyên.</p>
-      <div class="grid">
-        <div><label>File XLSX chuẩn</label><input id="grammarImportFile" type="file" accept=".xlsx,.xls"></div>
-        <div><label>Phạm vi cập nhật</label><select id="grammarImportScope"><option value="auto">Tự nhận theo sheet có trong file</option><option value="all">Cả ngữ pháp và bài tập</option><option value="theory">Chỉ ngữ pháp & ví dụ</option><option value="exercises">Chỉ bài tập</option></select></div>
-        <div><label>Trạng thái sau khi nhập</label><select id="grammarImportPublished"><option value="file">Theo cột published trong file</option><option value="1">Hiện cho học viên</option><option value="0">Lưu nháp / Ẩn</option></select></div>
-      </div>
-      <div class="row" style="margin-top:10px"><button class="ghost" id="previewGrammarImport">👁 Xem trước</button><button class="primary" id="runGrammarImport" disabled>⬆ Nhập dữ liệu</button><button class="ghost" id="grammarXlsxTemplate">⬇ Tải file XLSX mẫu</button></div>
-      <div class="status" id="grammarImportStatus"></div>
-      <div class="tablewrap" id="grammarImportPreview" hidden></div>
-    </div>
-
-    <div class="card">
       <h2>Nhập bài, video YouTube và tài liệu</h2>
       <div class="grid2">
         <div><label>Chọn khóa</label><select id="learningImportCourse"></select></div>
@@ -202,6 +190,25 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
     <div class="card">
       <h2>Các khóa học video</h2>
       <div class="tablewrap"><table><thead><tr><th>Thứ tự</th><th>Khóa học</th><th>Loại</th><th>Số bài</th><th>Trạng thái</th><th></th></tr></thead><tbody id="learningCourseBody"></tbody></table></div>
+    </div>
+  </section>
+
+  <section class="pane" id="grammarPane">
+    <div class="card">
+      <h2>Ngữ pháp &amp; Bài tập</h2>
+      <p class="muted">Đăng nội dung hàng loạt bằng file XLSX. Một file có thể chứa nhiều khóa, nhiều bài và đủ ba sheet <b>NGU_PHAP</b>, <b>VI_DU</b>, <b>BAI_TAP</b>.</p>
+      <div class="grid">
+        <div><label>File XLSX chuẩn</label><input id="grammarImportFile" type="file" accept=".xlsx,.xls"></div>
+        <div><label>Phạm vi cập nhật</label><select id="grammarImportScope"><option value="auto">Tự nhận theo sheet có trong file</option><option value="all">Cả ngữ pháp và bài tập</option><option value="theory">Chỉ ngữ pháp &amp; ví dụ</option><option value="exercises">Chỉ bài tập</option></select></div>
+        <div><label>Trạng thái sau khi nhập</label><select id="grammarImportPublished"><option value="file">Theo cột published trong file</option><option value="1">Hiện cho học viên</option><option value="0">Lưu nháp / Ẩn</option></select></div>
+      </div>
+      <div class="row" style="margin-top:10px"><button class="ghost" id="previewGrammarImport">👁 Xem trước</button><button class="primary" id="runGrammarImport" disabled>⬆ Nhập dữ liệu</button><button class="ghost" id="grammarXlsxTemplate">⬇ Tải file XLSX mẫu</button></div>
+      <div class="status" id="grammarImportStatus"></div>
+      <div class="tablewrap" id="grammarImportPreview" hidden></div>
+    </div>
+    <div class="card">
+      <h2>Chỉnh sửa thủ công</h2>
+      <p class="muted">Sau khi nhập file, anh vào tab <b>Khóa học video</b> → <b>Quản lý nội dung từng bài</b> để sửa riêng cấu trúc, giải thích, ví dụ, câu hỏi, đáp án hoặc lời giải.</p>
     </div>
   </section>
 
@@ -340,6 +347,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   $(b.dataset.pane).classList.add('active');
   if(b.dataset.pane==='contentPane') loadCourses();
   if(b.dataset.pane==='learningPane') loadLearningCourses();
+  if(b.dataset.pane==='grammarPane') loadLearningCourses();
   if(b.dataset.pane==='shadowPane'){ loadCourses().then(()=>{loadShadowRule();loadShadowAdminVideos();}); }
 });
 
