@@ -796,20 +796,13 @@ if(demoCheck){
   <div class="wrap">
     <div class="module-header">
       <div class="brand">TIẾNG TRUNG ALUNI</div>
-      <h1>Khóa học tiếng Trung</h1>
-      <p>Học theo lộ trình · xem video theo thứ tự · tải tài liệu · lưu tiến độ.</p>
+      <h1>Tất cả khóa học</h1>
+      <p>Khám phá toàn bộ khóa học đang có trên Aluni. Khóa miễn phí có thể học ngay; khóa có phí sẽ được thêm vào “Khóa học của tôi” sau khi kích hoạt.</p>
     </div>
 
     <div class="course-catalog" id="courseCatalog">
-      <div class="course-hero">
-        <div>
-          <span class="free-chip">🎁 KHÓA HỌC MIỄN PHÍ</span>
-          <h2>Pinyin tiếng Trung từ cơ bản</h2>
-          <p>48 bài học video giúp người mới nắm chắc phát âm, thanh điệu và quy tắc ghép âm.</p>
-        </div>
-        <button class="btn primary" data-open-course="pinyin-48">Bắt đầu học →</button>
-      </div>
       <div class="catalog-grid" id="courseCatalogGrid"></div>
+      <div class="lesson-empty" id="courseCatalogEmpty" hidden>Chưa có khóa học nào được công khai.</div>
     </div>
 
     <div class="course-detail" id="courseDetail" hidden>
@@ -859,6 +852,7 @@ if(demoCheck){
   const catalog=document.getElementById('courseCatalog');
   const detail=document.getElementById('courseDetail');
   const grid=document.getElementById('courseCatalogGrid');
+  const catalogEmpty=document.getElementById('courseCatalogEmpty');
   const myGrid=document.getElementById('myCourseGrid');
   const myEmpty=document.getElementById('myCourseEmpty');
   const lessonList=document.getElementById('courseLessonList');
@@ -890,7 +884,9 @@ if(demoCheck){
   }
   function renderCatalog(){
     if(!grid)return;
-    grid.innerHTML=allCourses().map(c=>{
+    const courses=allCourses();
+    if(catalogEmpty)catalogEmpty.hidden=courses.length>0;
+    grid.innerHTML=courses.map(c=>{
       const free=c.access==='free';
       return `<article class="catalog-card">
         <div class="catalog-icon">${courseEsc(c.icon||'课')}</div>
@@ -1140,7 +1136,7 @@ function grammarEsc(value){return String(value??'').replace(/[&<>"']/g,m=>({'&':
 async function loadGrammarCatalog(){
   const course=document.getElementById('grammarCourse'),lesson=document.getElementById('grammarLesson');
   if(!course||grammarCatalog.length)return;
-  try{const r=await fetch(shadowApi('/grammar/catalog'),{cache:'no-store'}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được bài tập.');grammarCatalog=Array.isArray(j.sets)?j.sets:[];const groups=[...new Map(grammarCatalog.map(x=>[String(x.course_id),x.course_title])).entries()];course.innerHTML='<option value="">Chọn khóa học</option>'+groups.map(([id,title])=>`<option value="${grammarEsc(id)}">${grammarEsc(title)}</option>`).join('');lesson.innerHTML='<option value="">Chọn bài học</option>';if(!grammarCatalog.length)document.getElementById('grammarEmpty').textContent='Chưa có bộ ngữ pháp nào được xuất bản.'}catch(e){document.getElementById('grammarEmpty').textContent=e.message}
+  try{const r=await fetch(shadowApi('/grammar/catalog'),{cache:'no-store'}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được bài tập.');grammarCatalog=Array.isArray(j.sets)?j.sets:[];const groups=[...new Map(grammarCatalog.map(x=>[String(x.course_id),x.course_title])).entries()];course.innerHTML='<option value="">Chọn khóa học</option>'+groups.map(([id,title])=>`<option value="${grammarEsc(id)}">${grammarEsc(title)}</option>`).join('');lesson.innerHTML='<option value="">Chọn bài học</option>';if(!grammarCatalog.length)document.getElementById('grammarEmpty').innerHTML='Chưa có bài ngữ pháp công khai.<br><span class="muted">Nếu Admin đã nhập dữ liệu, hãy kiểm tra khóa học đã chuyển từ “Lưu nháp / Ẩn” sang “Xuất bản / Hiện”.</span>'}catch(e){document.getElementById('grammarEmpty').textContent=e.message}
 }
 function fillGrammarLessons(courseId,selectedId){
   const lesson=document.getElementById('grammarLesson'),items=grammarCatalog.filter(x=>String(x.course_id)===String(courseId));
