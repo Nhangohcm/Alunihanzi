@@ -10,7 +10,6 @@
 <script src="data.js"></script>
 <script src="tts-config.js"></script>
 <script src="access-config.js"></script>
-<script src="course-data.js"></script>
 <style>
 :root{--bg:#f5f0e7;--paper:#fffdf8;--ink:#26382f;--muted:#747a73;--green:#718875;--green2:#e2eadf;--line:#ded7cb;--warm:#f0e8d9;--lock:#8b6423;--shadow:0 12px 32px rgba(46,58,50,.09)}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#f9f5ed,#f3eee4);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans",Arial,sans-serif}
@@ -225,7 +224,6 @@ input,select{width:100%;border:1px solid var(--line);border-radius:13px;backgrou
   margin:10px 0;
 }
 .grammar-example{padding:8px 0;border-bottom:1px dashed var(--line)}
-.grammar-empty{text-align:center;padding:28px;color:var(--muted)}.grammar-question{border:1px solid var(--line);border-radius:15px;padding:14px;margin:12px 0}.grammar-question h3{margin:0 0 10px;font-size:1rem}.exercise-option{display:block;padding:10px;border:1px solid var(--line);border-radius:11px;margin:7px 0;cursor:pointer}.exercise-option.correct{background:#e2efe3;border-color:#94b59a}.exercise-option.wrong{background:#fff0ed;border-color:#d9a19a}.question-explain{margin-top:9px;color:var(--muted);font-size:.9rem}.grammar-score{font-size:1.2rem;font-weight:900;margin:12px 0}.grammar-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
 .exercise-option{
   display:block;
   border:1px solid var(--line);
@@ -474,59 +472,8 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
 .word-popup-vi{font-size:1.05rem;margin-top:5px}
 .word-popup-status{color:var(--muted);font-size:.84rem;margin-top:4px}
 .word-popup-close{position:absolute;right:8px;top:8px;border:0;background:transparent;font-size:1.35rem;cursor:pointer}
-
-/* KHÓA HỌC */
-.course-hero{background:linear-gradient(135deg,#e8efe5,#fff8ec);border:1px solid var(--line);border-radius:24px;padding:22px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;gap:18px}
-.course-hero h2{margin:5px 0 7px;font-size:clamp(1.45rem,4vw,2.05rem)}.course-hero p{margin:0;color:var(--muted);line-height:1.55}
-.catalog-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}.catalog-card{background:white;border:1px solid var(--line);border-radius:19px;padding:16px;display:flex;flex-direction:column;min-height:205px}
-.catalog-icon{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:var(--green2);font-size:1.45rem}.catalog-card h3{margin:12px 0 5px}.catalog-card p{color:var(--muted);line-height:1.5;margin:0 0 13px;font-size:.92rem}.catalog-meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}.course-badge{font-size:.76rem;font-weight:850;padding:5px 8px;border-radius:999px;background:var(--warm);color:var(--muted)}.course-badge.free{background:#e2efe3;color:#39734d}.course-badge.paid{background:#f3ead9;color:var(--lock)}.catalog-card .btn{margin-top:auto;width:100%}.course-card-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:auto}.catalog-card .course-card-actions .btn{margin-top:0}.course-shadow-btn{background:#fff8ec;border-color:#e7cfa7;color:#7b5b22}@media(max-width:420px){.course-card-actions{grid-template-columns:1fr}}
-.activation-panel{margin-bottom:18px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(135deg,#f2f6ef,#fffaf1);overflow:hidden}.activation-panel summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 19px;font-weight:900;font-size:1.05rem}.activation-panel summary::-webkit-details-marker{display:none}.activation-panel summary::after{content:'⌄';font-size:1.15rem;color:var(--muted)}.activation-panel[open] summary::after{content:'⌃'}.activation-body{padding:0 19px 19px}.activation-body p{margin:0 0 12px;color:var(--muted);line-height:1.5}.activation-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:9px;align-items:start}.activation-form input{width:100%}.activation-help{font-size:.82rem;color:var(--muted);margin-top:9px}.activation-msg{min-height:23px;margin-top:9px;font-weight:800}.activation-msg.ok{color:#39734d}.activation-msg.err{color:#a24d46}@media(max-width:760px){.activation-form{grid-template-columns:1fr}.activation-form .btn{width:100%}.activation-panel summary{padding:15px}.activation-body{padding:0 15px 15px}}
-.course-detail[hidden],.course-catalog[hidden]{display:none!important}.course-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}.course-detail-head h2{margin:3px 0 5px}.course-detail-head p{margin:0;color:var(--muted)}
-.course-progress{margin:16px 0 13px}.course-progress-row{display:flex;justify-content:space-between;gap:10px;font-size:.88rem;font-weight:800;margin-bottom:7px}.progress-track{height:10px;border-radius:999px;background:#e9e5dd;overflow:hidden}.progress-fill{height:100%;width:0;background:var(--green);border-radius:inherit;transition:width .25s ease}
-.course-tools{display:grid;grid-template-columns:1fr auto;gap:8px;margin:14px 0}.lesson-list{display:grid;gap:9px}.course-lesson{border:1px solid var(--line);background:white;border-radius:17px;overflow:hidden}.lesson-head{width:100%;border:0;background:white;color:var(--ink);display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:11px;padding:14px;text-align:left}.lesson-head:hover{background:#faf8f2}.lesson-number{width:38px;height:38px;border-radius:12px;background:var(--green2);display:grid;place-items:center;font-weight:900;color:#526856}.lesson-title{font-weight:880;line-height:1.35}.lesson-summary{display:block;color:var(--muted);font-size:.8rem;font-weight:650;margin-top:3px}.lesson-state{font-weight:900;color:var(--muted)}.course-lesson.open .lesson-head{background:#f4f7f1}.lesson-body{display:none;border-top:1px solid var(--line);padding:14px;background:#fffdf9}.course-lesson.open .lesson-body{display:block}.lesson-empty{padding:16px;border-radius:13px;background:var(--warm);color:var(--muted);line-height:1.5;text-align:center}.lesson-video{margin-bottom:14px}.lesson-video:last-child{margin-bottom:0}.lesson-video-title{font-weight:850;margin:0 0 8px}.lesson-video-frame{aspect-ratio:16/9;background:#202522;border-radius:14px;overflow:hidden}.lesson-video-frame iframe{width:100%;height:100%;border:0;display:block}.lesson-resources{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px;padding-top:13px;border-top:1px solid var(--line)}.lesson-actions{display:flex;justify-content:space-between;align-items:center;gap:9px;margin-top:13px}.complete-btn.done{background:#e2efe3;color:#39734d;border-color:#b8d0bc}
-@media(max-width:760px){.catalog-grid{grid-template-columns:1fr}.course-hero{align-items:flex-start;flex-direction:column}.course-tools{grid-template-columns:1fr}.course-detail-head{flex-direction:column}.course-detail-head .btn{align-self:flex-start}.catalog-card{min-height:0}}
-@media(max-width:480px){.course-hero{padding:17px}.lesson-head{grid-template-columns:auto 1fr auto;padding:12px 10px}.lesson-number{width:34px;height:34px}.lesson-body{padding:10px}.lesson-actions{align-items:stretch;flex-direction:column}.lesson-actions .btn{width:100%}}
-/* v30: compact ClassIn-style course list and fully visible mobile navigation. */
-.lesson-video{margin:0!important;border-bottom:1px solid #ece9e1}.lesson-video:last-child{border-bottom:0}
-.lesson-video-toggle{width:100%;border:0;background:transparent;color:var(--ink);display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:8px;padding:11px 4px;text-align:left;cursor:pointer}
-.lesson-video-toggle:hover{background:#faf8f2}.lesson-video-icon{font-size:1rem}.lesson-video-toggle .lesson-video-title{font-size:.94rem;font-weight:760;line-height:1.35;margin:0}.lesson-video-state{color:var(--muted);font-weight:900}
-.lesson-video-player{display:none;padding:0 4px 12px}.lesson-video.playing .lesson-video-player{display:block}
-@media(max-width:780px){.app-topbar{gap:7px}.app-mini-brand{align-self:center}.app-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;overflow:visible}.app-nav-btn{width:100%;padding:8px 6px;font-size:.8rem;overflow:hidden;text-overflow:ellipsis}.module-header{padding-top:10px}}
-@media(max-width:480px){.lesson-list{gap:6px}.course-lesson{border-radius:12px}.lesson-head{grid-template-columns:auto minmax(0,1fr) auto;gap:8px;padding:9px 10px}.lesson-number{width:31px;height:31px;border-radius:9px;font-size:.83rem}.lesson-title{font-size:.9rem;font-weight:790;line-height:1.25}.lesson-summary{font-size:.72rem;margin-top:2px}.lesson-body{padding:4px 10px 10px}.lesson-video-toggle{padding:10px 2px}.lesson-video-toggle .lesson-video-title{font-size:.86rem;font-weight:700}.course-detail-head h2{font-size:1.3rem}.course-detail-head p{font-size:.9rem}.course-tools{margin:10px 0}.course-progress{margin:12px 0 10px}}
-.lesson-video-frame.video-portrait{aspect-ratio:9/16!important;max-width:360px;margin-inline:auto}.video-frame.video-portrait{aspect-ratio:9/16!important;max-width:430px;margin-inline:auto}
-@media(max-width:760px){#shadowPlayerCard .video-frame.video-portrait{width:min(76vw,330px)!important;max-width:calc(100% - 12px)!important;aspect-ratio:9/16!important}.lesson-video-frame.video-portrait{width:min(78vw,330px);aspect-ratio:9/16!important}}
-/* v32-R1: keep portrait video compact on phones so Shadowing text remains visible. */
-@media(max-width:760px){
-  #shadowPlayerCard .video-frame.video-portrait{
-    width:auto!important;
-    height:min(44dvh,390px)!important;
-    max-width:calc(100% - 12px)!important;
-    max-height:44dvh!important;
-    aspect-ratio:9/16!important;
-    margin-inline:auto!important;
-  }
-  .lesson-video-frame.video-portrait{
-    width:auto!important;
-    height:min(46dvh,410px)!important;
-    max-width:100%!important;
-    max-height:46dvh!important;
-    aspect-ratio:9/16!important;
-    margin-inline:auto!important;
-  }
-  #shadowPlayerCard.transcript-mode .video-frame.video-portrait{
-    width:auto!important;
-    height:min(34dvh,300px)!important;
-    max-width:100%!important;
-    max-height:34dvh!important;
-  }
-}
-@supports not (height:1dvh){
-  @media(max-width:760px){
-    #shadowPlayerCard .video-frame.video-portrait{height:min(44vh,390px)!important;max-height:44vh!important}
-    .lesson-video-frame.video-portrait{height:min(46vh,410px)!important;max-height:46vh!important}
-    #shadowPlayerCard.transcript-mode .video-frame.video-portrait{height:min(34vh,300px)!important;max-height:34vh!important}
-  }
-}
+.learning-grid{display:grid;grid-template-columns:300px 1fr;gap:16px}.learning-list{display:grid;gap:9px}.learning-course-btn,.learning-lesson-btn{width:100%;text-align:left;border:1px solid var(--line);background:white;border-radius:14px;padding:12px;cursor:pointer}.learning-course-btn.active,.learning-lesson-btn.active{border-color:var(--green);background:#edf2ea}.learning-detail{border:1px solid var(--line);border-radius:18px;background:white;padding:18px}.lesson-parts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:14px 0}.lesson-part{padding:10px 8px;border-radius:12px;background:#f5f0e7;text-align:center;font-size:.82rem;font-weight:800}.lesson-part.ready{background:#e3efe3;color:#386047}.learning-empty{padding:20px;border:1px dashed var(--line);border-radius:14px;color:var(--muted);text-align:center}.learning-video,.learning-resource{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+@media(max-width:760px){.learning-grid{grid-template-columns:1fr}.lesson-parts{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -534,10 +481,9 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
   <div class="app-mini-brand">TIẾNG TRUNG ALUNI</div>
   <nav class="app-nav">
     <button class="app-nav-btn active" data-section="writingSection">✍ Viết chữ</button>
+    <button class="app-nav-btn" data-section="learningSection">🎓 Khóa học</button>
     <button class="app-nav-btn" data-section="shadowSection">🎥 Shadowing</button>
     <button class="app-nav-btn" data-section="grammarSection">📚 Ngữ pháp & Bài tập</button>
-    <button class="app-nav-btn" data-section="coursesSection">🎓 Khóa học</button>
-    <button class="app-nav-btn" data-section="myCoursesSection">👤 Khóa học của tôi</button>
   </nav>
 </div>
 
@@ -793,282 +739,6 @@ if(demoCheck){
 </section>
 
 
-<section class="aluni-section" id="coursesSection">
-  <div class="wrap">
-    <div class="module-header">
-      <div class="brand">TIẾNG TRUNG ALUNI</div>
-      <h1>Tất cả khóa học</h1>
-      <p>Khám phá toàn bộ khóa học đang có trên Aluni. Khóa miễn phí có thể học ngay; khóa có phí sẽ được thêm vào “Khóa học của tôi” sau khi kích hoạt.</p>
-    </div>
-
-    <div class="course-catalog" id="courseCatalog">
-      <div class="catalog-grid" id="courseCatalogGrid"></div>
-      <div class="lesson-empty" id="courseCatalogEmpty" hidden>Chưa có khóa học nào được công khai.</div>
-    </div>
-
-    <div class="course-detail" id="courseDetail" hidden>
-      <div class="module-card">
-        <div class="course-detail-head">
-          <div>
-            <button class="btn ghost" id="backToCourses">← Tất cả khóa học</button>
-            <h2 id="courseDetailTitle">Pinyin tiếng Trung từ cơ bản</h2>
-            <p id="courseDetailDescription"></p>
-          </div>
-          <span class="course-badge free" id="courseDetailBadge">Miễn phí</span>
-        </div>
-        <div class="course-progress">
-          <div class="course-progress-row"><span>Tiến độ của bạn</span><span id="courseProgressText">0/48 bài · 0%</span></div>
-          <div class="progress-track" role="progressbar" aria-label="Tiến độ khóa học"><div class="progress-fill" id="courseProgressFill"></div></div>
-        </div>
-        <div class="course-tools">
-          <input id="courseLessonSearch" type="search" placeholder="Tìm theo số bài hoặc tên bài..." aria-label="Tìm bài học">
-          <button class="btn soft" id="continueCourseBtn">▶ Tiếp tục học</button>
-        </div>
-        <div class="lesson-list" id="courseLessonList"></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<section class="aluni-section" id="myCoursesSection">
-  <div class="wrap">
-    <div class="module-header">
-      <div class="brand">TIẾNG TRUNG ALUNI</div>
-      <h1>Khóa học của tôi</h1>
-      <p>Các khóa học miễn phí và khóa anh/chị đã kích hoạt.</p>
-    </div>
-    <details class="activation-panel" id="courseActivationPanel" open>
-      <summary>🔑 Nhập mã khóa học</summary>
-      <div class="activation-body">
-        <p>Nhập thông tin đã dùng khi mua khóa và mã Aluni gửi cho bạn. Khóa học sẽ tự động được thêm vào danh sách bên dưới.</p>
-        <div class="activation-form">
-          <input id="myCourseIdentity" autocomplete="email" placeholder="Số điện thoại hoặc email">
-          <input id="myCourseCode" autocomplete="off" autocapitalize="characters" placeholder="Mã khóa học, ví dụ ALU-ABCD-EFGH">
-          <button class="btn primary" id="myCourseActivateBtn" type="button">Kích hoạt khóa học</button>
-        </div>
-        <div class="activation-msg" id="myCourseActivationMsg" aria-live="polite"></div>
-        <div class="activation-help">Mỗi mã chỉ gắn với một số điện thoại hoặc email. Nếu cần hỗ trợ, liên hệ Zalo 0931 444 083.</div>
-      </div>
-    </details>
-    <div class="module-card">
-      <div class="catalog-grid" id="myCourseGrid"></div>
-      <div class="lesson-empty" id="myCourseEmpty" hidden>
-        Chưa có khóa học nào. Hãy vào tab Khóa học để học thử, mua khóa hoặc nhập mã kích hoạt.
-      </div>
-    </div>
-  </div>
-</section>
-
-<script>
-(function(){
-  const COURSE_PROGRESS_KEY='aluni_course_progress_v1';
-  const catalog=document.getElementById('courseCatalog');
-  const detail=document.getElementById('courseDetail');
-  const grid=document.getElementById('courseCatalogGrid');
-  const catalogEmpty=document.getElementById('courseCatalogEmpty');
-  const myGrid=document.getElementById('myCourseGrid');
-  const myEmpty=document.getElementById('myCourseEmpty');
-  const lessonList=document.getElementById('courseLessonList');
-  let activeCourse=null;
-  let managedCourses=null;
-  let companionShadowCourseIds=new Set();
-
-  function courseEsc(value){return String(value??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-  function allCourses(){return Array.isArray(managedCourses)?managedCourses:(Array.isArray(window.ALUNI_COURSES)?window.ALUNI_COURSES:[])}
-  async function loadManagedCourses(){
-    const base=String(window.ALUNI_API_BASE||'').replace(/\/+$/,'');
-    if(!base)return;
-    try{
-      const [r,sr]=await Promise.all([fetch(base+'/learning-courses',{cache:'no-store'}),fetch(base+'/shadowing/courses',{cache:'no-store'})]);
-      const j=await r.json();const sj=sr.ok?await sr.json():{courses:[]};
-      companionShadowCourseIds=new Set((Array.isArray(sj.courses)?sj.courses:[]).map(c=>String(c.id)));
-      if(r.ok&&Array.isArray(j.courses)&&j.managed)managedCourses=j.courses;
-      renderCatalog();renderMyCourses();
-    }catch(e){/* Giữ dữ liệu mẫu khi mạng chưa sẵn sàng. */}
-  }
-  function loadProgress(){try{return JSON.parse(localStorage.getItem(COURSE_PROGRESS_KEY)||'{}')||{}}catch(e){return{}}}
-  function saveProgress(value){localStorage.setItem(COURSE_PROGRESS_KEY,JSON.stringify(value))}
-  function completed(courseId){const p=loadProgress();return Array.isArray(p[courseId]?.completed)?p[courseId].completed:[]}
-  function youtubeId(url){
-    const s=String(url||'').trim();
-    if(!s)return'';
-    const m=s.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/i);
-    return m?m[1]:'';
-  }
-  function renderCatalog(){
-    if(!grid)return;
-    const courses=allCourses();
-    if(catalogEmpty)catalogEmpty.hidden=courses.length>0;
-    grid.innerHTML=courses.map(c=>{
-      const free=c.access==='free';
-      return `<article class="catalog-card">
-        <div class="catalog-icon">${courseEsc(c.icon||'课')}</div>
-        <h3>${courseEsc(c.title)}</h3>
-        <p>${courseEsc(c.description)}</p>
-        <div class="catalog-meta"><span class="course-badge ${free?'free':'paid'}">${free?'Miễn phí':'Có phí'}</span><span class="course-badge">${c.lessons?.length||0} bài</span></div>
-        <button class="btn ${free?'primary':'ghost'}" data-open-course="${courseEsc(c.id)}">${free?'Bắt đầu học':'Xem khóa học'} →</button>
-      </article>`;
-    }).join('');
-  }
-  function hasStoredEntitlement(courseId){
-    for(let i=0;i<localStorage.length;i++){
-      const key=localStorage.key(i);
-      if(!key||!key.startsWith('aluni_entitlement_'))continue;
-      try{
-        const value=JSON.parse(localStorage.getItem(key)||'null');
-        if(!value?.token)continue;
-        if(String(value.course_id||'')===String(courseId||''))return true;
-        const payload=JSON.parse(atob(value.token.split('.')[0].replace(/-/g,'+').replace(/_/g,'/')));
-        if(String(payload.course_id||'')===String(courseId||''))return true;
-      }catch(e){}
-    }
-    return false;
-  }
-  function ownsCourse(course){
-    return course.access==='free'||hasStoredEntitlement(course.id);
-  }
-  function validIdentity(value){
-    const s=String(value||'').trim();
-    return s.includes('@')?/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s):s.replace(/\D/g,'').length>=9;
-  }
-  async function activateMyCourse(){
-    const identity=document.getElementById('myCourseIdentity').value.trim();
-    const code=document.getElementById('myCourseCode').value.trim().toUpperCase();
-    const msg=document.getElementById('myCourseActivationMsg');
-    if(!validIdentity(identity)){msg.textContent='Vui lòng nhập đúng số điện thoại hoặc email.';msg.className='activation-msg err';return}
-    if(!code){msg.textContent='Vui lòng nhập mã khóa học.';msg.className='activation-msg err';return}
-    msg.textContent='Đang kiểm tra mã...';msg.className='activation-msg';
-    try{
-      const base=String(window.ALUNI_API_BASE||'').replace(/\/+$/,'');
-      const r=await fetch(base+'/access/activate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identity,code})});
-      const j=await r.json();
-      if(!r.ok||!j.ok)throw new Error(j.error||'Mã khóa học không hợp lệ.');
-      localStorage.setItem('aluni_entitlement_'+String(j.course_id)+'_v1',JSON.stringify(j));
-      const course=allCourses().find(c=>String(c.id)===String(j.course_id));
-      msg.textContent='Kích hoạt thành công'+(course?' khóa “'+course.title+'”':'')+'.';msg.className='activation-msg ok';
-      document.getElementById('myCourseCode').value='';renderMyCourses();
-      setTimeout(()=>{document.getElementById('courseActivationPanel').open=false;myGrid?.scrollIntoView({behavior:'smooth',block:'start'})},700);
-    }catch(e){msg.textContent=e.message||'Chưa kết nối được hệ thống.';msg.className='activation-msg err'}
-  }
-  function renderMyCourses(){
-    if(!myGrid||!myEmpty)return;
-    const mine=allCourses().filter(ownsCourse);
-    myEmpty.hidden=mine.length>0;
-    myGrid.innerHTML=mine.map(c=>{
-      const hasShadow=companionShadowCourseIds.has(String(c.id));
-      return `<article class="catalog-card">
-        <div class="catalog-icon">${courseEsc(c.icon||'课')}</div>
-        <h3>${courseEsc(c.title)}</h3>
-        <p>${courseEsc(c.description)}</p>
-        <div class="catalog-meta"><span class="course-badge free">Đã có quyền học</span><span class="course-badge">${c.lessons?.length||0} bài</span></div>
-        <div class="course-card-actions"><button class="btn primary" data-open-my-course="${courseEsc(c.id)}">📘 Vào học khóa chính</button>${hasShadow?`<button class="btn course-shadow-btn" data-open-shadow-course="${courseEsc(c.id)}">🎧 Luyện Shadowing</button>`:''}</div>
-      </article>`;
-    }).join('');
-  }
-  function openCourse(courseId){
-    activeCourse=allCourses().find(c=>c.id===courseId);
-    if(!activeCourse)return;
-    catalog.hidden=true;detail.hidden=false;
-    document.getElementById('courseDetailTitle').textContent=activeCourse.title;
-    document.getElementById('courseDetailDescription').textContent=activeCourse.description||'';
-    const badge=document.getElementById('courseDetailBadge');
-    badge.textContent=activeCourse.access==='free'?'Miễn phí':'Có phí';
-    badge.className='course-badge '+(activeCourse.access==='free'?'free':'paid');
-    document.getElementById('courseLessonSearch').value='';
-    renderLessons();updateProgress();
-    window.scrollTo({top:0,behavior:'smooth'});
-  }
-  function closeAllLessons(except){
-    lessonList.querySelectorAll('.course-lesson.open').forEach(el=>{if(el!==except){el.classList.remove('open');el.querySelector('.lesson-head')?.setAttribute('aria-expanded','false');el.querySelector('.lesson-state').textContent='⌄';el.querySelectorAll('iframe').forEach(x=>x.remove())}});
-  }
-  function lessonBody(lesson){
-    const videos=Array.isArray(lesson.videos)?lesson.videos:[];
-    const resources=Array.isArray(lesson.resources)?lesson.resources:[];
-    const videoHtml=videos.map((v,i)=>{
-      const id=youtubeId(v.youtube||v.url);
-      const aspect=resolveVideoAspect(v.video_aspect,v.youtube||v.url);
-      return id?`<div class="lesson-video"><button class="lesson-video-toggle" type="button" aria-expanded="false"><span class="lesson-video-icon">▻</span><span class="lesson-video-title">${courseEsc(v.title||('Video '+(i+1)))}</span><span class="lesson-video-state">⌄</span></button><div class="lesson-video-player"><div class="lesson-video-frame ${aspect==='portrait'?'video-portrait':''}" data-youtube-id="${id}"></div></div></div>`:'';
-    }).join('');
-    const resourceHtml=resources.length?`<div class="lesson-resources">${resources.map(r=>{const canDownload=r.access_mode!=='view';return `<a class="btn soft" href="${courseEsc(r.url)}" target="_blank" rel="noopener noreferrer" ${canDownload?'download':''}>${canDownload?'⬇':'👁'} ${courseEsc(r.title||(canDownload?'Tải tài liệu':'Xem tài liệu'))}</a>`}).join('')}</div>`:'';
-    const shadowHtml=lesson.shadow_video_id?`<div class="lesson-resources"><button class="btn course-shadow-btn" data-open-linked-shadow="${Number(lesson.shadow_video_id)}" data-shadow-course="${courseEsc(lesson.shadow_course_id||'')}">🎧 Luyện Shadowing bài này${lesson.shadow_title?' · '+courseEsc(lesson.shadow_title):''}</button></div>`:'';
-    const grammarHtml=lesson.grammar_set_id?`<div class="lesson-resources"><button class="btn soft" data-open-grammar="${Number(lesson.grammar_set_id)}">📚 Học ngữ pháp & làm bài tập${lesson.grammar_title?' · '+courseEsc(lesson.grammar_title):''}</button></div>`:'';
-    return `${videoHtml||'<div class="lesson-empty">Nội dung video và tài liệu của bài này đang được cập nhật.</div>'}${resourceHtml}${shadowHtml}${grammarHtml}<div class="lesson-actions"><span class="hint">Học xong bài, hãy đánh dấu để lưu tiến độ.</span><button class="btn ghost complete-btn" data-complete="${courseEsc(lesson.id)}">✓ Đánh dấu đã học</button></div>`;
-  }
-  function renderLessons(query=''){
-    if(!activeCourse)return;
-    const q=String(query).trim().toLowerCase();
-    const done=completed(activeCourse.id);
-    const lessons=(activeCourse.lessons||[]).filter(l=>!q||String(l.number).includes(q)||String(l.title).toLowerCase().includes(q));
-    lessonList.innerHTML=lessons.length?lessons.map(l=>{
-      const isDone=done.includes(l.id), videoCount=l.videos?.length||0;
-      return `<article class="course-lesson" data-lesson-id="${courseEsc(l.id)}">
-        <button class="lesson-head" aria-expanded="false">
-          <span class="lesson-number">${courseEsc((String(l.title).match(/Bài\s*0*(\d+)/i)||[])[1]||String(Number(l.number)+1).padStart(2,'0'))}</span>
-          <span class="lesson-title">${isDone?'✓ ':''}${courseEsc(l.title)}<span class="lesson-summary">${videoCount?videoCount+' video':'Đang cập nhật nội dung'}${l.resources?.length?' · '+l.resources.length+' tài liệu':''}${l.shadow_video_id?' · 🎧 Shadowing':''}${l.grammar_set_id?' · 📚 Bài tập':''}</span></span>
-          <span class="lesson-state">⌄</span>
-        </button><div class="lesson-body">${lessonBody(l)}</div>
-      </article>`;
-    }).join(''):'<div class="lesson-empty">Không tìm thấy bài học phù hợp.</div>';
-    lessonList.querySelectorAll('.complete-btn').forEach(btn=>{if(done.includes(btn.dataset.complete)){btn.classList.add('done');btn.textContent='✓ Đã học'}});
-  }
-  function toggleLesson(card){
-    const opening=!card.classList.contains('open');closeAllLessons(card);
-    card.classList.toggle('open',opening);
-    card.querySelector('.lesson-head').setAttribute('aria-expanded',String(opening));
-    card.querySelector('.lesson-state').textContent=opening?'⌃':'⌄';
-    if(opening){card.scrollIntoView({behavior:'smooth',block:'nearest'})}
-    else card.querySelectorAll('iframe').forEach(x=>x.remove());
-  }
-  function toggleVideo(video){
-    const lesson=video.closest('.course-lesson');
-    lesson.querySelectorAll('.lesson-video.playing').forEach(other=>{if(other!==video){other.classList.remove('playing');other.querySelector('.lesson-video-toggle').setAttribute('aria-expanded','false');other.querySelector('.lesson-video-state').textContent='⌄';other.querySelector('iframe')?.remove()}});
-    const opening=!video.classList.contains('playing');video.classList.toggle('playing',opening);
-    video.querySelector('.lesson-video-toggle').setAttribute('aria-expanded',String(opening));video.querySelector('.lesson-video-state').textContent=opening?'⌃':'⌄';
-    const box=video.querySelector('.lesson-video-frame');
-    if(opening&&!box.querySelector('iframe')){const f=document.createElement('iframe');f.src=`https://www.youtube-nocookie.com/embed/${box.dataset.youtubeId}?rel=0`;f.title='Video bài học';f.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';f.allowFullscreen=true;box.appendChild(f);video.scrollIntoView({behavior:'smooth',block:'nearest'})}
-    if(!opening)box.querySelector('iframe')?.remove();
-  }
-  function toggleComplete(lessonId){
-    if(!activeCourse)return;
-    const p=loadProgress();if(!p[activeCourse.id])p[activeCourse.id]={completed:[],lastLesson:''};
-    let list=Array.isArray(p[activeCourse.id].completed)?p[activeCourse.id].completed:[];
-    list=list.includes(lessonId)?list.filter(x=>x!==lessonId):[...list,lessonId];
-    p[activeCourse.id].completed=list;p[activeCourse.id].lastLesson=lessonId;saveProgress(p);
-    renderLessons(document.getElementById('courseLessonSearch').value);updateProgress();
-  }
-  function updateProgress(){
-    if(!activeCourse)return;const total=activeCourse.lessons?.length||0;const count=completed(activeCourse.id).length;const pct=total?Math.round(count/total*100):0;
-    document.getElementById('courseProgressText').textContent=`${count}/${total} bài · ${pct}%`;
-    document.getElementById('courseProgressFill').style.width=pct+'%';
-    document.querySelector('#courseDetail .progress-track')?.setAttribute('aria-valuenow',String(pct));
-  }
-  function continueCourse(){
-    if(!activeCourse)return;const p=loadProgress();const last=p[activeCourse.id]?.lastLesson;const done=completed(activeCourse.id);
-    const target=last||activeCourse.lessons?.find(l=>!done.includes(l.id))?.id||activeCourse.lessons?.[0]?.id;
-    const card=lessonList.querySelector(`[data-lesson-id="${target}"]`)||lessonList.querySelector('.course-lesson');if(card)toggleLesson(card);
-  }
-  document.addEventListener('click',e=>{
-    const linkedShadow=e.target.closest('[data-open-linked-shadow]');if(linkedShadow){openLinkedShadowing(linkedShadow.dataset.openLinkedShadow,linkedShadow.dataset.shadowCourse);return}
-    const shadow=e.target.closest('[data-open-shadow-course]');if(shadow){openCompanionShadowing(shadow.dataset.openShadowCourse);return}
-    const mine=e.target.closest('[data-open-my-course]');if(mine){document.querySelector('.app-nav-btn[data-section="coursesSection"]')?.click();openCourse(mine.dataset.openMyCourse);return}
-    const open=e.target.closest('[data-open-course]');if(open){openCourse(open.dataset.openCourse);return}
-    const head=e.target.closest('#courseLessonList .lesson-head');if(head){toggleLesson(head.closest('.course-lesson'));return}
-    const video=e.target.closest('#courseLessonList .lesson-video-toggle');if(video){toggleVideo(video.closest('.lesson-video'));return}
-    const grammar=e.target.closest('[data-open-grammar]');if(grammar){openGrammarSet(Number(grammar.dataset.openGrammar));return}
-    const complete=e.target.closest('[data-complete]');if(complete){toggleComplete(complete.dataset.complete)}
-  });
-  document.getElementById('backToCourses')?.addEventListener('click',()=>{closeAllLessons();detail.hidden=true;catalog.hidden=false;activeCourse=null;window.scrollTo({top:0,behavior:'smooth'})});
-  document.getElementById('courseLessonSearch')?.addEventListener('input',e=>renderLessons(e.target.value));
-  document.getElementById('continueCourseBtn')?.addEventListener('click',continueCourse);
-  document.getElementById('myCourseActivateBtn')?.addEventListener('click',activateMyCourse);
-  document.getElementById('myCourseCode')?.addEventListener('keydown',e=>{if(e.key==='Enter')activateMyCourse()});
-  renderCatalog();renderMyCourses();
-  loadManagedCourses();
-})();
-</script>
-
-
 <section class="aluni-section" id="shadowSection">
   <div class="wrap">
     <div class="module-header">
@@ -1139,6 +809,11 @@ if(demoCheck){
   <div class="word-popup-status" id="wordPopupStatus"></div>
 </div>
 
+<section class="aluni-section" id="learningSection">
+  <div class="wrap"><div class="module-header"><div class="brand">TIẾNG TRUNG ALUNI</div><h1>Khóa học của Aluni</h1><p>Mỗi bài học được sắp xếp thống nhất: Bài giảng · Shadowing · Bài tập · Viết chữ · Tài liệu.</p></div>
+  <div class="module-card learning-grid"><div><label>Chọn khóa học</label><div class="learning-list" id="learningPublicCourses"><div class="learning-empty">Đang tải khóa học...</div></div></div><div><label>Danh sách bài học</label><div class="learning-list" id="learningPublicLessons"><div class="learning-empty">Chọn một khóa học để xem bài.</div></div><div id="learningPublicDetail" style="margin-top:12px"></div></div></div></div>
+</section>
+
 <section class="aluni-section" id="grammarSection">
   <div class="wrap">
     <div class="module-header">
@@ -1151,59 +826,77 @@ if(demoCheck){
       <div class="module-grid">
         <div>
           <label>Khóa học</label>
-          <select id="grammarCourse"><option value="">Đang tải...</option></select>
+          <select id="grammarCourse">
+            <option>HSK 1</option>
+            <option>50+ Phản xạ</option>
+          </select>
         </div>
         <div>
           <label>Bài học</label>
-          <select id="grammarLesson"><option value="">Chọn bài học</option></select>
+          <select id="grammarLesson">
+            <option>Bài mẫu · Sinh hoạt hằng ngày</option>
+          </select>
         </div>
       </div>
-      <div class="module-note">Chọn khóa và bài. Kết quả chỉ tính trên thiết bị hiện tại, không ảnh hưởng tiến độ khóa học.</div>
+      <div class="module-note">
+        Đây là khung Ngữ pháp & Bài tập. Sau này dữ liệu sẽ được nhập từ Admin giống cách anh đang nhập từ vựng.
+      </div>
     </div>
-    <div class="module-card grammar-empty" id="grammarEmpty">Chưa chọn bài ngữ pháp.</div>
-    <div class="module-card grammar-grid" id="grammarContent" hidden>
-      <div class="grammar-box" id="grammarTheory"></div>
-      <div class="exercise-box"><span class="grammar-tag">BÀI TẬP</span><div id="grammarQuestions"></div><div class="grammar-toolbar"><button class="btn primary" id="checkGrammarAnswers">Chấm điểm</button><button class="btn ghost" id="resetGrammarAnswers">Làm lại</button></div><div class="grammar-score" id="grammarScore"></div></div>
+
+    <div class="module-card grammar-grid">
+      <div class="grammar-box">
+        <span class="grammar-tag">NGỮ PHÁP MẪU</span>
+        <h2>了 · le</h2>
+        <p>Dùng để biểu thị hành động đã hoàn thành hoặc tình huống đã thay đổi.</p>
+        <div class="grammar-formula">S + V + 了</div>
+        <div class="grammar-example">
+          <strong>我吃饭了。</strong><br>
+          <span class="pinyin">Wǒ chīfàn le.</span><br>
+          <span class="meaning">Tôi ăn cơm rồi.</span>
+        </div>
+        <div class="grammar-example">
+          <strong>他回家了。</strong><br>
+          <span class="pinyin">Tā huí jiā le.</span><br>
+          <span class="meaning">Anh ấy về nhà rồi.</span>
+        </div>
+      </div>
+
+      <div class="exercise-box">
+        <span class="grammar-tag">BÀI TẬP MẪU</span>
+        <h2>Câu 1</h2>
+        <p>“Tôi ăn cơm rồi.” nói thế nào?</p>
+        <label class="exercise-option"><input type="radio" name="demoQ" value="a"> 我吃饭。</label>
+        <label class="exercise-option"><input type="radio" name="demoQ" value="b"> 我吃饭了。</label>
+        <label class="exercise-option"><input type="radio" name="demoQ" value="c"> 我了吃饭。</label>
+        <button class="btn primary" id="checkDemoExercise">Kiểm tra đáp án</button>
+        <div class="exercise-result" id="demoExerciseResult"></div>
+      </div>
     </div>
   </div>
 </section>
 <script>
-// ===== GRAMMAR & EXERCISES V34 =====
-let grammarCatalog=[];
-let activeGrammar=null;
-function grammarEsc(value){return String(value??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-async function loadGrammarCatalog(){
-  const course=document.getElementById('grammarCourse'),lesson=document.getElementById('grammarLesson');
-  if(!course||grammarCatalog.length)return;
-  try{const r=await fetch(shadowApi('/grammar/catalog'),{cache:'no-store'}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được bài tập.');grammarCatalog=Array.isArray(j.sets)?j.sets:[];const groups=[...new Map(grammarCatalog.map(x=>[String(x.course_id),x.course_title])).entries()];course.innerHTML='<option value="">Chọn khóa học</option>'+groups.map(([id,title])=>`<option value="${grammarEsc(id)}">${grammarEsc(title)}</option>`).join('');lesson.innerHTML='<option value="">Chọn bài học</option>';if(!grammarCatalog.length)document.getElementById('grammarEmpty').innerHTML='Chưa có bài ngữ pháp công khai.<br><span class="muted">Nếu Admin đã nhập dữ liệu, hãy kiểm tra khóa học đã chuyển từ “Lưu nháp / Ẩn” sang “Xuất bản / Hiện”.</span>'}catch(e){document.getElementById('grammarEmpty').textContent=e.message}
+// ===== KHÓA HỌC THỐNG NHẤT R6 =====
+let publicLearningCourses=[],selectedPublicCourse=null;
+async function loadPublicLearningCourses(){
+  const box=document.getElementById('learningPublicCourses');if(!box)return;
+  try{const r=await fetch(api('/learning-courses'),{cache:'no-store'}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được khóa học.');publicLearningCourses=Array.isArray(j.courses)?j.courses:[];box.innerHTML='';
+    if(!publicLearningCourses.length){box.innerHTML='<div class="learning-empty">Chưa có khóa học nào được xuất bản.</div>';return}
+    publicLearningCourses.forEach((c,i)=>{const b=document.createElement('button');b.className='learning-course-btn';b.innerHTML=`<b>${shadowEsc(c.icon||'课')} ${shadowEsc(c.title)}</b><div class="hint">${(c.lessons||[]).length} bài · ${c.access==='paid'?'Có phí':'Miễn phí'}</div>`;b.onclick=()=>selectPublicCourse(c,b);box.appendChild(b);if(i===0)b.click();});
+  }catch(e){box.innerHTML=`<div class="learning-empty">${shadowEsc(e.message)}</div>`;}
 }
-function fillGrammarLessons(courseId,selectedId){
-  const lesson=document.getElementById('grammarLesson'),items=grammarCatalog.filter(x=>String(x.course_id)===String(courseId));
-  lesson.innerHTML='<option value="">Chọn bài học</option>'+items.map(x=>`<option value="${Number(x.id)}">Bài ${String(x.lesson_number).padStart(2,'0')} · ${grammarEsc(x.lesson_title)} · ${grammarEsc(x.title)}</option>`).join('');
-  if(selectedId)lesson.value=String(selectedId);
+function selectPublicCourse(course,button){
+  selectedPublicCourse=course;document.querySelectorAll('.learning-course-btn').forEach(x=>x.classList.remove('active'));button.classList.add('active');const box=document.getElementById('learningPublicLessons');box.innerHTML='';document.getElementById('learningPublicDetail').innerHTML='';
+  if(!(course.lessons||[]).length){box.innerHTML='<div class="learning-empty">Khóa đã được tạo nhưng chưa có bài học. Hãy thêm bài trong Admin.</div>';return}
+  course.lessons.forEach((l,i)=>{const b=document.createElement('button');b.className='learning-lesson-btn';b.innerHTML=`<b>Bài ${String(l.number).padStart(2,'0')} · ${shadowEsc(l.title)}</b><div class="hint">${(l.videos||[]).length} bài giảng · ${l.shadowing?'Có Shadowing':'Chưa có Shadowing'} · ${(l.resources||[]).length} tài liệu</div>`;b.onclick=()=>renderPublicLesson(l,b);box.appendChild(b);if(i===0)b.click();});
 }
-async function openGrammarSet(id){
-  document.querySelector('.app-nav-btn[data-section="grammarSection"]')?.click();await loadGrammarCatalog();
-  const meta=grammarCatalog.find(x=>Number(x.id)===Number(id));if(meta){document.getElementById('grammarCourse').value=String(meta.course_id);fillGrammarLessons(meta.course_id,id)}
-  const empty=document.getElementById('grammarEmpty'),content=document.getElementById('grammarContent');empty.hidden=false;content.hidden=true;empty.textContent='Đang tải bài ngữ pháp...';
-  try{const r=await fetch(shadowApi('/grammar/set?id='+encodeURIComponent(id)),{cache:'no-store'}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được bài tập.');activeGrammar=j;renderGrammarSet()}catch(e){empty.textContent=e.message}
+function renderPublicLesson(lesson,button){
+  document.querySelectorAll('.learning-lesson-btn').forEach(x=>x.classList.remove('active'));button.classList.add('active');const videos=lesson.videos||[],resources=lesson.resources||[],hasShadow=!!lesson.shadowing;
+  const parts=[['▶','Bài giảng',videos.length>0],['🎥','Shadowing',hasShadow],['✓','Bài tập',false],['✍','Viết chữ',true],['📄','Tài liệu',resources.length>0]];
+  document.getElementById('learningPublicDetail').innerHTML=`<div class="learning-detail"><h2>Bài ${String(lesson.number).padStart(2,'0')} · ${shadowEsc(lesson.title)}</h2><div class="lesson-parts">${parts.map(p=>`<div class="lesson-part ${p[2]?'ready':''}">${p[0]}<br>${p[1]}<br><small>${p[2]?'Có nội dung':'Chưa có'}</small></div>`).join('')}</div>${videos.map(v=>`<div class="learning-video"><span>▶ ${shadowEsc(v.title)}</span><a class="btn soft" href="${shadowEsc(v.youtube)}" target="_blank" rel="noopener">Mở bài giảng</a></div>`).join('')}${hasShadow?`<div class="learning-video"><span>🎥 ${shadowEsc(lesson.shadowing.title||'Luyện Shadowing')}</span><button class="btn primary" onclick="openLessonShadowing('${shadowEsc(selectedPublicCourse.id)}','${lesson.shadowing.id}')">Luyện ngay</button></div>`:''}${resources.map(r=>`<div class="learning-resource"><span>📄 ${shadowEsc(r.title)}</span><a class="btn soft" href="${shadowEsc(r.url)}" target="_blank" rel="noopener">${r.access_mode==='view'?'Xem':'Tải / mở'}</a></div>`).join('')}</div>`;
 }
-function renderGrammarSet(){
-  const set=activeGrammar?.set,questions=activeGrammar?.questions||[],empty=document.getElementById('grammarEmpty'),content=document.getElementById('grammarContent');if(!set)return;
-  document.getElementById('grammarTheory').innerHTML=`<span class="grammar-tag">NGỮ PHÁP</span><h2>${grammarEsc(set.title)}${set.pinyin?' · '+grammarEsc(set.pinyin):''}</h2><p>${grammarEsc(set.explanation||'')}</p>${set.formula?`<div class="grammar-formula">${grammarEsc(set.formula)}</div>`:''}${(set.examples||[]).map(x=>`<div class="grammar-example"><strong>${grammarEsc(x.hanzi)}</strong>${x.pinyin?`<br><span class="pinyin">${grammarEsc(x.pinyin)}</span>`:''}${x.vi?`<br><span class="meaning">${grammarEsc(x.vi)}</span>`:''}</div>`).join('')}`;
-  document.getElementById('grammarQuestions').innerHTML=questions.length?questions.map((q,i)=>`<div class="grammar-question" data-question="${i}"><h3>Câu ${i+1}. ${grammarEsc(q.prompt)}</h3>${(q.options||[]).map((o,k)=>`<label class="exercise-option"><input type="radio" name="grammarQ${i}" value="${k}"> ${grammarEsc(o)}</label>`).join('')}<div class="question-explain" hidden></div></div>`).join(''):'<p class="muted">Bài này chưa có câu hỏi trắc nghiệm.</p>';
-  document.getElementById('checkGrammarAnswers').hidden=!questions.length;document.getElementById('resetGrammarAnswers').hidden=!questions.length;document.getElementById('grammarScore').textContent='';empty.hidden=true;content.hidden=false;content.scrollIntoView({behavior:'smooth',block:'start'});
+async function openLessonShadowing(courseId,videoId){
+  document.querySelector('.app-nav-btn[data-section="shadowSection"]')?.click();const c=document.getElementById('shadowCourse'),v=document.getElementById('shadowVideo');if(!shadowCourses.length)await loadShadowCourses();c.value=String(courseId);await loadShadowVideos(courseId);v.value=String(videoId);await loadShadowVideo(videoId);
 }
-function checkGrammarAnswers(){
-  const questions=activeGrammar?.questions||[];let correct=0,answered=0;
-  questions.forEach((q,i)=>{const box=document.querySelector(`.grammar-question[data-question="${i}"]`),chosen=box?.querySelector('input:checked');if(chosen)answered++;box?.querySelectorAll('.exercise-option').forEach((label,k)=>{label.classList.toggle('correct',k===Number(q.correct_index));label.classList.toggle('wrong',chosen&&Number(chosen.value)===k&&k!==Number(q.correct_index));label.querySelector('input').disabled=true});if(chosen&&Number(chosen.value)===Number(q.correct_index))correct++;const explain=box?.querySelector('.question-explain');if(explain){explain.hidden=false;explain.textContent=q.explanation||`Đáp án đúng: ${(q.options||[])[Number(q.correct_index)]||''}`}});
-  const pct=questions.length?Math.round(correct/questions.length*100):0;document.getElementById('grammarScore').textContent=`Kết quả: ${correct}/${questions.length} câu đúng · ${pct}%${answered<questions.length?' · Còn câu chưa trả lời':''}`;
-}
-document.getElementById('grammarCourse')?.addEventListener('change',e=>{fillGrammarLessons(e.target.value);document.getElementById('grammarContent').hidden=true;document.getElementById('grammarEmpty').hidden=false;document.getElementById('grammarEmpty').textContent='Chọn một bài học để bắt đầu.'});
-document.getElementById('grammarLesson')?.addEventListener('change',e=>{if(e.target.value)openGrammarSet(Number(e.target.value))});
-document.getElementById('checkGrammarAnswers')?.addEventListener('click',checkGrammarAnswers);
-document.getElementById('resetGrammarAnswers')?.addEventListener('click',renderGrammarSet);
-document.querySelector('.app-nav-btn[data-section="grammarSection"]')?.addEventListener('click',loadGrammarCatalog);
 
 // ===== SHADOWING V22 =====
 let shadowCourses = [];
@@ -1222,61 +915,10 @@ function shadowApi(path){
   return base + path;
 }
 
-function entitlementForCourse(courseId){
-  for(let i=0;i<localStorage.length;i++){
-    const key=localStorage.key(i);
-    if(!key||!key.startsWith('aluni_entitlement_'))continue;
-    try{
-      const value=JSON.parse(localStorage.getItem(key)||'null');
-      if(value?.token&&String(value.course_id||'')===String(courseId||''))return value;
-      if(value?.token){
-        const payload=JSON.parse(atob(value.token.split('.')[0].replace(/-/g,'+').replace(/_/g,'/')));
-        if(String(payload.course_id||'')===String(courseId||''))return value;
-      }
-    }catch(e){}
-  }
-  return null;
-}
-
-function shadowFetchOptions(courseId){
-  const entitlement=entitlementForCourse(courseId);
-  return entitlement?.token?{cache:'no-store',headers:{Authorization:`Bearer ${entitlement.token}`}}:{cache:'no-store'};
-}
-
-async function openCompanionShadowing(courseId){
-  const nav=document.querySelector('.app-nav-btn[data-section="shadowSection"]');
-  nav?.click();
-  if(!shadowCourses.length)await loadShadowCourses();
-  const courseSel=document.getElementById('shadowCourse');
-  if(!courseSel)return;
-  courseSel.value=String(courseId||'');
-  await loadShadowVideos(courseSel.value);
-  document.getElementById('shadowSection')?.scrollIntoView({behavior:'smooth',block:'start'});
-}
-
-async function openLinkedShadowing(videoId,courseId){
-  const nav=document.querySelector('.app-nav-btn[data-section="shadowSection"]');
-  nav?.click();
-  if(!shadowCourses.length)await loadShadowCourses();
-  const courseSel=document.getElementById('shadowCourse');
-  const videoSel=document.getElementById('shadowVideo');
-  if(!courseSel||!videoSel)return;
-  courseSel.value=String(courseId||'');
-  await loadShadowVideos(courseSel.value);
-  videoSel.value=String(videoId||'');
-  await loadShadowVideo(videoSel.value);
-  document.getElementById('shadowPlayerCard')?.scrollIntoView({behavior:'smooth',block:'start'});
-}
-
 function youtubeIdFromUrl(url){
   const s = String(url || '').trim();
   const m = s.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{6,})/);
   return m ? m[1] : s;
-}
-
-function resolveVideoAspect(value,url){
-  if(value==='portrait'||value==='landscape') return value;
-  return /youtube\.com\/shorts\//i.test(String(url||'')) ? 'portrait' : 'landscape';
 }
 
 function shadowThumbnail(url){
@@ -1350,7 +992,7 @@ function fitShadowYoutubePlayer(){
   const iframe = document.querySelector('#shadowPlayerCard iframe#youtubePlayer');
   if(!frame || !iframe) return;
   const width = Math.round(frame.getBoundingClientRect().width);
-  const height = Math.round(width * (frame.classList.contains('video-portrait') ? 16 / 9 : 9 / 16));
+  const height = Math.round(width * 9 / 16);
   iframe.setAttribute('width', String(width));
   iframe.setAttribute('height', String(height));
   iframe.style.setProperty('width', '100%', 'important');
@@ -1389,7 +1031,7 @@ async function loadShadowVideos(courseId){
   if(!courseId) return;
 
   try{
-    const r = await fetch(shadowApi('/shadowing/videos?course_id=' + encodeURIComponent(courseId)), shadowFetchOptions(courseId));
+    const r = await fetch(shadowApi('/shadowing/videos?course_id=' + encodeURIComponent(courseId)), {cache:'no-store'});
     const j = await r.json();
     shadowVideos = Array.isArray(j.videos) ? j.videos : [];
 
@@ -1408,8 +1050,7 @@ async function loadShadowVideos(courseId){
 async function loadShadowVideo(videoId){
   if(!videoId) return;
   try{
-    const courseId=document.getElementById('shadowCourse')?.value||'';
-    const r = await fetch(shadowApi('/shadowing/video?id=' + encodeURIComponent(videoId)), shadowFetchOptions(courseId));
+    const r = await fetch(shadowApi('/shadowing/video?id=' + encodeURIComponent(videoId)), {cache:'no-store'});
     const j = await r.json();
 
     if(!r.ok){
@@ -1427,8 +1068,6 @@ async function loadShadowVideo(videoId){
     renderShadowLive(0);
 
     const ytId = youtubeIdFromUrl(j.video.youtube_url);
-    const shadowFrame=document.querySelector('#shadowPlayerCard .video-frame');
-    shadowFrame?.classList.toggle('video-portrait',resolveVideoAspect(j.video.video_aspect,j.video.youtube_url)==='portrait');
     document.getElementById('shadowPlayerCard').style.display = 'grid';
     document.getElementById('shadowNote').textContent = j.video.title;
 
@@ -1771,6 +1410,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   // Chỉ tải dữ liệu khi người dùng thực sự bấm tab Shadowing.
   document.querySelectorAll('.app-nav-btn').forEach(btn=>{
+    if(btn.dataset.section === 'learningSection'){
+      btn.addEventListener('click', ()=>{if(!publicLearningCourses.length)loadPublicLearningCourses();});
+    }
     if(btn.dataset.section === 'shadowSection'){
       btn.addEventListener('click', ()=>{
         if(!shadowCourses.length) loadShadowCourses();

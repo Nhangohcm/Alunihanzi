@@ -35,6 +35,9 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
 .item-admin{display:grid;grid-template-columns:auto 1fr 2fr auto auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.item-admin.resource-row{grid-template-columns:auto 1fr 2fr 130px auto auto}.item-admin:last-child{border-bottom:0}.danger{background:#fff4f2;color:#a24d46;border:1px solid #e8c8c2}.mini-title{font-weight:850;margin:12px 0 5px}.order-buttons{display:flex;gap:5px}.order-buttons button{padding:8px 10px}.upload-box{margin-top:10px;padding:12px;border:1px dashed var(--line);border-radius:12px;background:#faf8f3}.upload-grid{display:grid;grid-template-columns:1fr 1.4fr 150px auto;gap:8px;align-items:end}.file-note{font-size:.82rem;color:var(--muted);margin-top:7px}
 .drag-handle{cursor:grab;user-select:none;touch-action:none;color:var(--muted);padding:4px 7px;border:1px dashed var(--line);border-radius:8px;background:white}.drag-handle:active{cursor:grabbing}.dragging{opacity:.42}.drag-over{outline:2px solid var(--green);outline-offset:-2px}.lesson-summary-main{display:flex;align-items:center;gap:8px}.sortable-list{min-height:4px}
 .preview-input{min-width:150px;padding:8px;border-radius:8px}.preview-hanzi{min-width:220px}.preview-time{white-space:nowrap;font-variant-numeric:tabular-nums}.loading{opacity:.65;pointer-events:none}
+.editor-banner{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 14px;margin-bottom:14px;border:1px solid #cddacb;border-radius:14px;background:var(--soft)}
+.editor-banner.editing{background:#fff5df;border-color:#e3c98e}.editor-title{font-weight:900}.editor-meta{font-size:.86rem;color:var(--muted);margin-top:3px}.publish-badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#e3efe3;color:#386047;font-weight:850;font-size:.8rem}.draft-badge{background:#eee9df;color:#756b59}
+.sticky-actions{position:sticky;bottom:8px;z-index:5;padding:10px;background:rgba(255,253,248,.94);border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 28px rgba(38,56,47,.12)}
 @media(max-width:760px){.grid,.grid2{grid-template-columns:1fr}.login-row{grid-template-columns:1fr}}
 @media(max-width:760px){.item-admin{grid-template-columns:1fr}.item-admin button{width:100%}}
 @media(max-width:760px){.item-admin.resource-row,.upload-grid{grid-template-columns:1fr}}
@@ -195,7 +198,8 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
 
   <section class="pane" id="shadowPane">
     <div class="card">
-      <h2>Thêm video Shadowing</h2>
+      <div class="editor-banner" id="shadowEditorBanner"><div><div class="editor-title" id="shadowEditorTitle">＋ Tạo bài Shadowing mới</div><div class="editor-meta" id="shadowEditorMeta">Nhập thông tin, đọc SRT + XLSX, kiểm tra rồi lưu.</div></div><button class="ghost" id="newShadowVideo">＋ Bài mới</button></div>
+      <h2>Thông tin bài Shadowing</h2>
       <div class="grid">
         <div><label>Khóa học</label><select id="shadowAdminCourse"></select></div>
         <div><label>Số bài</label><input id="shadowLessonNumber" type="number" min="1" value="1"></div>
@@ -211,6 +215,7 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
           </select>
         </div>
       </div>
+      <div class="grid2" style="margin-top:10px"><div><label>Trạng thái bài</label><select id="shadowPublished"><option value="1">Đã xuất bản</option><option value="0">Lưu nháp / Ẩn</option></select></div><div class="muted" style="padding-top:31px">Bài ẩn vẫn được giữ trong Admin nhưng học viên không nhìn thấy.</div></div>
       <div class="grid2" style="margin-top:10px">
         <div>
           <label>Ngoại lệ cho video này</label>
@@ -248,9 +253,9 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
         <div><label>File SRT tiếng Trung — bắt buộc</label><input id="shadowSrt" type="file" accept=".srt"></div>
         <div><label>Transcript CSV/XLSX đã biên tập — không bắt buộc</label><input id="shadowTranscriptFile" type="file" accept=".csv,.xlsx,.xls"></div>
       </div>
-      <p class="muted">Chỉ cần SRT, Aluni sẽ giữ chữ Hán và mốc thời gian rồi dùng AI tạo pinyin + nghĩa Việt. Nếu tải thêm CSV/XLSX, dữ liệu đã biên tập trong file sẽ được ưu tiên.</p>
+      <p class="muted">Nên dùng SRT + XLSX đã biên tập. Khi đang sửa bài cũ, anh có thể sửa trực tiếp bảng bên dưới mà không cần chọn lại file.</p>
       <div class="row" style="margin-top:10px">
-        <button class="primary" id="generateShadowTranscript">Tạo pinyin và nghĩa Việt</button>
+        <button class="primary" id="generateShadowTranscript">Đọc file và xem trước</button>
         <button class="ghost" id="shadowTemplateBtn">⬇ Tải file mẫu transcript</button>
       </div>
       <div id="shadowPreviewWrap" style="display:none;margin-top:16px">
@@ -259,8 +264,8 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
           <thead><tr><th>#</th><th>Thời gian</th><th>Chữ Hán</th><th>Pinyin</th><th>Nghĩa Việt</th><th></th></tr></thead>
           <tbody id="shadowPreviewBody"></tbody>
         </table></div>
-        <div class="row" style="margin-top:12px">
-          <button class="primary" id="saveShadowVideo">Lưu vào thư viện Shadowing</button>
+        <div class="row sticky-actions" style="margin-top:12px">
+          <button class="primary" id="saveShadowVideo">Xuất bản Shadowing</button><button class="ghost" id="saveShadowDraft">Lưu bản nháp</button><button class="ghost" id="cancelShadowEdit">Hủy chỉnh sửa</button><button class="danger" id="deleteEditingShadow" style="display:none">Xóa bài này</button>
         </div>
       </div>
     </div>
@@ -269,7 +274,7 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
       <h2>Danh sách video</h2>
       <div class="tablewrap">
         <table>
-          <thead><tr><th>Khóa</th><th>Bài</th><th>Tiêu đề</th><th>YouTube</th><th>Free riêng</th><th>Số câu</th><th></th></tr></thead>
+          <thead><tr><th>Khóa</th><th>Bài</th><th>Tiêu đề</th><th>Trạng thái</th><th>YouTube</th><th>Free riêng</th><th>Số câu</th><th>Thao tác</th></tr></thead>
           <tbody id="shadowVideoBody"></tbody>
         </table>
       </div>
@@ -285,6 +290,7 @@ const base=String(window.ALUNI_API_BASE||'').replace(/\/+$/,'');
 const $=id=>document.getElementById(id);
 let codes=[],courses=[],learningCourses=[],adminSecret='';
 let shadowDraftSegments=[];
+let editingShadowId=null;
 
 function fmt(v){return v?new Date(v).toLocaleString('vi-VN'):'—'}
 async function api(path,opts={}){
@@ -569,7 +575,11 @@ $('learningTemplateBtn').onclick=learningTemplate;
 $('manageLearningCourse').onchange=loadLearningContent;
 $('refreshLearningContent').onclick=loadLearningContent;
 $('addLearningLesson').onclick=addLearningLesson;
-$('saveShadowVideo').onclick=saveShadowVideo;
+$('saveShadowVideo').onclick=()=>saveShadowVideo(true);
+$('saveShadowDraft').onclick=()=>saveShadowVideo(false);
+$('newShadowVideo').onclick=resetShadowEditor;
+$('cancelShadowEdit').onclick=resetShadowEditor;
+$('deleteEditingShadow').onclick=()=>{if(editingShadowId)deleteShadowVideo(editingShadowId)};
 $('generateShadowTranscript').onclick=generateShadowTranscript;
 $('saveShadowRule').onclick=saveShadowRule;
 $('shadowTemplateBtn').onclick=downloadShadowTemplate;
@@ -715,19 +725,44 @@ async function loadShadowAdminVideos(){
     $('shadowVideoBody').innerHTML='';
     rows.forEach(v=>{
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${v.course_id}</td><td>${v.lesson_number}</td><td>${v.title}</td>
+      tr.innerHTML=`<td>${esc(v.course_id)}</td><td>${v.lesson_number}</td><td>${esc(v.title)}</td>
+        <td>${Number(v.active||0)?'<span class="publish-badge">Đã xuất bản</span>':'<span class="publish-badge draft-badge">Bản nháp</span>'}</td>
         <td><a href="${v.youtube_url}" target="_blank">Mở</a></td>
         <td>${Number(v.free_override||0) ? 'Có' : '—'}</td>
         <td>${v.segment_count||0}</td>
-        <td><button class="ghost shadowDeleteBtn" data-id="${v.id}">Xóa</button></td>`;
+        <td><div class="row"><button class="ghost shadowEditBtn" data-id="${v.id}">Sửa</button><button class="ghost shadowToggleBtn" data-id="${v.id}" data-active="${Number(v.active||0)}">${Number(v.active||0)?'Ẩn':'Xuất bản'}</button><button class="danger shadowDeleteBtn" data-id="${v.id}">Xóa</button></div></td>`;
       $('shadowVideoBody').appendChild(tr);
     });
     document.querySelectorAll('.shadowDeleteBtn').forEach(btn=>{
       btn.onclick=()=>deleteShadowVideo(Number(btn.dataset.id));
     });
+    document.querySelectorAll('.shadowEditBtn').forEach(btn=>{btn.onclick=()=>editShadowVideo(Number(btn.dataset.id));});
+    document.querySelectorAll('.shadowToggleBtn').forEach(btn=>{btn.onclick=()=>toggleShadowVideo(Number(btn.dataset.id),Number(btn.dataset.active)!==1);});
   }catch(e){
     $('shadowStatus').textContent=e.message;
   }
+}
+
+function resetShadowEditor(){
+  editingShadowId=null;shadowDraftSegments=[];
+  $('shadowLessonNumber').value='1';$('shadowTitle').value='';$('shadowYoutube').value='';$('shadowFreeOverride').checked=false;$('shadowPublished').value='1';$('shadowSrt').value='';$('shadowTranscriptFile').value='';renderShadowPreview();
+  $('shadowEditorBanner').classList.remove('editing');$('shadowEditorTitle').textContent='＋ Tạo bài Shadowing mới';$('shadowEditorMeta').textContent='Nhập thông tin, đọc SRT + XLSX, kiểm tra rồi lưu.';$('saveShadowVideo').textContent='Xuất bản Shadowing';$('deleteEditingShadow').style.display='none';
+}
+
+async function editShadowVideo(id){
+  try{
+    $('shadowStatus').textContent='Đang tải bài cũ...';
+    const j=await api('/admin/shadowing/video?id='+encodeURIComponent(id));
+    const v=j.video||{};editingShadowId=Number(v.id);
+    $('shadowAdminCourse').value=String(v.course_id||'');$('shadowLessonNumber').value=Number(v.lesson_number||1);$('shadowTitle').value=v.title||'';$('shadowYoutube').value=v.youtube_url||'';$('shadowFreeOverride').checked=Number(v.free_override||0)===1;$('shadowPublished').value=Number(v.active||0)===1?'1':'0';
+    shadowDraftSegments=(j.segments||[]).map(s=>({start_sec:Number(s.start_sec),end_sec:Number(s.end_sec),hanzi:s.hanzi||'',pinyin:s.pinyin||'',vi:s.vi||''}));renderShadowPreview();
+    $('shadowEditorBanner').classList.add('editing');$('shadowEditorTitle').textContent='✎ Đang sửa: '+(v.title||'Bài Shadowing');$('shadowEditorMeta').textContent=`Khóa ${v.course_id} · Bài ${v.lesson_number} · ${shadowDraftSegments.length} câu · lưu sẽ cập nhật đúng bài này`;$('saveShadowVideo').textContent='Lưu thay đổi và xuất bản';$('deleteEditingShadow').style.display='inline-block';$('shadowStatus').textContent='Đã nạp bài cũ. Anh có thể sửa trực tiếp từng câu.';$('shadowStatus').className='status ok';$('shadowEditorBanner').scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(e){$('shadowStatus').textContent=e.message;$('shadowStatus').className='status err';}
+}
+
+async function toggleShadowVideo(id,active){
+  try{await api('/admin/shadowing/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,active:active?1:0})});$('shadowStatus').textContent=active?'Đã xuất bản bài.':'Đã ẩn bài khỏi học viên.';await loadShadowAdminVideos();}
+  catch(e){$('shadowStatus').textContent=e.message;}
 }
 
 
@@ -773,13 +808,14 @@ async function deleteShadowVideo(id){
       body:JSON.stringify({id})
     });
     $('shadowStatus').textContent='Đã xóa video.';
+    if(editingShadowId===id)resetShadowEditor();
     await loadShadowAdminVideos();
   }catch(e){
     $('shadowStatus').textContent=e.message;
   }
 }
 
-async function saveShadowVideo(){
+async function saveShadowVideo(forcePublished=true){
   if(!shadowDraftSegments.length){
     $('shadowStatus').textContent='Hãy tạo và kiểm tra bản xem trước trước khi lưu.';
     return;
@@ -792,18 +828,21 @@ async function saveShadowVideo(){
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
+        id:editingShadowId,
         course_id:$('shadowAdminCourse').value,
         lesson_number:Number($('shadowLessonNumber').value||1),
         title:$('shadowTitle').value.trim(),
         youtube_url:$('shadowYoutube').value.trim(),
         free_override:$('shadowFreeOverride').checked ? 1 : 0,
+        active:forcePublished ? 1 : 0,
         segments
       })
     });
 
-    $('shadowStatus').textContent=`Đã lưu video với ${segments.length} câu vào thư viện Shadowing.`;
+    const action=editingShadowId?'cập nhật':'lưu';
+    $('shadowStatus').textContent=`Đã ${action} ${segments.length} câu. ${forcePublished?'Bài đã xuất bản.':'Bài đang ở trạng thái bản nháp.'}`;
     $('shadowStatus').className='status ok';
-    loadShadowAdminVideos();
+    await loadShadowAdminVideos();resetShadowEditor();
   }catch(e){
     $('shadowStatus').textContent=e.message;
   }
