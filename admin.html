@@ -15,7 +15,7 @@ body{margin:0;background:linear-gradient(180deg,#f8f4ec,#f2ede3);color:var(--ink
 h1,h2{margin-top:0}.brand{font-weight:900;letter-spacing:.1em;color:var(--green)}
 .muted{color:var(--muted);line-height:1.5}
 input,select,button{font:inherit}
-input,select,textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:white;font:inherit}textarea{min-height:96px;resize:vertical;line-height:1.45}
+input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:white}
 button{padding:11px 14px;border-radius:12px;border:0;font-weight:850;cursor:pointer}
 .primary{background:var(--green);color:white}.ghost{background:white;border:1px solid var(--line)}
 .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -32,8 +32,9 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
 .badge{display:inline-block;background:var(--soft);padding:5px 9px;border-radius:999px;font-size:.82rem;font-weight:800}
 .course-manager-head{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.course-manager-head>div{flex:1;min-width:220px}
 .lesson-admin{border:1px solid var(--line);border-radius:14px;margin-top:10px;overflow:hidden}.lesson-admin summary{cursor:pointer;padding:12px 14px;background:#f7f3eb;font-weight:850;display:flex;justify-content:space-between;gap:10px}.lesson-admin-body{padding:12px}
-.item-admin{display:grid;grid-template-columns:auto 1fr 2fr 130px auto auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.item-admin.resource-row{grid-template-columns:auto 1fr 2fr 130px auto auto}.item-admin:last-child{border-bottom:0}.danger{background:#fff4f2;color:#a24d46;border:1px solid #e8c8c2}.mini-title{font-weight:850;margin:12px 0 5px}.order-buttons{display:flex;gap:5px}.order-buttons button{padding:8px 10px}.upload-box{margin-top:10px;padding:12px;border:1px dashed var(--line);border-radius:12px;background:#faf8f3}.upload-grid{display:grid;grid-template-columns:1fr 1.4fr 150px auto;gap:8px;align-items:end}.file-note{font-size:.82rem;color:var(--muted);margin-top:7px}
+.item-admin{display:grid;grid-template-columns:auto 1fr 2fr auto auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.item-admin.resource-row{grid-template-columns:auto 1fr 2fr 130px auto auto}.item-admin:last-child{border-bottom:0}.danger{background:#fff4f2;color:#a24d46;border:1px solid #e8c8c2}.mini-title{font-weight:850;margin:12px 0 5px}.order-buttons{display:flex;gap:5px}.order-buttons button{padding:8px 10px}.upload-box{margin-top:10px;padding:12px;border:1px dashed var(--line);border-radius:12px;background:#faf8f3}.upload-grid{display:grid;grid-template-columns:1fr 1.4fr 150px auto;gap:8px;align-items:end}.file-note{font-size:.82rem;color:var(--muted);margin-top:7px}
 .drag-handle{cursor:grab;user-select:none;touch-action:none;color:var(--muted);padding:4px 7px;border:1px dashed var(--line);border-radius:8px;background:white}.drag-handle:active{cursor:grabbing}.dragging{opacity:.42}.drag-over{outline:2px solid var(--green);outline-offset:-2px}.lesson-summary-main{display:flex;align-items:center;gap:8px}.sortable-list{min-height:4px}
+.preview-input{min-width:150px;padding:8px;border-radius:8px}.preview-hanzi{min-width:220px}.preview-time{white-space:nowrap;font-variant-numeric:tabular-nums}.loading{opacity:.65;pointer-events:none}
 @media(max-width:760px){.grid,.grid2{grid-template-columns:1fr}.login-row{grid-template-columns:1fr}}
 @media(max-width:760px){.item-admin{grid-template-columns:1fr}.item-admin button{width:100%}}
 @media(max-width:760px){.item-admin.resource-row,.upload-grid{grid-template-columns:1fr}}
@@ -64,15 +65,14 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
       <button class="ghost" id="logoutBtn">Đăng xuất</button>
     </div>
     <div class="tabs">
-      <button class="tab active" data-pane="contentPane">✍️ Viết chữ Hán</button>
-      <button class="tab" data-pane="shadowPane">🎥 Video Shadowing</button>
-      <button class="tab" data-pane="grammarPane">📚 Ngữ pháp &amp; Bài tập</button>
+      <button class="tab active" data-pane="codesPane">🔑 Mã kích hoạt</button>
+      <button class="tab" data-pane="contentPane">✍️ Viết chữ Hán</button>
       <button class="tab" data-pane="learningPane">🎓 Khóa học video</button>
-      <button class="tab" data-pane="codesPane">🔑 Mã kích hoạt</button>
+<button class="tab" data-pane="shadowPane">🎥 Video Shadowing</button>
     </div>
   </div>
 
-  <section class="pane" id="codesPane">
+  <section class="pane active" id="codesPane">
     <div class="card">
       <h2>Mã kích hoạt</h2>
       <div class="grid">
@@ -98,7 +98,7 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
     </div>
   </section>
 
-  <section class="pane active" id="contentPane">
+  <section class="pane" id="contentPane">
     <div class="card">
       <h2>Tạo / cập nhật khóa học</h2>
       <div class="grid">
@@ -142,14 +142,9 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
   </section>
 
   <section class="pane" id="learningPane">
-    <div class="card" id="learningCourseEditor">
-      <h2 id="learningFormTitle">Tạo khóa học mới</h2>
-      <p class="muted">Chọn một khóa đã có để sửa hoặc bấm <b>＋ Tạo khóa mới</b>. Khóa chỉ xuất hiện ở trang học viên sau khi xuất bản.</p>
-      <div class="course-manager-head" style="margin-bottom:14px">
-        <div><label>Chọn khóa học cần chỉnh</label><select id="learningCoursePicker"><option value="">— Tạo khóa học mới —</option></select></div>
-        <button class="ghost" id="newLearningCourse">＋ Tạo khóa mới</button>
-        <button class="ghost" id="reloadLearningCourses">↻ Làm mới</button>
-      </div>
+    <div class="card">
+      <h2>Tạo / cập nhật khóa học video</h2>
+      <p class="muted">Khóa chỉ xuất hiện ở trang học viên khi anh bật <b>Xuất bản</b>. Dùng lại đúng mã khóa để cập nhật, không tạo trùng.</p>
       <div class="grid">
         <div><label>Mã khóa</label><input id="learningId" placeholder="Ví dụ: pinyin-48"></div>
         <div><label>Tên khóa</label><input id="learningTitle" placeholder="Pinyin tiếng Trung từ cơ bản"></div>
@@ -161,7 +156,7 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
         <div><label>Trạng thái</label><select id="learningPublished"><option value="0">Lưu nháp / Ẩn</option><option value="1">Xuất bản</option></select></div>
       </div>
       <div style="margin-top:10px"><label>Mô tả khóa học</label><input id="learningDescription" placeholder="Mô tả ngắn hiển thị trên thẻ khóa học"></div>
-      <div class="row" style="margin-top:10px"><button class="primary" id="saveLearningCourse">💾 Lưu thay đổi</button><button class="primary" id="savePublishLearningCourse">✓ Lưu &amp; xuất bản</button><button class="ghost" id="clearLearningForm">Hủy / làm trống</button></div>
+      <div class="row" style="margin-top:10px"><button class="primary" id="saveLearningCourse">Lưu khóa học</button><button class="ghost" id="clearLearningForm">Tạo khóa mới</button></div>
       <div class="status" id="learningStatus"></div>
     </div>
 
@@ -169,7 +164,7 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
       <h2>Quản lý nội dung từng bài</h2>
       <p class="muted">Dùng phần này để thêm hoặc sửa lẻ từng bài, video và tài liệu mà không phải nhập lại toàn bộ file.</p>
       <div class="course-manager-head">
-        <div><label>Khóa đang quản lý</label><select id="manageLearningCourse"></select></div>
+        <div><label>Chọn khóa học</label><select id="manageLearningCourse"></select></div>
         <button class="ghost" id="refreshLearningContent">Làm mới nội dung</button>
       </div>
       <div style="margin-top:12px"><label>Tên bài mới</label><input id="newLessonTitle" placeholder="Hệ thống tự đánh số tiếp theo"></div>
@@ -198,25 +193,6 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
     </div>
   </section>
 
-  <section class="pane" id="grammarPane">
-    <div class="card">
-      <h2>Ngữ pháp &amp; Bài tập</h2>
-      <p class="muted">Đăng nội dung hàng loạt bằng file XLSX. Một file có thể chứa nhiều khóa, nhiều bài và đủ ba sheet <b>NGU_PHAP</b>, <b>VI_DU</b>, <b>BAI_TAP</b>.</p>
-      <div class="grid">
-        <div><label>File XLSX chuẩn</label><input id="grammarImportFile" type="file" accept=".xlsx,.xls"></div>
-        <div><label>Phạm vi cập nhật</label><select id="grammarImportScope"><option value="auto">Tự nhận theo sheet có trong file</option><option value="all">Cả ngữ pháp và bài tập</option><option value="theory">Chỉ ngữ pháp &amp; ví dụ</option><option value="exercises">Chỉ bài tập</option></select></div>
-        <div><label>Trạng thái sau khi nhập</label><select id="grammarImportPublished"><option value="file">Theo cột published trong file</option><option value="1">Hiện cho học viên</option><option value="0">Lưu nháp / Ẩn</option></select></div>
-      </div>
-      <div class="row" style="margin-top:10px"><button class="ghost" id="previewGrammarImport">👁 Xem trước</button><button class="primary" id="runGrammarImport" disabled>⬆ Nhập dữ liệu</button><button class="ghost" id="grammarXlsxTemplate">⬇ Tải file XLSX mẫu</button></div>
-      <div class="status" id="grammarImportStatus"></div>
-      <div class="tablewrap" id="grammarImportPreview" hidden></div>
-    </div>
-    <div class="card">
-      <h2>Chỉnh sửa thủ công</h2>
-      <p class="muted">Sau khi nhập file, anh vào tab <b>Khóa học video</b> → <b>Quản lý nội dung từng bài</b> để sửa riêng cấu trúc, giải thích, ví dụ, câu hỏi, đáp án hoặc lời giải.</p>
-    </div>
-  </section>
-
   <section class="pane" id="shadowPane">
     <div class="card">
       <h2>Thêm video Shadowing</h2>
@@ -227,9 +203,6 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
       </div>
       <div class="grid2" style="margin-top:10px">
         <div><label>Link YouTube</label><input id="shadowYoutube" placeholder="https://www.youtube.com/watch?v=..."></div>
-        <div><label>Kiểu khung video</label><select id="shadowVideoAspect"><option value="auto">Tự động (Shorts = dọc)</option><option value="landscape">Ngang 16:9</option><option value="portrait">Dọc 9:16</option></select></div>
-      </div>
-      <div class="grid2" style="margin-top:10px">
         <div>
           <label>Quyền xem Shadowing</label>
           <select id="shadowAccessMode">
@@ -270,18 +243,25 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
     </div>
 
     <div class="card">
-      <h2>Nhập timing & transcript</h2>
+      <h2>Nhập nhanh Shadowing</h2>
       <div class="grid2">
-        <div><label>File SRT từ CapCut</label><input id="shadowSrt" type="file" accept=".srt"></div>
-        <div><label>Transcript CSV/XLSX</label><input id="shadowTranscriptFile" type="file" accept=".csv,.xlsx,.xls"></div>
+        <div><label>File SRT tiếng Trung — bắt buộc</label><input id="shadowSrt" type="file" accept=".srt"></div>
+        <div><label>Transcript CSV/XLSX đã biên tập — không bắt buộc</label><input id="shadowTranscriptFile" type="file" accept=".csv,.xlsx,.xls"></div>
       </div>
-      <p class="muted">Transcript cần đúng 3 cột: <strong>hanzi | pinyin | vi</strong>. Số dòng phải khớp số câu trong SRT.</p>
-      <div class="sample">hanzi,pinyin,vi
-你今天去哪儿？,Nǐ jīntiān qù nǎr?,Hôm nay bạn đi đâu?
-我去公司上班。,Wǒ qù gōngsī shàngbān.,Tôi đến công ty làm việc.</div>
+      <p class="muted">Chỉ cần SRT, Aluni sẽ giữ chữ Hán và mốc thời gian rồi dùng AI tạo pinyin + nghĩa Việt. Nếu tải thêm CSV/XLSX, dữ liệu đã biên tập trong file sẽ được ưu tiên.</p>
       <div class="row" style="margin-top:10px">
-        <button class="primary" id="saveShadowVideo">Lưu video Shadowing</button>
+        <button class="primary" id="generateShadowTranscript">Tạo pinyin và nghĩa Việt</button>
         <button class="ghost" id="shadowTemplateBtn">⬇ Tải file mẫu transcript</button>
+      </div>
+      <div id="shadowPreviewWrap" style="display:none;margin-top:16px">
+        <h3>Xem trước và chỉnh sửa (<span id="shadowPreviewCount">0</span> câu)</h3>
+        <div class="tablewrap"><table>
+          <thead><tr><th>#</th><th>Thời gian</th><th>Chữ Hán</th><th>Pinyin</th><th>Nghĩa Việt</th><th></th></tr></thead>
+          <tbody id="shadowPreviewBody"></tbody>
+        </table></div>
+        <div class="row" style="margin-top:12px">
+          <button class="primary" id="saveShadowVideo">Lưu vào thư viện Shadowing</button>
+        </div>
       </div>
     </div>
 
@@ -304,6 +284,7 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;bord
 const base=String(window.ALUNI_API_BASE||'').replace(/\/+$/,'');
 const $=id=>document.getElementById(id);
 let codes=[],courses=[],learningCourses=[],adminSecret='';
+let shadowDraftSegments=[];
 
 function fmt(v){return v?new Date(v).toLocaleString('vi-VN'):'—'}
 async function api(path,opts={}){
@@ -352,7 +333,6 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   $(b.dataset.pane).classList.add('active');
   if(b.dataset.pane==='contentPane') loadCourses();
   if(b.dataset.pane==='learningPane') loadLearningCourses();
-  if(b.dataset.pane==='grammarPane') loadLearningCourses();
   if(b.dataset.pane==='shadowPane'){ loadCourses().then(()=>{loadShadowRule();loadShadowAdminVideos();}); }
 });
 
@@ -456,40 +436,35 @@ function template(){
 async function loadLearningCourses(){
   try{
     const j=await api('/admin/learning/courses');learningCourses=j.courses||[];
-    const selected=$('learningCoursePicker').value||$('manageLearningCourse').value||($('learningId').readOnly?$('learningId').value:'');
-    $('learningImportCourse').innerHTML='';$('manageLearningCourse').innerHTML='';$('learningCoursePicker').innerHTML='<option value="">— Tạo khóa học mới —</option>';$('learningCourseBody').innerHTML='';
+    const selected=$('manageLearningCourse').value;
+    $('learningImportCourse').innerHTML='';$('manageLearningCourse').innerHTML='';$('learningCourseBody').innerHTML='';
     learningCourses.forEach(c=>{
       $('learningImportCourse').add(new Option(c.title,c.id));
       $('manageLearningCourse').add(new Option(c.title,c.id));
-      $('learningCoursePicker').add(new Option(`${c.title} · ${Number(c.published)?'Đã xuất bản':'Đang ẩn'}`,c.id));
       const tr=document.createElement('tr');
       tr.innerHTML=`<td>${Number(c.sort_order||0)}</td><td><b>${c.title}</b><br><span class="muted">${c.id}</span></td><td>${c.access==='paid'?'Có phí':'Miễn phí'}</td><td>${c.lesson_count||0}</td><td>${Number(c.published)?'<span class="badge">Đã xuất bản</span>':'Lưu nháp'}</td><td><button class="ghost editLearning" data-id="${c.id}">Sửa</button></td>`;
       $('learningCourseBody').appendChild(tr);
     });
     document.querySelectorAll('.editLearning').forEach(b=>b.onclick=()=>editLearningCourse(b.dataset.id));
-    if(selected&&learningCourses.some(c=>c.id===selected)){
-      $('learningCoursePicker').value=selected;$('manageLearningCourse').value=selected;$('learningImportCourse').value=selected;
-    }
+    if(selected&&learningCourses.some(c=>c.id===selected))$('manageLearningCourse').value=selected;
+    $('learningStatus').textContent=`Có ${learningCourses.length} khóa học video.`;
     if(learningCourses.length)await loadLearningContent();else $('learningLessonList').innerHTML='';
   }catch(e){$('learningStatus').textContent=e.message}
 }
-function editLearningCourse(id,scroll=true){
+function editLearningCourse(id){
   const c=learningCourses.find(x=>x.id===id);if(!c)return;
   $('learningId').value=c.id;$('learningId').readOnly=true;$('learningTitle').value=c.title||'';$('learningIcon').value=c.icon||'课';$('learningAccess').value=c.access||'free';$('learningSort').value=Number(c.sort_order||0);$('learningPublished').value=Number(c.published)?'1':'0';$('learningDescription').value=c.description||'';
-  $('learningCoursePicker').value=c.id;$('manageLearningCourse').value=c.id;$('learningImportCourse').value=c.id;$('learningFormTitle').textContent='Chỉnh sửa khóa học: '+c.title;
-  $('learningStatus').textContent=Number(c.published)?'Khóa này đang hiển thị trên web học viên.':'Khóa này đang ẩn. Anh có thể bấm “Lưu & xuất bản”.';
-  loadLearningContent();if(scroll)$('learningCourseEditor').scrollIntoView({behavior:'smooth',block:'start'});
+  $('learningStatus').textContent='Đang sửa khóa '+c.title+'.';window.scrollTo({top:0,behavior:'smooth'});
 }
 function clearLearningForm(){
-  $('learningId').value='';$('learningId').readOnly=false;$('learningTitle').value='';$('learningIcon').value='拼';$('learningAccess').value='free';$('learningSort').value='0';$('learningPublished').value='0';$('learningDescription').value='';$('learningCoursePicker').value='';$('learningFormTitle').textContent='Tạo khóa học mới';$('learningStatus').textContent='Nhập thông tin rồi bấm Lưu thay đổi hoặc Lưu & xuất bản.';$('learningId').focus();
+  $('learningId').value='';$('learningId').readOnly=false;$('learningTitle').value='';$('learningIcon').value='拼';$('learningAccess').value='free';$('learningSort').value='0';$('learningPublished').value='0';$('learningDescription').value='';
 }
-async function saveLearningCourse(forcePublish=false){
+async function saveLearningCourse(){
   try{
     const id=$('learningId').value.trim(),title=$('learningTitle').value.trim();
     if(!id||!title){$('learningStatus').textContent='Nhập mã khóa và tên khóa.';return}
-    if(forcePublish)$('learningPublished').value='1';
     const j=await api('/admin/learning/course',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,title,icon:$('learningIcon').value.trim(),access:$('learningAccess').value,sort_order:Number($('learningSort').value||0),published:$('learningPublished').value==='1',description:$('learningDescription').value.trim()})});
-    $('learningId').value=j.id;$('learningId').readOnly=true;await loadLearningCourses();editLearningCourse(j.id,false);$('learningStatus').textContent=$('learningPublished').value==='1'?'Đã lưu và xuất bản khóa học. Web học viên sẽ tự cập nhật.':'Đã lưu thay đổi. Khóa vẫn đang ẩn.';
+    $('learningStatus').textContent=$('learningPublished').value==='1'?'Đã lưu và xuất bản khóa học.':'Đã lưu bản nháp.';$('learningId').value=j.id;await loadLearningCourses();
   }catch(e){$('learningStatus').textContent=e.message}
 }
 async function importLearning(){
@@ -498,84 +473,25 @@ async function importLearning(){
   try{const rows=await parseFile(file);const j=await api('/admin/learning/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:courseId,rows})});$('learningStatus').textContent=`Đã nhập ${j.lesson_count} bài. Nếu khóa đã xuất bản, trang học viên sẽ tự cập nhật.`;await loadLearningCourses()}catch(e){$('learningStatus').textContent=e.message}
 }
 function learningTemplate(){
-  const t='\uFEFFlesson_number,lesson_title,video_title,youtube_url,video_aspect,resource_title,resource_url\r\n00,Giới thiệu khóa học,Video ngang,https://www.youtube.com/watch?v=LrLgKqlqxVA,landscape,Giới thiệu,https://example.com/gioi-thieu.pdf\r\n01,Làm quen Pinyin,Video dọc,https://www.youtube.com/watch?v=z9DY9l2dDzY,portrait,Sách Pinyin,https://example.com/sach.pdf\r\n02,Bốn thanh điệu,Video tự động,https://youtube.com/shorts/...,auto,,\r\n';
+  const t='\uFEFFlesson_number,lesson_title,video_title,youtube_url,resource_title,resource_url\r\n00,Giới thiệu khóa học,Video 1,https://youtu.be/...,Giới thiệu,https://example.com/gioi-thieu.pdf\r\n01,Làm quen Pinyin,Video 1,https://youtu.be/...,Sách Pinyin,https://example.com/sach.pdf\r\n01,Làm quen Pinyin,Video 2,https://youtu.be/...,,\r\n02,Bốn thanh điệu,Video 1,https://youtu.be/...,Bài tập,https://example.com/bai-tap.pdf\r\n';
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download='mau-khoa-hoc-video-aluni.csv';a.click();
 }
 
-let grammarImportData=null;
-function normalizeImportRow(row){const out={};Object.entries(row||{}).forEach(([k,v])=>out[String(k).trim().toLowerCase()]=v);return out}
-function importKey(row){return `${String(row.course_id||'').trim()}|${Number(row.lesson_number)}`}
-function sheetRows(wb,name){const actual=wb.SheetNames.find(x=>x.trim().toUpperCase()===name);return actual?XLSX.utils.sheet_to_json(wb.Sheets[actual],{defval:''}).map(normalizeImportRow):[]}
-function publishedValue(v){const s=String(v??'').trim().toLowerCase();return !['0','false','no','ẩn','an','nháp','nhap'].includes(s)}
-function correctIndex(v,options){const s=String(v??'').trim().toUpperCase();let n=/^[A-Z]$/.test(s)?s.charCodeAt(0)-65:Number(s)-1;if(!Number.isInteger(n)||n<0||n>=options.length)throw new Error(`Đáp án “${v}” không hợp lệ.`);return n}
-async function readGrammarWorkbook(file){
-  const wb=XLSX.read(await file.arrayBuffer(),{type:'array'}),theory=sheetRows(wb,'NGU_PHAP'),examples=sheetRows(wb,'VI_DU'),questions=sheetRows(wb,'BAI_TAP');
-  if(!theory.length&&!examples.length&&!questions.length)throw new Error('Không thấy sheet NGU_PHAP, VI_DU hoặc BAI_TAP.');
-  const groups=new Map();
-  const get=r=>{if(!String(r.course_id||'').trim()||r.lesson_number==='')throw new Error('Mỗi dòng cần course_id và lesson_number.');const k=importKey(r);if(!groups.has(k))groups.set(k,{course_id:String(r.course_id).trim(),lesson_number:Number(r.lesson_number),theory:null,examples:[],questions:[]});return groups.get(k)};
-  theory.forEach(r=>{const g=get(r);if(!String(r.title||'').trim())throw new Error(`NGU_PHAP ${g.course_id} bài ${g.lesson_number} thiếu title.`);g.theory={title:String(r.title).trim(),pinyin:String(r.pinyin||''),explanation:String(r.explanation||''),formula:String(r.formula||''),published:publishedValue(r.published)}});
-  examples.sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0)).forEach(r=>{const g=get(r);if(String(r.hanzi||'').trim())g.examples.push({hanzi:String(r.hanzi).trim(),pinyin:String(r.pinyin||''),vi:String(r.vi||'')})});
-  questions.sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0)).forEach(r=>{const g=get(r),options=['option_a','option_b','option_c','option_d'].map(k=>String(r[k]||'').trim()).filter(Boolean);if(!String(r.prompt||'').trim()||options.length<2)throw new Error(`BAI_TAP ${g.course_id} bài ${g.lesson_number} cần câu hỏi và ít nhất 2 lựa chọn.`);g.questions.push({prompt:String(r.prompt).trim(),options,correct_index:correctIndex(r.correct,options),explanation:String(r.explanation||'')})});
-  return {groups:[...groups.values()],hasTheory:theory.length>0||examples.length>0,hasExercises:questions.length>0,sheets:wb.SheetNames};
-}
-async function resolveGrammarLessons(data){
-  const courseIds=[...new Set(data.groups.map(g=>g.course_id))],maps={};
-  for(const id of courseIds){const j=await api('/admin/learning/course-content?course_id='+encodeURIComponent(id));maps[id]=new Map((j.lessons||[]).map(l=>[Number(l.lesson_number),l]));}
-  data.groups.forEach(g=>{g.lesson=maps[g.course_id]?.get(Number(g.lesson_number))||null});
-  return data;
-}
-function chosenGrammarScope(data){const selected=$('grammarImportScope').value;if(selected!=='auto')return selected;if(data.hasTheory&&data.hasExercises)return'all';if(data.hasTheory)return'theory';return'exercises'}
-async function previewGrammarWorkbook(){
-  const file=$('grammarImportFile').files[0];if(!file){$('grammarImportStatus').textContent='Hãy chọn file XLSX.';return}
-  try{let data=await readGrammarWorkbook(file);data=await resolveGrammarLessons(data);const scope=chosenGrammarScope(data),missing=data.groups.filter(g=>!g.lesson);grammarImportData=data;$('grammarImportPreview').hidden=false;$('grammarImportPreview').innerHTML=`<table><thead><tr><th>Khóa</th><th>Bài</th><th>Ngữ pháp</th><th>Ví dụ</th><th>Bài tập</th><th>Kiểm tra</th></tr></thead><tbody>${data.groups.map(g=>`<tr><td>${esc(g.course_id)}</td><td>${g.lesson_number}</td><td>${esc(g.theory?.title||'—')}</td><td>${g.examples.length}</td><td>${g.questions.length}</td><td>${g.lesson?'<span class="ok">Sẵn sàng</span>':'<span class="err">Không tìm thấy bài</span>'}</td></tr>`).join('')}</tbody></table>`;$('runGrammarImport').disabled=!!missing.length;$('grammarImportStatus').textContent=missing.length?`Có ${missing.length} bài không tồn tại trên Aluni. Hãy sửa course_id hoặc lesson_number trong file.`:`Sẵn sàng nhập ${data.groups.length} bài · phạm vi: ${scope==='all'?'cả hai':scope==='theory'?'ngữ pháp & ví dụ':'chỉ bài tập'}.`;}
-  catch(e){grammarImportData=null;$('runGrammarImport').disabled=true;$('grammarImportStatus').textContent=e.message}
-}
-async function runGrammarWorkbookImport(){
-  if(!grammarImportData)return;const scope=chosenGrammarScope(grammarImportData),publishMode=$('grammarImportPublished').value,btn=$('runGrammarImport');btn.disabled=true;
-  try{let done=0;for(const g of grammarImportData.groups){if(!g.lesson)throw new Error(`Không tìm thấy ${g.course_id} bài ${g.lesson_number}.`);if(scope!=='exercises'&&!g.theory)throw new Error(`${g.course_id} bài ${g.lesson_number} thiếu dòng NGU_PHAP.`);const published=publishMode==='file'?(g.theory?.published??true):publishMode==='1';await api('/admin/grammar/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lesson_id:g.lesson.id,update_scope:scope,title:g.theory?.title||'',pinyin:g.theory?.pinyin||'',formula:g.theory?.formula||'',explanation:g.theory?.explanation||'',examples:g.examples,questions:g.questions,published})});done++;$('grammarImportStatus').textContent=`Đang nhập ${done}/${grammarImportData.groups.length} bài...`;}$('grammarImportStatus').textContent=`Đã nhập thành công ${done} bài. ${scope==='exercises'?'Phần ngữ pháp cũ được giữ nguyên.':scope==='theory'?'Bài tập cũ được giữ nguyên.':'Ngữ pháp và bài tập đã được cập nhật.'}`;await loadLearningContent();}
-  catch(e){$('grammarImportStatus').textContent='Dừng nhập: '+e.message}finally{btn.disabled=false}
-}
-function downloadGrammarXlsxTemplate(){
-  const wb=XLSX.utils.book_new();
-  const grammar=[{course_id:'pinyin-48',lesson_number:1,title:'Vị ngữ tính từ',pinyin:'xíngróngcí wèiyǔ',explanation:'Tính từ có thể trực tiếp làm vị ngữ. Thường không dùng 是 trước tính từ.',formula:'Chủ ngữ + 很 + tính từ',published:1},{course_id:'pinyin-48',lesson_number:2,title:'Câu hỏi với 吗',pinyin:'ma',explanation:'Thêm 吗 cuối câu trần thuật để tạo câu hỏi Có/Không.',formula:'Câu trần thuật + 吗？',published:0}];
-  const examples=[{course_id:'pinyin-48',lesson_number:1,hanzi:'他很好。',pinyin:'Tā hěn hǎo.',vi:'Anh ấy rất khỏe.',sort_order:1},{course_id:'pinyin-48',lesson_number:1,hanzi:'今天很冷。',pinyin:'Jīntiān hěn lěng.',vi:'Hôm nay rất lạnh.',sort_order:2},{course_id:'pinyin-48',lesson_number:2,hanzi:'你忙吗？',pinyin:'Nǐ máng ma?',vi:'Bạn bận không?',sort_order:1}];
-  const exercises=[{course_id:'pinyin-48',lesson_number:1,prompt:'Chọn câu đúng.',option_a:'他很好。',option_b:'他是很好。',option_c:'很他好。',option_d:'他好很。',correct:'A',explanation:'Vị ngữ tính từ thường không dùng 是.',sort_order:1},{course_id:'pinyin-48',lesson_number:2,prompt:'“Bạn bận không?” nói thế nào?',option_a:'你吗忙？',option_b:'你忙吗？',option_c:'吗你忙？',option_d:'你很忙。',correct:'B',explanation:'吗 đặt ở cuối câu.',sort_order:1}];
-  [['NGU_PHAP',grammar],['VI_DU',examples],['BAI_TAP',exercises]].forEach(([name,rows])=>XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),name));XLSX.writeFile(wb,'mau-ngu-phap-bai-tap-aluni.xlsx');
-}
-
-let shadowLibraryVideos=[];
-function shadowLibraryOptions(selected){
-  return '<option value="">— Chưa liên kết —</option>'+shadowLibraryVideos.map(v=>`<option value="${Number(v.id)}" ${Number(selected)===Number(v.id)?'selected':''}>${esc(v.course_id)} · Bài ${Number(v.lesson_number)} · ${esc(v.title)}</option>`).join('');
-}
-function grammarExamplesText(items){return (items||[]).map(x=>[x.hanzi||'',x.pinyin||'',x.vi||''].join(' | ')).join('\n')}
-function grammarQuestionsText(items){return (items||[]).map(q=>[q.prompt||'',...(q.options||[]),Number(q.correct_index||0)+1,q.explanation||''].join(' | ')).join('\n')}
-function parseGrammarExamples(text){return String(text||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map(line=>{const p=line.split('|').map(x=>x.trim());return{hanzi:p[0]||'',pinyin:p[1]||'',vi:p[2]||''}})}
-function parseGrammarQuestions(text){return String(text||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map((line,row)=>{const p=line.split('|').map(x=>x.trim());if(p.length<4)throw new Error(`Câu hỏi dòng ${row+1} chưa đủ dữ liệu.`);let answerPos=-1;for(let i=p.length-1;i>=2;i--){if(/^\d+$/.test(p[i])){answerPos=i;break}}if(answerPos<2)throw new Error(`Câu hỏi dòng ${row+1} thiếu số đáp án đúng.`);const options=p.slice(1,answerPos),correct=Number(p[answerPos])-1;if(options.length<2||correct<0||correct>=options.length)throw new Error(`Đáp án đúng ở dòng ${row+1} không hợp lệ.`);return{prompt:p[0],options,correct_index:correct,explanation:p.slice(answerPos+1).join(' | ')}})}
 async function loadLearningContent(){
   const courseId=$('manageLearningCourse').value;
   if(!courseId)return;
   $('learningContentStatus').textContent='Đang tải nội dung...';
   try{
-    const [j,shadowData]=await Promise.all([api('/admin/learning/course-content?course_id='+encodeURIComponent(courseId)),api('/admin/shadowing/videos')]);
-    shadowLibraryVideos=shadowData.videos||[];
+    const j=await api('/admin/learning/course-content?course_id='+encodeURIComponent(courseId));
     const lessons=j.lessons||[];
     $('learningLessonList').innerHTML=lessons.map(l=>`<details class="lesson-admin" data-kind="lesson" data-id="${esc(l.id)}">
-      <summary><span class="lesson-summary-main"><span class="drag-handle" draggable="true" title="Giữ và kéo để đổi vị trí">⋮⋮</span><span>${esc(l.title||('Bài '+String(Number(l.lesson_number)+1).padStart(2,'0')))}</span></span><span>${l.videos.length} video · ${l.resources.length} tài liệu</span></summary>
+      <summary><span class="lesson-summary-main"><span class="drag-handle" draggable="true" title="Giữ và kéo để đổi vị trí">⋮⋮</span><span>Bài ${String(l.lesson_number).padStart(2,'0')} — ${esc(l.title)}</span></span><span>${l.videos.length} video · ${l.resources.length} tài liệu</span></summary>
       <div class="lesson-admin-body">
-        <div class="grid2"><div><label>Số liên kết kỹ thuật (học viên không nhìn thấy)</label><input class="editLessonNumber" data-id="${esc(l.id)}" type="number" min="0" value="${Number(l.lesson_number)}"></div><div><label>Tên bài hiển thị cho học viên</label><input class="editLessonTitle" data-id="${esc(l.id)}" value="${esc(l.title)}"></div></div>
+        <div class="grid2"><div><label>Số bài</label><input class="editLessonNumber" data-id="${esc(l.id)}" type="number" min="0" value="${Number(l.lesson_number)}"></div><div><label>Tên bài</label><input class="editLessonTitle" data-id="${esc(l.id)}" value="${esc(l.title)}"></div></div>
         <div class="row" style="margin-top:8px"><button class="ghost saveLesson" data-id="${esc(l.id)}">Lưu tên/số bài</button><button class="danger deleteLesson" data-id="${esc(l.id)}">Xóa bài</button></div>
-        <div class="mini-title">Liên kết Thư viện Shadowing</div>
-        <div class="grid2"><select class="lessonShadowLink" data-lesson="${esc(l.id)}">${shadowLibraryOptions(l.shadow_video_id)}</select><button class="ghost saveShadowLink" data-lesson="${esc(l.id)}">🎧 Lưu liên kết Shadowing</button></div>
-        <div class="file-note">Chọn một video đã nhập trong tab Video Shadowing. Video và transcript không bị sao chép; có thể dùng lại cho nhiều bài.</div>
-        <div class="mini-title">Ngữ pháp & bài tập trắc nghiệm</div>
-        <div class="grid"><input class="grammarTitle" data-lesson="${esc(l.id)}" value="${esc(l.grammar?.title||'')}" placeholder="Tên điểm ngữ pháp, ví dụ: 了 · le"><input class="grammarPinyin" data-lesson="${esc(l.id)}" value="${esc(l.grammar?.pinyin||'')}" placeholder="Pinyin / cách đọc"><input class="grammarFormula" data-lesson="${esc(l.id)}" value="${esc(l.grammar?.formula||'')}" placeholder="Công thức, ví dụ: S + V + 了"></div>
-        <textarea class="grammarExplanation" data-lesson="${esc(l.id)}" placeholder="Giải thích ngắn gọn" style="margin-top:8px">${esc(l.grammar?.explanation||'')}</textarea>
-        <label class="file-note">Ví dụ: mỗi dòng ghi <b>Hán tự | pinyin | nghĩa Việt</b></label><textarea class="grammarExamples" data-lesson="${esc(l.id)}" placeholder="我吃饭了。 | Wǒ chīfàn le. | Tôi ăn cơm rồi.">${esc(grammarExamplesText(l.grammar?.examples))}</textarea>
-        <label class="file-note">Câu hỏi: mỗi dòng ghi <b>Câu hỏi | lựa chọn 1 | lựa chọn 2 | lựa chọn 3 | số đáp án đúng | lời giải</b></label><textarea class="grammarQuestions" data-lesson="${esc(l.id)}" placeholder="“Tôi ăn cơm rồi” nói thế nào? | 我吃饭。 | 我吃饭了。 | 我了吃饭。 | 2 | 了 đặt sau động từ.">${esc(grammarQuestionsText(l.grammar?.questions))}</textarea>
-        <div class="row" style="margin-top:8px"><button class="primary saveGrammar" data-lesson="${esc(l.id)}">📚 Lưu ngữ pháp & bài tập</button>${l.grammar?`<button class="danger deleteGrammar" data-lesson="${esc(l.id)}">Xóa bộ bài tập</button>`:''}<label style="display:flex;align-items:center;gap:7px"><input class="grammarPublished" data-lesson="${esc(l.id)}" type="checkbox" style="width:auto" ${!l.grammar||Number(l.grammar.published)!==0?'checked':''}> Hiện cho học viên</label></div>
         <div class="mini-title">Video YouTube</div>
-        <div class="sortable-list" data-kind="video">${(l.videos||[]).map((v,i,a)=>`<div class="item-admin" data-kind="video" data-id="${v.id}"><span class="drag-handle" draggable="true" title="Giữ và kéo để đổi vị trí">⋮⋮</span><input class="videoTitle" data-id="${v.id}" value="${esc(v.title)}"><input class="videoUrl" data-id="${v.id}" value="${esc(v.youtube_url)}"><select class="videoAspect" data-id="${v.id}"><option value="auto" ${v.video_aspect==='auto'?'selected':''}>Tự động</option><option value="landscape" ${v.video_aspect==='landscape'?'selected':''}>16:9</option><option value="portrait" ${v.video_aspect==='portrait'?'selected':''}>9:16</option></select><span class="order-buttons"><button class="ghost reorderItem" data-kind="video" data-id="${v.id}" data-direction="up" ${i===0?'disabled':''}>↑</button><button class="ghost reorderItem" data-kind="video" data-id="${v.id}" data-direction="down" ${i===a.length-1?'disabled':''}>↓</button></span><button class="danger deleteItem" data-kind="video" data-id="${v.id}">Xóa</button></div>`).join('')||'<div class="muted">Chưa có video.</div>'}</div>
-        <div class="grid" style="margin-top:8px"><input class="newVideoTitle" data-lesson="${esc(l.id)}" placeholder="Tên video"><input class="newVideoUrl" data-lesson="${esc(l.id)}" placeholder="Link YouTube"><select class="newVideoAspect" data-lesson="${esc(l.id)}"><option value="auto">Tự động</option><option value="landscape">Ngang 16:9</option><option value="portrait">Dọc 9:16</option></select></div><button class="ghost addVideo" data-lesson="${esc(l.id)}" style="margin-top:8px">＋ Thêm video</button>
+        <div class="sortable-list" data-kind="video">${(l.videos||[]).map((v,i,a)=>`<div class="item-admin" data-kind="video" data-id="${v.id}"><span class="drag-handle" draggable="true" title="Giữ và kéo để đổi vị trí">⋮⋮</span><input class="videoTitle" data-id="${v.id}" value="${esc(v.title)}"><input class="videoUrl" data-id="${v.id}" value="${esc(v.youtube_url)}"><span class="order-buttons"><button class="ghost reorderItem" data-kind="video" data-id="${v.id}" data-direction="up" ${i===0?'disabled':''}>↑</button><button class="ghost reorderItem" data-kind="video" data-id="${v.id}" data-direction="down" ${i===a.length-1?'disabled':''}>↓</button></span><button class="danger deleteItem" data-kind="video" data-id="${v.id}">Xóa</button></div>`).join('')||'<div class="muted">Chưa có video.</div>'}</div>
+        <div class="grid2" style="margin-top:8px"><input class="newVideoTitle" data-lesson="${esc(l.id)}" placeholder="Tên video"><input class="newVideoUrl" data-lesson="${esc(l.id)}" placeholder="Link YouTube"></div><button class="ghost addVideo" data-lesson="${esc(l.id)}" style="margin-top:8px">＋ Thêm video</button>
         <div class="mini-title">Bài tập / tài liệu</div>
         <div class="sortable-list" data-kind="resource">${(l.resources||[]).map((r,i,a)=>`<div class="item-admin resource-row" data-kind="resource" data-id="${r.id}"><span class="drag-handle" draggable="true" title="Giữ và kéo để đổi vị trí">⋮⋮</span><input class="resourceTitle" data-id="${r.id}" value="${esc(r.title)}"><input class="resourceUrl" data-id="${r.id}" value="${esc(r.resource_url)}"><select class="resourceMode" data-id="${r.id}"><option value="view" ${r.access_mode==='view'?'selected':''}>Chỉ xem</option><option value="download" ${r.access_mode!=='view'?'selected':''}>Cho tải</option></select><span class="order-buttons"><button class="ghost reorderItem" data-kind="resource" data-id="${r.id}" data-direction="up" ${i===0?'disabled':''}>↑</button><button class="ghost reorderItem" data-kind="resource" data-id="${r.id}" data-direction="down" ${i===a.length-1?'disabled':''}>↓</button></span><button class="danger deleteItem" data-kind="resource" data-id="${r.id}">Xóa</button></div>`).join('')||'<div class="muted">Chưa có tài liệu.</div>'}</div>
         <div class="upload-box"><b>Tải file trực tiếp từ máy</b><div class="upload-grid" style="margin-top:8px"><input class="uploadResourceTitle" data-lesson="${esc(l.id)}" placeholder="Tên hiển thị, ví dụ: Bài tập"><input class="uploadResourceFile" data-lesson="${esc(l.id)}" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.mp3"><select class="uploadResourceMode" data-lesson="${esc(l.id)}"><option value="view">Chỉ xem</option><option value="download">Cho tải</option></select><button class="primary uploadResource" data-lesson="${esc(l.id)}">Tải lên</button></div><div class="file-note">PDF/ảnh có thể chỉ xem. Word nên chọn Cho tải hoặc đổi sang PDF. Tối đa 25 MB/file.</div></div>
@@ -615,10 +531,7 @@ function enableDragSort(){
 function bindLearningContentActions(){
   document.querySelectorAll('.saveLesson').forEach(b=>b.onclick=()=>learningPost('/admin/learning/lesson',{id:b.dataset.id,course_id:$('manageLearningCourse').value,lesson_number:Number(document.querySelector(`.editLessonNumber[data-id="${b.dataset.id}"]`).value),title:document.querySelector(`.editLessonTitle[data-id="${b.dataset.id}"]`).value}));
   document.querySelectorAll('.deleteLesson').forEach(b=>b.onclick=()=>{if(confirm('Xóa bài này cùng toàn bộ video và tài liệu?'))learningPost('/admin/learning/delete',{kind:'lesson',id:b.dataset.id})});
-  document.querySelectorAll('.addVideo').forEach(b=>b.onclick=()=>learningPost('/admin/learning/video',{lesson_id:b.dataset.lesson,title:document.querySelector(`.newVideoTitle[data-lesson="${b.dataset.lesson}"]`).value,youtube_url:document.querySelector(`.newVideoUrl[data-lesson="${b.dataset.lesson}"]`).value,video_aspect:document.querySelector(`.newVideoAspect[data-lesson="${b.dataset.lesson}"]`).value}));
-  document.querySelectorAll('.saveShadowLink').forEach(b=>b.onclick=()=>learningPost('/admin/learning/shadow-link',{lesson_id:b.dataset.lesson,shadow_video_id:document.querySelector(`.lessonShadowLink[data-lesson="${CSS.escape(b.dataset.lesson)}"]`).value||null}));
-  document.querySelectorAll('.saveGrammar').forEach(b=>b.onclick=async()=>{const lesson=b.dataset.lesson;try{await learningPost('/admin/grammar/save',{lesson_id:lesson,title:document.querySelector(`.grammarTitle[data-lesson="${CSS.escape(lesson)}"]`).value,pinyin:document.querySelector(`.grammarPinyin[data-lesson="${CSS.escape(lesson)}"]`).value,formula:document.querySelector(`.grammarFormula[data-lesson="${CSS.escape(lesson)}"]`).value,explanation:document.querySelector(`.grammarExplanation[data-lesson="${CSS.escape(lesson)}"]`).value,examples:parseGrammarExamples(document.querySelector(`.grammarExamples[data-lesson="${CSS.escape(lesson)}"]`).value),questions:parseGrammarQuestions(document.querySelector(`.grammarQuestions[data-lesson="${CSS.escape(lesson)}"]`).value),published:document.querySelector(`.grammarPublished[data-lesson="${CSS.escape(lesson)}"]`).checked});$('learningContentStatus').textContent='Đã lưu ngữ pháp và bài tập.'}catch(e){$('learningContentStatus').textContent=e.message}});
-  document.querySelectorAll('.deleteGrammar').forEach(b=>b.onclick=()=>{if(confirm('Xóa bộ ngữ pháp và toàn bộ câu hỏi của bài này?'))learningPost('/admin/grammar/delete',{lesson_id:b.dataset.lesson})});
+  document.querySelectorAll('.addVideo').forEach(b=>b.onclick=()=>learningPost('/admin/learning/video',{lesson_id:b.dataset.lesson,title:document.querySelector(`.newVideoTitle[data-lesson="${b.dataset.lesson}"]`).value,youtube_url:document.querySelector(`.newVideoUrl[data-lesson="${b.dataset.lesson}"]`).value}));
   document.querySelectorAll('.addResource').forEach(b=>b.onclick=()=>learningPost('/admin/learning/resource',{lesson_id:b.dataset.lesson,title:document.querySelector(`.newResourceTitle[data-lesson="${b.dataset.lesson}"]`).value,resource_url:document.querySelector(`.newResourceUrl[data-lesson="${b.dataset.lesson}"]`).value,access_mode:document.querySelector(`.newResourceMode[data-lesson="${b.dataset.lesson}"]`).value}));
   document.querySelectorAll('.uploadResource').forEach(b=>b.onclick=async()=>{
     const lesson=b.dataset.lesson,fileInput=document.querySelector(`.uploadResourceFile[data-lesson="${lesson}"]`),file=fileInput.files[0];
@@ -629,7 +542,7 @@ function bindLearningContentActions(){
   });
   document.querySelectorAll('.deleteItem').forEach(b=>b.onclick=()=>{if(confirm('Xóa mục này?'))learningPost('/admin/learning/delete',{kind:b.dataset.kind,id:Number(b.dataset.id)})});
   document.querySelectorAll('.reorderItem').forEach(b=>b.onclick=async()=>{const row=b.closest('[data-kind][data-id]'),box=row.parentElement,sibling=b.dataset.direction==='up'?row.previousElementSibling:row.nextElementSibling;if(!sibling)return;box.insertBefore(row,b.dataset.direction==='up'?sibling:sibling.nextSibling);await saveVisibleOrder(box,b.dataset.kind)});
-  document.querySelectorAll('.videoTitle,.videoUrl,.videoAspect').forEach(x=>x.onchange=()=>learningPost('/admin/learning/video',{id:Number(x.dataset.id),title:document.querySelector(`.videoTitle[data-id="${x.dataset.id}"]`).value,youtube_url:document.querySelector(`.videoUrl[data-id="${x.dataset.id}"]`).value,video_aspect:document.querySelector(`.videoAspect[data-id="${x.dataset.id}"]`).value}));
+  document.querySelectorAll('.videoTitle,.videoUrl').forEach(x=>x.onchange=()=>learningPost('/admin/learning/video',{id:Number(x.dataset.id),title:document.querySelector(`.videoTitle[data-id="${x.dataset.id}"]`).value,youtube_url:document.querySelector(`.videoUrl[data-id="${x.dataset.id}"]`).value}));
   document.querySelectorAll('.resourceTitle,.resourceUrl,.resourceMode').forEach(x=>x.onchange=()=>learningPost('/admin/learning/resource',{id:Number(x.dataset.id),title:document.querySelector(`.resourceTitle[data-id="${x.dataset.id}"]`).value,resource_url:document.querySelector(`.resourceUrl[data-id="${x.dataset.id}"]`).value,access_mode:document.querySelector(`.resourceMode[data-id="${x.dataset.id}"]`).value}));
   enableDragSort();
 }
@@ -649,23 +562,15 @@ $('saveCourse').onclick=saveCourse;
 $('loadCourses').onclick=loadCourses;
 $('importBtn').onclick=doImport;
 $('templateBtn').onclick=template;
-$('saveLearningCourse').onclick=()=>saveLearningCourse(false);
-$('savePublishLearningCourse').onclick=()=>saveLearningCourse(true);
+$('saveLearningCourse').onclick=saveLearningCourse;
 $('clearLearningForm').onclick=clearLearningForm;
-$('newLearningCourse').onclick=clearLearningForm;
-$('reloadLearningCourses').onclick=loadLearningCourses;
-$('learningCoursePicker').onchange=()=>{$('learningCoursePicker').value?editLearningCourse($('learningCoursePicker').value,false):clearLearningForm()};
 $('importLearningBtn').onclick=importLearning;
 $('learningTemplateBtn').onclick=learningTemplate;
-$('previewGrammarImport').onclick=previewGrammarWorkbook;
-$('runGrammarImport').onclick=runGrammarWorkbookImport;
-$('grammarXlsxTemplate').onclick=downloadGrammarXlsxTemplate;
-$('grammarImportFile').onchange=()=>{grammarImportData=null;$('runGrammarImport').disabled=true;$('grammarImportPreview').hidden=true;$('grammarImportStatus').textContent='Bấm “Xem trước” để kiểm tra file.'};
-$('grammarImportScope').onchange=()=>{if(grammarImportData)previewGrammarWorkbook()};
-$('manageLearningCourse').onchange=()=>{const id=$('manageLearningCourse').value;if(id)editLearningCourse(id,false);else loadLearningContent()};
+$('manageLearningCourse').onchange=loadLearningContent;
 $('refreshLearningContent').onclick=loadLearningContent;
 $('addLearningLesson').onclick=addLearningLesson;
 $('saveShadowVideo').onclick=saveShadowVideo;
+$('generateShadowTranscript').onclick=generateShadowTranscript;
 $('saveShadowRule').onclick=saveShadowRule;
 $('shadowTemplateBtn').onclick=downloadShadowTemplate;
 $('shadowAdminCourse').onchange=()=>{loadShadowRule();loadShadowAdminVideos();};
@@ -700,6 +605,109 @@ async function parseTranscriptFile(file){
   return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
 }
 
+function formatShadowTime(seconds){
+  const n=Math.max(0,Number(seconds)||0);
+  const h=Math.floor(n/3600);
+  const m=Math.floor((n%3600)/60);
+  const s=(n%60).toFixed(3).padStart(6,'0');
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${s}`;
+}
+
+function renderShadowPreview(){
+  const body=$('shadowPreviewBody');
+  body.innerHTML='';
+  shadowDraftSegments.forEach((segment,index)=>{
+    const tr=document.createElement('tr');
+    const numberCell=document.createElement('td');
+    numberCell.textContent=String(index+1);
+    const timeCell=document.createElement('td');
+    timeCell.className='preview-time';
+    timeCell.textContent=`${formatShadowTime(segment.start_sec)} → ${formatShadowTime(segment.end_sec)}`;
+    tr.append(numberCell,timeCell);
+    for(const field of ['hanzi','pinyin','vi']){
+      const td=document.createElement('td');
+      const input=document.createElement('input');
+      input.className='preview-input'+(field==='hanzi'?' preview-hanzi':'');
+      input.value=segment[field]||'';
+      input.oninput=()=>{shadowDraftSegments[index][field]=input.value;};
+      td.appendChild(input);
+      tr.appendChild(td);
+    }
+    const actionCell=document.createElement('td');
+    const remove=document.createElement('button');
+    remove.className='danger';
+    remove.textContent='Xóa';
+    remove.onclick=()=>{shadowDraftSegments.splice(index,1);renderShadowPreview();};
+    actionCell.appendChild(remove);
+    tr.appendChild(actionCell);
+    body.appendChild(tr);
+  });
+  $('shadowPreviewCount').textContent=String(shadowDraftSegments.length);
+  $('shadowPreviewWrap').style.display=shadowDraftSegments.length?'block':'none';
+}
+
+async function enrichShadowLines(lines){
+  const output=[];
+  const batchSize=20;
+  for(let start=0;start<lines.length;start+=batchSize){
+    const batch=lines.slice(start,start+batchSize);
+    $('shadowStatus').textContent=`AI đang xử lý câu ${start+1}–${Math.min(start+batch.length,lines.length)} / ${lines.length}...`;
+    const result=await api('/admin/shadowing/enrich',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({lines:batch})
+    });
+    if(!Array.isArray(result.items)||result.items.length!==batch.length){
+      throw new Error(`AI trả về sai số dòng ở nhóm bắt đầu từ câu ${start+1}.`);
+    }
+    output.push(...result.items);
+  }
+  return output;
+}
+
+async function generateShadowTranscript(){
+  const srtFile=$('shadowSrt').files[0];
+  const trFile=$('shadowTranscriptFile').files[0];
+  if(!srtFile){
+    $('shadowStatus').textContent='Hãy chọn file SRT tiếng Trung.';
+    $('shadowStatus').className='status err';
+    return;
+  }
+  const button=$('generateShadowTranscript');
+  try{
+    button.classList.add('loading');
+    $('shadowStatus').className='status';
+    const timings=await parseSrtFile(srtFile);
+    if(!timings.length) throw new Error('Không đọc được câu hoặc mốc thời gian trong file SRT.');
+    let transcript;
+    if(trFile){
+      transcript=await parseTranscriptFile(trFile);
+      if(timings.length!==transcript.length){
+        throw new Error(`SRT có ${timings.length} câu nhưng transcript có ${transcript.length} dòng. Hãy kiểm tra lại file.`);
+      }
+    }else{
+      transcript=await enrichShadowLines(timings.map(row=>row.srt_text));
+    }
+    shadowDraftSegments=timings.map((timing,index)=>({
+      start_sec:timing.start_sec,
+      end_sec:timing.end_sec,
+      hanzi:String(transcript[index]?.hanzi||timing.srt_text||''),
+      pinyin:String(transcript[index]?.pinyin||''),
+      vi:String(transcript[index]?.vi||'')
+    }));
+    renderShadowPreview();
+    $('shadowStatus').textContent=`Đã tạo bản xem trước ${shadowDraftSegments.length} câu. Anh kiểm tra rồi bấm “Lưu vào thư viện Shadowing”.`;
+    $('shadowStatus').className='status ok';
+  }catch(e){
+    shadowDraftSegments=[];
+    renderShadowPreview();
+    $('shadowStatus').textContent=e.message;
+    $('shadowStatus').className='status err';
+  }finally{
+    button.classList.remove('loading');
+  }
+}
+
 async function loadShadowAdminVideos(){
   try{
     const j=await api('/admin/shadowing/videos');
@@ -707,7 +715,7 @@ async function loadShadowAdminVideos(){
     $('shadowVideoBody').innerHTML='';
     rows.forEach(v=>{
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${v.course_id}</td><td>${v.lesson_number}</td><td>${v.title}<div class="muted">${v.video_aspect==='portrait'?'Dọc 9:16':v.video_aspect==='landscape'?'Ngang 16:9':'Tự động'}</div></td>
+      tr.innerHTML=`<td>${v.course_id}</td><td>${v.lesson_number}</td><td>${v.title}</td>
         <td><a href="${v.youtube_url}" target="_blank">Mở</a></td>
         <td>${Number(v.free_override||0) ? 'Có' : '—'}</td>
         <td>${v.segment_count||0}</td>
@@ -772,30 +780,13 @@ async function deleteShadowVideo(id){
 }
 
 async function saveShadowVideo(){
-  const srtFile=$('shadowSrt').files[0];
-  const trFile=$('shadowTranscriptFile').files[0];
-
-  if(!srtFile || !trFile){
-    $('shadowStatus').textContent='Chọn đủ file SRT và transcript.';
+  if(!shadowDraftSegments.length){
+    $('shadowStatus').textContent='Hãy tạo và kiểm tra bản xem trước trước khi lưu.';
     return;
   }
 
   try{
-    const timings=await parseSrtFile(srtFile);
-    const transcript=await parseTranscriptFile(trFile);
-
-    if(timings.length !== transcript.length){
-      $('shadowStatus').textContent=`SRT có ${timings.length} câu nhưng transcript có ${transcript.length} dòng. Hai số phải bằng nhau.`;
-      return;
-    }
-
-    const segments=timings.map((t,i)=>({
-      start_sec:t.start_sec,
-      end_sec:t.end_sec,
-      hanzi:String(transcript[i].hanzi || t.srt_text || ''),
-      pinyin:String(transcript[i].pinyin || ''),
-      vi:String(transcript[i].vi || '')
-    }));
+    const segments=shadowDraftSegments.map(segment=>({...segment}));
 
     await api('/admin/shadowing/save',{
       method:'POST',
@@ -805,13 +796,13 @@ async function saveShadowVideo(){
         lesson_number:Number($('shadowLessonNumber').value||1),
         title:$('shadowTitle').value.trim(),
         youtube_url:$('shadowYoutube').value.trim(),
-        video_aspect:$('shadowVideoAspect').value,
         free_override:$('shadowFreeOverride').checked ? 1 : 0,
         segments
       })
     });
 
-    $('shadowStatus').textContent=`Đã lưu video với ${segments.length} câu.`;
+    $('shadowStatus').textContent=`Đã lưu video với ${segments.length} câu vào thư viện Shadowing.`;
+    $('shadowStatus').className='status ok';
     loadShadowAdminVideos();
   }catch(e){
     $('shadowStatus').textContent=e.message;
