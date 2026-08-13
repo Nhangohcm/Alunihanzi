@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Aluni Admin V47 — Miễn phí Ngữ pháp theo khóa</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="access-config.js"></script>
+<script src="access-config.js?v=20260813-2"></script>
 <style>
 :root{--bg:#f5f0e7;--paper:#fffdf8;--ink:#26382f;--muted:#727972;--green:#718875;--line:#ddd6ca;--soft:#edf2ea}
 *{box-sizing:border-box}
@@ -501,6 +501,11 @@ async function login(){
     $('loginStatus').className='status err';
     return;
   }
+  if(!base){
+    $('loginStatus').textContent='Lỗi kết nối: chưa tải được access-config.js.';
+    $('loginStatus').className='status err';
+    return;
+  }
   $('loginStatus').textContent='Đang kiểm tra...';
   try{
     await api('/admin/content/courses');
@@ -512,7 +517,10 @@ async function login(){
     await loadLearningCourses();
     await refreshCodes();
   }catch(e){
-    $('loginStatus').textContent='Sai mã quản trị.';
+    const message=String(e&&e.message||'Lỗi không xác định');
+    $('loginStatus').textContent=message==='Unauthorized'
+      ? 'Sai mã quản trị.'
+      : `Lỗi kết nối Worker: ${message}`;
     $('loginStatus').className='status err';
   }
 }
