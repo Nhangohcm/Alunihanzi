@@ -791,15 +791,18 @@ if(demoCheck){
     </div>
 
     <div class="module-card">
+      <div class="filters" style="margin-bottom:14px"><button class="filter active" id="shadowModeCourse">Theo khóa học</button><button class="filter" id="shadowModeChannel">Theo kênh</button></div>
       <div class="module-grid">
-        <div>
+        <div id="shadowCoursePicker">
           <label>Khóa học</label>
           <select id="shadowCourse"><option value="">Chọn khóa học</option></select>
         </div>
-        <div>
+        <div id="shadowVideoPicker">
           <label>Bài / Video</label>
           <select id="shadowVideo"><option value="">Chọn video</option></select>
         </div>
+        <div id="shadowChannelPicker" hidden><label>Kênh / Playlist</label><select id="shadowChannelPlaylist"><option value="">Chọn playlist</option></select></div>
+        <div id="shadowChannelVideoPicker" hidden><label>Bài trong playlist</label><select id="shadowChannelVideo"><option value="">Chọn video</option></select></div>
       </div>
       <div class="module-note" id="shadowNote">
         Chọn khóa và video để bắt đầu luyện Shadowing.
@@ -1017,6 +1020,10 @@ function renderAdultKids(){
   document.getElementById('adultKidsSeries').innerHTML=series.map(s=>`<article class="kids-series-card"><div class="kids-series-thumb" ${s.thumbnail_url?`style="background-image:url('${shadowEsc(s.thumbnail_url)}')"`:''}>${s.thumbnail_url?'':shadowEsc(s.collection_icon||'🎬')}</div><div class="kids-series-copy"><div class="kids-series-meta">${shadowEsc(s.collection_title||'Nội dung')} · ${shadowEsc(s.level_title||'')}</div><h3>${shadowEsc(s.title)}</h3><div class="hint">${shadowEsc(s.description||'')||`${(s.lessons||[]).length} tập luyện nghe`}</div><div class="kids-episode-list">${(s.lessons||[]).slice(0,6).map(ep=>`<div class="kids-episode"><span>Tập ${String(ep.lesson_number).padStart(2,'0')} · ${shadowEsc(ep.title)}</span>${ep.youtube_url?`<a href="${shadowEsc(ep.youtube_url)}" target="_blank" rel="noopener">Xem</a>`:''}</div>`).join('')}</div></div></article>`).join('')||'<div class="learning-empty">Chưa có Series được xuất bản trong mục này.</div>';
 }
 document.querySelector('.app-nav-btn[data-section="kidsPublicSection"]')?.addEventListener('click',loadAdultKids);
+$('shadowModeCourse').onclick=()=>selectShadowMode('course');
+$('shadowModeChannel').onclick=()=>selectShadowMode('channel');
+$('shadowChannelPlaylist').onchange=renderMediaVideoOptions;
+$('shadowChannelVideo').onchange=e=>{if(e.target.value)loadMediaVideo(e.target.value)};
 async function openWritingLesson(courseId,lessonNumber){
   document.querySelector('.app-nav-btn[data-section="writingSection"]')?.click();
   if(!courses.length)await loadRemoteContent();
@@ -1040,6 +1047,12 @@ let repeatCurrentLine = false;
 let showShadowPinyin = true;
 let showShadowVi = true;
 let shadowSuggestionsLoaded = false;
+let mediaPlaylists=[];
+
+async function loadMediaPlaylists(){try{const headers={};const ents=savedEntitlements();const token=Object.values(ents).find(x=>x?.token)?.token;if(token)headers.Authorization=`Bearer ${token}`;const r=await fetch(shadowApi('/media/catalog?audience=shadowing'),{cache:'no-store',headers}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được playlist.');mediaPlaylists=j.playlists||[];const s=$('shadowChannelPlaylist');s.innerHTML='<option value="">Chọn kênh → playlist</option>';mediaPlaylists.forEach(p=>s.add(new Option(`${p.channel_name} → ${p.title}`,p.id)));$('shadowNote').textContent=mediaPlaylists.length?'Chọn kênh, playlist và video để bắt đầu.':'Chưa có playlist theo kênh được xuất bản.'}catch(e){$('shadowNote').textContent=e.message}}
+function selectShadowMode(mode){const channel=mode==='channel';$('shadowModeCourse').classList.toggle('active',!channel);$('shadowModeChannel').classList.toggle('active',channel);$('shadowCoursePicker').hidden=channel;$('shadowVideoPicker').hidden=channel;$('shadowChannelPicker').hidden=!channel;$('shadowChannelVideoPicker').hidden=!channel;$('shadowPlayerCard').style.display='none';if(channel)loadMediaPlaylists();else loadShadowCourses()}
+function renderMediaVideoOptions(){const p=mediaPlaylists.find(x=>x.id===$('shadowChannelPlaylist').value),s=$('shadowChannelVideo');s.innerHTML='<option value="">Chọn video</option>';for(const x of (p?.items||[]))s.add(new Option(`${x.locked?'🔒 ':''}${x.item_number}. ${x.title}`,x.id));$('shadowNote').textContent=p?`Có ${(p.items||[]).length} video trong playlist.`:'Chọn playlist.'}
+async function loadMediaVideo(id){const p=mediaPlaylists.find(x=>(x.items||[]).some(i=>String(i.id)===String(id))),item=(p?.items||[]).find(i=>String(i.id)===String(id));if(item?.locked){openAccess();$('shadowChannelVideo').value='';return}try{const ent=item?.product_course_id?savedEntitlements()[item.product_course_id]:null,headers=ent?.token?{Authorization:`Bearer ${ent.token}`}:{},r=await fetch(shadowApi('/media/item?id='+encodeURIComponent(id)),{cache:'no-store',headers}),j=await r.json();if(!r.ok){if(j.locked)openAccess();throw new Error(j.error||`HTTP ${r.status}`)}shadowSegments=j.segments||[];shadowCurrentIndex=-1;renderShadowTranscript();renderShadowLive(-1);const ytId=youtubeIdFromUrl(j.video.youtube_url||j.item.youtube_url);$('shadowPlayerCard').style.display='grid';$('shadowNote').textContent=j.item.title;if(shadowPlayer&&shadowPlayer.loadVideoById)shadowPlayer.loadVideoById(ytId);else shadowPlayer=new YT.Player('youtubePlayer',{videoId:ytId,events:{onReady:startShadowSync,onStateChange:startShadowSync}});startShadowSync()}catch(e){$('shadowNote').textContent=e.message}}
 
 function shadowApi(path){
   const base = String(window.ALUNI_API_BASE || '').replace(/\/+$/,'');
