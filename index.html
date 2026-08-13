@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f5f0e7">
+<meta name="theme-color" content="#4f67e8">
 <title>Tiếng Trung Aluni - Luyện viết chữ Hán</title>
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
 <script src="https://www.youtube.com/iframe_api"></script>
@@ -224,6 +224,9 @@ input,select{width:100%;border:1px solid var(--line);border-radius:13px;backgrou
   margin:10px 0;
 }
 .grammar-example{padding:8px 0;border-bottom:1px dashed var(--line)}
+.grammar-empty{text-align:center;padding:28px;color:var(--muted)}
+.grammar-question{border:1px solid var(--line);border-radius:15px;padding:14px;margin:12px 0}
+.grammar-question h3{margin:0 0 10px;font-size:1rem}
 .exercise-option{
   display:block;
   border:1px solid var(--line);
@@ -232,6 +235,18 @@ input,select{width:100%;border:1px solid var(--line);border-radius:13px;backgrou
   margin:8px 0;
   background:white;
 }
+.exercise-option.correct{background:#e2efe3;border-color:#94b59a}
+.exercise-option.wrong{background:#fff0ed;border-color:#d9a19a}
+.question-explain{margin-top:9px;color:var(--muted);font-size:.9rem}
+.grammar-score{font-size:1.2rem;font-weight:900;margin:12px 0}
+.grammar-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
+.grammar-search-box{position:relative}
+.grammar-search-input{font-size:1.05rem;padding:14px 16px;border:2px solid var(--green);border-radius:14px;width:100%}
+.grammar-search-results{display:grid;gap:8px;margin-top:10px;max-height:360px;overflow:auto}
+.grammar-search-result{width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:13px;padding:11px 13px;cursor:pointer;color:var(--ink)}
+.grammar-search-result:hover,.grammar-search-result:focus{border-color:var(--green);background:#f5f8f3}
+.grammar-search-result b{display:block;font-size:1rem}.grammar-search-result small{display:block;color:var(--muted);margin-top:4px}
+.grammar-access-chip{display:inline-block;margin-left:7px;padding:3px 7px;border-radius:999px;background:#e2efe3;color:#45604c;font-size:.72rem;font-weight:850}
 .exercise-result{min-height:22px;margin-top:8px;font-weight:800}
 .module-note{
   background:#f7f3eb;
@@ -472,19 +487,40 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
 .word-popup-vi{font-size:1.05rem;margin-top:5px}
 .word-popup-status{color:var(--muted);font-size:.84rem;margin-top:4px}
 .word-popup-close{position:absolute;right:8px;top:8px;border:0;background:transparent;font-size:1.35rem;cursor:pointer}
-.learning-grid{display:grid;grid-template-columns:300px 1fr;gap:16px}.learning-list{display:grid;gap:9px}.learning-course-btn,.learning-lesson-btn{width:100%;text-align:left;border:1px solid var(--line);background:white;border-radius:14px;padding:12px;cursor:pointer}.learning-course-btn.active,.learning-lesson-btn.active{border-color:var(--green);background:#edf2ea}.learning-detail{border:1px solid var(--line);border-radius:18px;background:white;padding:18px}.lesson-parts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:14px 0}.lesson-part{padding:10px 8px;border-radius:12px;background:#f5f0e7;text-align:center;font-size:.82rem;font-weight:800}.lesson-part.ready{background:#e3efe3;color:#386047}.learning-empty{padding:20px;border:1px dashed var(--line);border-radius:14px;color:var(--muted);text-align:center}.learning-video,.learning-resource{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
-@media(max-width:760px){.learning-grid{grid-template-columns:1fr}.lesson-parts{grid-template-columns:repeat(2,1fr)}}
+.learning-grid{display:grid;grid-template-columns:minmax(240px,300px) minmax(270px,360px) minmax(0,1fr);gap:16px;align-items:start}.learning-column{min-width:0}.learning-column-title{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 0 10px;font-size:.83rem;color:#5d6881;text-transform:uppercase;letter-spacing:.06em}.learning-list{display:grid;gap:9px;max-height:680px;overflow:auto;padding-right:3px}.learning-course-btn,.learning-lesson-btn{width:100%;text-align:left;border:1px solid #e0e6f2;background:#fff;border-radius:15px;padding:14px;cursor:pointer;color:#1d2943;transition:.18s ease}.learning-course-btn:hover,.learning-lesson-btn:hover{transform:translateY(-1px);border-color:#b9c5ef;box-shadow:0 8px 20px rgba(65,80,135,.08)}.learning-course-btn.active,.learning-lesson-btn.active{border-color:#7185ec;background:linear-gradient(120deg,#eef2ff,#f7f4ff);box-shadow:inset 4px 0 #4f67e8}.learning-detail{border:1px solid #e0e6f2;border-radius:18px;background:#fff;padding:20px;min-height:280px}.lesson-parts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:16px 0}.lesson-part{padding:12px 8px;border-radius:13px;background:#f2f4f9;color:#8490a8;text-align:center;font-size:.8rem;font-weight:800}.lesson-part.ready{background:#e9f8f1;color:#17835b}.learning-empty{padding:24px;border:1px dashed #cad3e7;border-radius:14px;color:#7a8499;text-align:center;background:#fafbfe}.learning-video,.learning-resource{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #edf0f6}
+.kids-public-filters{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 18px}.kids-filter{border:1px solid #dce4f4;background:#fff;border-radius:999px;padding:9px 14px;font-weight:850;color:#4c5a76}.kids-filter.active{background:#4f67e8;color:#fff;border-color:#4f67e8}.kids-public-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.kids-series-card{overflow:hidden;border:1px solid #e0e6f2;border-radius:19px;background:#fff;box-shadow:0 10px 26px rgba(58,73,126,.08)}.kids-series-thumb{aspect-ratio:16/9;background:linear-gradient(135deg,#bcecf1,#d8d9ff);display:grid;place-items:center;font-size:3rem;background-size:cover;background-position:center}.kids-series-copy{padding:15px}.kids-series-copy h3{margin:7px 0}.kids-series-meta{font-size:.78rem;color:#4f67e8;font-weight:900}.kids-episode-list{display:grid;gap:7px;margin-top:12px}.kids-episode{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px;border-radius:11px;background:#f5f7fc;font-size:.84rem}.kids-episode a{font-weight:850;color:#4056c5;text-decoration:none}@media(max-width:1100px){.kids-public-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.kids-public-grid{grid-template-columns:1fr}}
+/* V44 — giao diện học viên hiện đại và sẵn sàng nối bán hàng */
+:root{--bg:#f3f6ff;--paper:#fff;--ink:#17233e;--muted:#66728c;--green:#4f67e8;--green2:#eef2ff;--line:#e1e6f2;--warm:#fff0e4;--lock:#a05f20;--shadow:0 14px 36px rgba(58,73,126,.09)}
+body{background:radial-gradient(circle at 8% 0%,rgba(32,168,181,.14),transparent 28rem),radial-gradient(circle at 95% 0%,rgba(132,101,232,.15),transparent 30rem),linear-gradient(180deg,#f9fbff,#f2f5fc);min-height:100vh}.wrap{width:min(1480px,calc(100% - 40px));padding:28px 0 56px}
+.app-topbar{position:sticky;top:8px;z-index:100;width:min(1480px,calc(100% - 40px));margin:10px auto 0;padding:9px 11px;border:1px solid rgba(220,226,240,.9);border-radius:18px;background:rgba(255,255,255,.9);box-shadow:0 10px 30px rgba(55,69,118,.09);backdrop-filter:blur(16px)}.app-brand-lockup{display:flex;align-items:center;gap:10px;min-width:max-content}.app-logo{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#20a8b5,#4f67e8 55%,#8465e8);color:#fff;font-size:1.15rem;box-shadow:0 7px 16px rgba(79,103,232,.25)}.app-brand-name{font-weight:950;letter-spacing:.035em}.app-brand-tagline{font-size:.72rem;color:var(--muted);margin-top:1px}.app-mini-brand{display:none}.app-nav{flex:1;justify-content:center}.app-nav-btn{border:0;background:transparent;color:#596681;padding:9px 13px}.app-nav-btn.active{background:#eef2ff;color:#4056c5;box-shadow:inset 0 0 0 1px #dbe2ff}.top-actions{display:flex;gap:7px}.top-activate{border:0;border-radius:12px;padding:10px 13px;background:linear-gradient(135deg,#4f67e8,#8465e8);color:#fff;font-weight:850;white-space:nowrap}
+.student-hero{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);gap:18px;align-items:stretch;margin-bottom:18px}.student-hero-main{position:relative;overflow:hidden;padding:32px;border-radius:24px;background:linear-gradient(125deg,#263a86,#4f67e8 52%,#8465e8);color:#fff;box-shadow:0 20px 44px rgba(58,76,164,.22)}.student-hero-main:after{content:"学";position:absolute;right:24px;bottom:-48px;font-size:12rem;font-weight:900;color:rgba(255,255,255,.08)}.student-eyebrow{font-size:.78rem;font-weight:900;letter-spacing:.12em;opacity:.78}.student-hero h1{max-width:760px;margin:9px 0 10px;font-size:clamp(2rem,4vw,3.35rem);line-height:1.08}.student-hero p{max-width:720px;margin:0;line-height:1.6;color:rgba(255,255,255,.84)}.hero-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:20px}.hero-actions button,.hero-actions a{position:relative;z-index:1;padding:11px 15px;border-radius:12px;border:1px solid rgba(255,255,255,.28);font-weight:850;text-decoration:none}.hero-primary{background:#fff;color:#4056c5}.hero-secondary{background:rgba(255,255,255,.1);color:#fff}.student-side{display:grid;gap:12px}.student-side-card{padding:18px;border-radius:20px;border:1px solid #e0e6f2;background:rgba(255,255,255,.92);box-shadow:var(--shadow)}.student-side-card h3{margin:3px 0 7px}.quick-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.quick-stat{padding:11px;border-radius:13px;background:#f3f6ff}.quick-stat b{display:block;font-size:1.15rem}.quick-stat span{font-size:.75rem;color:var(--muted)}
+.module-header{text-align:left;padding:8px 2px 18px}.module-header h1{font-size:clamp(1.65rem,3vw,2.25rem)}.module-card,.card{background:rgba(255,255,255,.96);border-color:#e1e6f2}.commerce-ready{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:15px 18px;margin-bottom:16px;border-radius:17px;background:linear-gradient(120deg,#fff7ed,#fff 48%,#f3efff);border:1px solid #f0dfcb}.commerce-ready b{display:block}.commerce-ready span{font-size:.86rem;color:var(--muted)}.commerce-actions{display:flex;gap:8px;flex-wrap:wrap}.commerce-actions button,.commerce-actions a{padding:10px 13px;border-radius:11px;border:1px solid #dfe5f1;background:#fff;color:#34415e;text-decoration:none;font-weight:850}.commerce-actions .accent{background:#f29c52;color:#fff;border-color:#f29c52}
+.btn.primary,.contact-link.primary{background:linear-gradient(135deg,#4f67e8,#8465e8);border-color:transparent}.btn.soft{background:#eef2ff;color:#4056c5}.brand{color:#4f67e8}.contact-card{background:linear-gradient(135deg,#eef4ff,#faf7ff)}
+.my-courses-panel{margin-bottom:18px;padding:20px;border:1px solid #cfd9f4;border-radius:21px;background:linear-gradient(125deg,#f6f8ff,#fff 58%,#f5f0ff);box-shadow:var(--shadow)}.my-courses-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:13px}.my-courses-head h2{margin:3px 0 0}.my-courses-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}.my-course-card{display:flex;flex-direction:column;gap:7px;padding:15px;border:1px solid #dce3f4;border-radius:16px;background:#fff}.my-course-card h3{margin:0}.my-course-card .btn{margin-top:auto}.owned-badge{display:inline-flex;width:max-content;padding:4px 8px;border-radius:999px;background:#e8f8f1;color:#17835b;font-size:.76rem;font-weight:900}.course-shadow-review{padding:14px;border-radius:15px;background:linear-gradient(120deg,#edf8ff,#f5f1ff);border:1px solid #d6e3f4;margin-bottom:12px}.course-shadow-review h3{margin:0 0 5px}.review-shadow-list{display:grid;gap:8px;margin-top:11px}.review-shadow-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid #e1e6f2}
+@media(max-width:900px){.my-courses-grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.my-courses-grid{grid-template-columns:1fr}.my-courses-head{align-items:flex-start;flex-direction:column}.review-shadow-item{align-items:flex-start;flex-direction:column}.review-shadow-item .btn{width:100%}}
+@media(max-width:1100px){.learning-grid{grid-template-columns:280px minmax(0,1fr)}.learning-column.detail-column{grid-column:1/-1}.student-hero{grid-template-columns:1fr}.student-side{grid-template-columns:1fr 1fr}}
+@media(max-width:820px){.wrap,.app-topbar{width:min(100% - 20px,780px)}.app-topbar{top:4px;align-items:flex-start}.app-brand-tagline{display:none}.app-brand-name{font-size:.88rem}.app-nav{justify-content:flex-start}.top-actions{display:none}.learning-grid{grid-template-columns:1fr}.learning-column.detail-column{grid-column:auto}.learning-list{max-height:none}.lesson-parts{grid-template-columns:repeat(2,1fr)}.student-side{grid-template-columns:1fr}.student-hero-main{padding:23px}.commerce-ready{align-items:flex-start;flex-direction:column}}
+@media(max-width:540px){
+  .app-topbar{padding:7px;position:sticky;top:3px}
+  .app-brand-lockup{display:none}
+  .app-nav{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;overflow:visible;padding:0}
+  .app-nav-btn{width:100%;min-width:0;padding:8px 6px;border-radius:11px;font-size:.78rem;line-height:1.2;text-align:center;white-space:normal}
+  .app-nav-btn:nth-child(5){grid-column:1/-1}
+  .wrap{padding-top:18px}.student-hero h1{font-size:2rem}.student-hero-main{border-radius:19px}.quick-stats{grid-template-columns:1fr 1fr}.learning-video,.learning-resource{align-items:flex-start;flex-direction:column}.learning-video .btn,.learning-resource .btn{width:100%;text-align:center}
+}
 </style>
 </head>
 <body>
 <div class="app-topbar">
-  <div class="app-mini-brand">TIẾNG TRUNG ALUNI</div>
+  <div class="app-brand-lockup"><div class="app-logo">海</div><div><div class="app-brand-name">TIẾNG TRUNG ALUNI</div><div class="app-brand-tagline">Học nhẹ · Nhớ dai · Phản xạ tự nhiên</div></div></div>
   <nav class="app-nav">
     <button class="app-nav-btn active" data-section="writingSection">✍ Viết chữ</button>
-    <button class="app-nav-btn" data-section="learningSection">🎓 Khóa học</button>
+    <button class="app-nav-btn" data-section="learningSection">🎓 Khóa học của tôi</button>
     <button class="app-nav-btn" data-section="shadowSection">🎥 Shadowing</button>
+    <button class="app-nav-btn" data-section="kidsPublicSection">🎬 Hoạt hình</button>
     <button class="app-nav-btn" data-section="grammarSection">📚 Ngữ pháp & Bài tập</button>
   </nav>
+  <div class="top-actions"><button class="top-activate" id="topActivateBtn">🔑 Kích hoạt khóa học</button></div>
 </div>
 
 <section class="aluni-section active" id="writingSection">
@@ -578,14 +614,14 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
   <div class="access-box">
     <button class="access-close" id="accessCloseBtn">×</button>
     <div class="brand">TIẾNG TRUNG ALUNI</div>
-    <h3>🔒 Mở toàn bộ Khóa 50+</h3>
-    <p class="hint">Bài 01–10 được học miễn phí. Bài 11–50 cần kích hoạt.</p>
+    <h3>🔑 Kích hoạt khóa học Aluni</h3>
+    <p class="hint">Nhập mã được cấp. Hệ thống tự nhận đúng khóa học, không cần chọn khóa thủ công.</p>
     <input id="accessIdentity" placeholder="Số điện thoại hoặc email" style="margin-bottom:9px">
     <input id="accessCode" placeholder="Mã kích hoạt, ví dụ 50P-ABCD-EFGH">
     <div class="access-msg" id="accessMsg"></div>
     <div class="access-actions">
       <button class="btn ghost" id="accessCancelBtn">← Quay lại dùng miễn phí</button>
-      <button class="btn primary" id="accessActivateBtn">Kích hoạt 12 tháng</button>
+      <button class="btn primary" id="accessActivateBtn">Kích hoạt khóa học</button>
     </div>
   </div>
 </div>
@@ -594,7 +630,7 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
 const $=id=>document.getElementById(id);
 let courses = Array.isArray(window.ALUNI_DEFAULT_DATA) ? JSON.parse(JSON.stringify(window.ALUNI_DEFAULT_DATA)) : [];
 let selectedCourseObj=null, selectedLessonObj=null, writer=null, currentItem=null, currentChars=[], currentCharIndex=0, radicalMode=true, currentAudio=null;
-const ACCESS_KEY='aluni_entitlement_50plus_v18';
+const ACCESS_KEY='aluni_entitlements_v46';
 
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function norm(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ü/gi,'u').toLowerCase().replace(/[^a-z0-9]+/g,'')}
@@ -615,12 +651,19 @@ async function loadRemoteContent(){
 
 function getCourse(id){return courses.find(c=>c.id===id)||null}
 function freeCount(course){return Number(course.free_lessons ?? (course.id==='50plus'?10:9999))}
-function savedEntitlement(){
-  try{const x=JSON.parse(localStorage.getItem(ACCESS_KEY)||'null');if(!x||!x.token||!x.expires_at)return null;if(Date.now()>=new Date(x.expires_at).getTime()){localStorage.removeItem(ACCESS_KEY);return null}return x}catch(e){return null}
+function savedEntitlements(){
+  try{
+    const map=JSON.parse(localStorage.getItem(ACCESS_KEY)||'{}')||{},old=JSON.parse(localStorage.getItem('aluni_entitlement_50plus_v18')||'null');
+    if(old?.token&&old?.course_id&&!map[old.course_id])map[old.course_id]=old;
+    Object.keys(map).forEach(id=>{if(!map[id]?.token||!map[id]?.expires_at||Date.now()>=new Date(map[id].expires_at).getTime())delete map[id]});
+    localStorage.setItem(ACCESS_KEY,JSON.stringify(map));return map;
+  }catch(e){return{}}
 }
+function saveEntitlement(item){const map=savedEntitlements();map[item.course_id]=item;localStorage.setItem(ACCESS_KEY,JSON.stringify(map));return map}
 async function hasFullAccess(courseId){
-  if(courseId!=='50plus') return true;
-  const e=savedEntitlement(); if(!e) return false;
+  const course=getCourse(courseId),publicCourse=publicLearningCourses.find(c=>String(c.id)===String(courseId));
+  if((publicCourse?.access||course?.access)==='free')return true;
+  const e=savedEntitlements()[courseId];if(!e)return false;
   try{const r=await fetch(api('/access/verify'),{headers:{Authorization:`Bearer ${e.token}`}});return r.ok}catch(err){return true}
 }
 function renderCourseSelect(){
@@ -686,7 +729,7 @@ function openAccess(){$('accessMsg').textContent='';$('accessModal').classList.a
 function closeAccess(){$('accessModal').classList.remove('show')}
 async function activate(){
   const identity=$('accessIdentity').value.trim(),code=$('accessCode').value.trim().toUpperCase(),msg=$('accessMsg');if(!identity||!code){msg.textContent='Nhập đủ SĐT/email và mã.';msg.className='access-msg err';return}
-  msg.textContent='Đang kiểm tra...';try{const r=await fetch(api('/access/activate'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identity,code,course_id:'50plus'})});const j=await r.json();if(!r.ok||!j.ok){msg.textContent=j.error||'Mã không hợp lệ.';msg.className='access-msg err';return}localStorage.setItem(ACCESS_KEY,JSON.stringify(j));msg.textContent='Kích hoạt thành công.';msg.className='access-msg ok';setTimeout(async()=>{closeAccess();const c=getCourse('50plus');await renderLessons(c)},400)}catch(e){msg.textContent='Chưa kết nối được hệ thống.';msg.className='access-msg err'}
+  msg.textContent='Đang kiểm tra...';try{const r=await fetch(api('/access/activate'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identity,code})});const j=await r.json();if(!r.ok||!j.ok){msg.textContent=j.error||'Mã không hợp lệ.';msg.className='access-msg err';return}saveEntitlement(j);msg.textContent='Kích hoạt thành công. Khóa học đã vào “Khóa học của tôi”.';msg.className='access-msg ok';setTimeout(async()=>{closeAccess();await renderMyCourses();const c=publicLearningCourses.find(x=>String(x.id)===String(j.course_id));if(c)openOwnedCourse(c.id)},500)}catch(e){msg.textContent='Chưa kết nối được hệ thống.';msg.className='access-msg err'}
 }
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.mode').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.mode).classList.add('active')});
 $('courseSelect').onchange=async()=>{const c=getCourse($('courseSelect').value);if(!c){$('lessonSelect').innerHTML='<option>Chọn bài học</option>';return}await renderLessons(c)};
@@ -810,8 +853,34 @@ if(demoCheck){
 </div>
 
 <section class="aluni-section" id="learningSection">
-  <div class="wrap"><div class="module-header"><div class="brand">TIẾNG TRUNG ALUNI</div><h1>Khóa học của Aluni</h1><p>Mỗi bài học được sắp xếp thống nhất: Bài giảng · Shadowing · Bài tập · Viết chữ · Tài liệu.</p></div>
-  <div class="module-card learning-grid"><div><label>Chọn khóa học</label><div class="learning-list" id="learningPublicCourses"><div class="learning-empty">Đang tải khóa học...</div></div></div><div><label>Danh sách bài học</label><div class="learning-list" id="learningPublicLessons"><div class="learning-empty">Chọn một khóa học để xem bài.</div></div><div id="learningPublicDetail" style="margin-top:12px"></div></div></div></div>
+  <div class="wrap">
+    <div class="student-hero">
+      <div class="student-hero-main"><div class="student-eyebrow">NỀN TẢNG HỌC TIẾNG TRUNG ALUNI</div><h1>Học nhẹ, nhớ dai,<br>phản xạ tự nhiên.</h1><p>Mỗi bài học đi theo một lộ trình rõ ràng: xem bài giảng, luyện Shadowing, làm bài tập, viết chữ và tải tài liệu.</p><div class="hero-actions"><button class="hero-primary" id="startLearningBtn">Bắt đầu học ngay →</button><a class="hero-secondary" href="https://zalo.me/0931444083" target="_blank" rel="noopener">Tư vấn khóa học</a></div></div>
+      <div class="student-side"><div class="student-side-card"><div class="brand">LỘ TRÌNH CỦA BẠN</div><h3>Học theo từng bài, không bị rối</h3><p class="hint">Nội dung của một bài được gom đủ tại một nơi và có thể học theo bất kỳ thứ tự phù hợp.</p><div class="quick-stats"><div class="quick-stat"><b>5</b><span>phần học / bài</span></div><div class="quick-stat"><b>1</b><span>lộ trình thống nhất</span></div></div></div><div class="student-side-card"><div class="brand">PHƯƠNG PHÁP ALUNI</div><h3>Nghe · Nói · Đọc · Viết</h3><p class="hint">Ưu tiên phản xạ thực tế, nội dung ngắn gọn và luyện tập lặp lại mỗi ngày.</p></div></div>
+    </div>
+    <div class="commerce-ready"><div><b>🎁 Có bài học miễn phí để trải nghiệm</b><span>Đã có mã khóa học? Kích hoạt để mở nội dung dành cho học viên.</span></div><div class="commerce-actions"><button class="accent" id="learningActivateBtn">🔑 Nhập mã kích hoạt</button><a href="https://zalo.me/0931444083" target="_blank" rel="noopener">💬 Hỏi về gói học</a></div></div>
+    <div class="my-courses-panel">
+      <div class="my-courses-head"><div><div class="brand">KHU VỰC HỌC VIÊN</div><h2>Khóa học của tôi</h2><p class="hint">Khóa đã kích hoạt bằng mã sẽ được giữ tại đây trên thiết bị này.</p></div><button class="btn primary" id="myCoursesActivateBtn">＋ Kích hoạt thêm khóa</button></div>
+      <div class="my-courses-grid" id="myCoursesGrid"><div class="learning-empty">Bạn chưa kích hoạt khóa học nào.</div></div>
+    </div>
+    <div class="module-header"><div class="brand">KHÔNG GIAN HỌC TẬP</div><h1>Tất cả khóa học Aluni</h1><p>Khóa của bạn được mở đầy đủ; các khóa khác vẫn có thể hiển thị bài học thử.</p></div>
+    <div class="module-card learning-grid">
+      <div class="learning-column"><h2 class="learning-column-title"><span>01 · Khóa học</span><span>🎓</span></h2><div class="learning-list" id="learningPublicCourses"><div class="learning-empty">Đang tải khóa học...</div></div></div>
+      <div class="learning-column"><h2 class="learning-column-title"><span>02 · Bài học</span><span>🗂️</span></h2><div class="learning-list" id="learningPublicLessons"><div class="learning-empty">Chọn một khóa học để xem bài.</div></div></div>
+      <div class="learning-column detail-column"><h2 class="learning-column-title"><span>03 · Nội dung bài</span><span>✨</span></h2><div id="learningPublicDetail"><div class="learning-empty">Chọn một bài học để xem đầy đủ nội dung.</div></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="aluni-section" id="kidsPublicSection">
+  <div class="wrap">
+    <div class="module-header"><div class="brand">KHO NỘI DUNG MỞ RỘNG</div><h1>🎬 Hoạt hình & nội dung luyện nghe</h1><p>Nội dung chọn lọc từ Aluni Kids, phù hợp cả trẻ em lẫn người lớn mới học. Kho người lớn không hiển thị ngược sang Kids.</p></div>
+    <div class="module-card">
+      <div class="kids-public-filters" id="adultKidsLanguages"><button class="kids-filter active">Đang tải...</button></div>
+      <div class="kids-public-filters" id="adultKidsCollections"></div>
+      <div class="kids-public-grid" id="adultKidsSeries"><div class="learning-empty">Đang tải kho nội dung...</div></div>
+    </div>
+  </div>
 </section>
 
 <section class="aluni-section" id="grammarSection">
@@ -821,78 +890,140 @@ if(demoCheck){
       <h1>Ngữ pháp & Bài tập</h1>
       <p>Học ngắn gọn · xem ví dụ · làm bài ngay trong cùng một bài học.</p>
     </div>
-
+    <div class="module-card grammar-search-box">
+      <label for="grammarSearch">🔍 Tìm ngữ pháp bất kỳ</label>
+      <input class="grammar-search-input" id="grammarSearch" autocomplete="off" placeholder="Nhập chữ Hán, pinyin, nghĩa Việt, cấu trúc hoặc câu ví dụ…">
+      <div class="hint" id="grammarSearchStatus">Có thể tìm: 把 · suiran · càng ngày càng · 因为…所以…</div>
+      <div class="grammar-search-results" id="grammarSearchResults" hidden></div>
+    </div>
     <div class="module-card">
       <div class="module-grid">
         <div>
           <label>Khóa học</label>
-          <select id="grammarCourse">
-            <option>HSK 1</option>
-            <option>50+ Phản xạ</option>
-          </select>
+          <select id="grammarCourse"><option value="">Đang tải...</option></select>
         </div>
         <div>
           <label>Bài học</label>
-          <select id="grammarLesson">
-            <option>Bài mẫu · Sinh hoạt hằng ngày</option>
-          </select>
+          <select id="grammarLesson"><option value="">Chọn bài học</option></select>
         </div>
-      </div>
-      <div class="module-note">
-        Đây là khung Ngữ pháp & Bài tập. Sau này dữ liệu sẽ được nhập từ Admin giống cách anh đang nhập từ vựng.
       </div>
     </div>
-
-    <div class="module-card grammar-grid">
-      <div class="grammar-box">
-        <span class="grammar-tag">NGỮ PHÁP MẪU</span>
-        <h2>了 · le</h2>
-        <p>Dùng để biểu thị hành động đã hoàn thành hoặc tình huống đã thay đổi.</p>
-        <div class="grammar-formula">S + V + 了</div>
-        <div class="grammar-example">
-          <strong>我吃饭了。</strong><br>
-          <span class="pinyin">Wǒ chīfàn le.</span><br>
-          <span class="meaning">Tôi ăn cơm rồi.</span>
-        </div>
-        <div class="grammar-example">
-          <strong>他回家了。</strong><br>
-          <span class="pinyin">Tā huí jiā le.</span><br>
-          <span class="meaning">Anh ấy về nhà rồi.</span>
-        </div>
-      </div>
-
-      <div class="exercise-box">
-        <span class="grammar-tag">BÀI TẬP MẪU</span>
-        <h2>Câu 1</h2>
-        <p>“Tôi ăn cơm rồi.” nói thế nào?</p>
-        <label class="exercise-option"><input type="radio" name="demoQ" value="a"> 我吃饭。</label>
-        <label class="exercise-option"><input type="radio" name="demoQ" value="b"> 我吃饭了。</label>
-        <label class="exercise-option"><input type="radio" name="demoQ" value="c"> 我了吃饭。</label>
-        <button class="btn primary" id="checkDemoExercise">Kiểm tra đáp án</button>
-        <div class="exercise-result" id="demoExerciseResult"></div>
-      </div>
+    <div class="module-card grammar-empty" id="grammarEmpty">Chưa chọn bài ngữ pháp.</div>
+    <div class="module-card grammar-grid" id="grammarContent" hidden>
+      <div class="grammar-box" id="grammarTheory"></div>
+      <div class="exercise-box"><span class="grammar-tag">BÀI TẬP</span><div id="grammarQuestions"></div><div class="grammar-toolbar"><button class="btn primary" id="checkGrammarAnswers">Chấm điểm</button><button class="btn ghost" id="resetGrammarAnswers">Làm lại</button></div><div class="grammar-score" id="grammarScore"></div></div>
     </div>
   </div>
 </section>
 <script>
+// ===== GRAMMAR & EXERCISES V47 =====
+let grammarCatalog=[];
+let activeGrammar=null;
+function grammarEsc(value){return String(value??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function grammarNormalize(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase().trim()}
+function grammarIsFree(meta){if(!meta)return false;if(meta.access_override==='free')return true;if(meta.access_override==='paid')return false;return meta.course_access==='free'||meta.grammar_access==='free_all'}
+function grammarSearchText(item){const examples=(item.examples||[]).flatMap(x=>[x.hanzi,x.pinyin,x.vi]).join(' ');return grammarNormalize([item.title,item.pinyin,item.explanation,item.formula,item.course_title,item.lesson_title,examples,item.question_text].join(' '))}
+function renderGrammarSearch(){
+  const input=document.getElementById('grammarSearch'),box=document.getElementById('grammarSearchResults'),status=document.getElementById('grammarSearchStatus');if(!input||!box)return;
+  const query=grammarNormalize(input.value);if(!query){box.hidden=true;box.innerHTML='';status.textContent=`Có ${grammarCatalog.length} bài ngữ pháp. Có thể tìm bằng Hán, pinyin hoặc tiếng Việt.`;return}
+  const matches=grammarCatalog.filter(x=>grammarSearchText(x).includes(query)).slice(0,30);box.hidden=false;box.innerHTML=matches.map(x=>`<button class="grammar-search-result" data-id="${Number(x.id)}"><b>${grammarEsc(x.title)}${grammarIsFree(x)?'<span class="grammar-access-chip">MIỄN PHÍ</span>':''}</b><small>${grammarEsc(x.course_title)} · Bài ${String(x.lesson_number).padStart(2,'0')} · ${grammarEsc(x.lesson_title)}</small></button>`).join('')||'<div class="grammar-empty">Chưa tìm thấy cấu trúc phù hợp.</div>';status.textContent=`Tìm thấy ${matches.length}${matches.length===30?' kết quả đầu tiên':' kết quả'}.`;box.querySelectorAll('button').forEach(b=>b.onclick=()=>openGrammarSet(Number(b.dataset.id)));
+}
+async function loadGrammarCatalog(){
+  const course=document.getElementById('grammarCourse'),lesson=document.getElementById('grammarLesson');
+  if(!course||grammarCatalog.length)return;
+  try{const r=await fetch(shadowApi('/grammar/catalog'),{cache:'no-store'}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được bài tập.');grammarCatalog=Array.isArray(j.sets)?j.sets:[];const groups=[...new Map(grammarCatalog.map(x=>[String(x.course_id),x.course_title])).entries()];course.innerHTML='<option value="">Chọn khóa học</option>'+groups.map(([id,title])=>`<option value="${grammarEsc(id)}">${grammarEsc(title)}</option>`).join('');lesson.innerHTML='<option value="">Chọn bài học</option>';renderGrammarSearch();if(!grammarCatalog.length)document.getElementById('grammarEmpty').textContent='Chưa có bộ ngữ pháp nào được xuất bản.'}catch(e){document.getElementById('grammarEmpty').textContent=e.message}
+}
+function fillGrammarLessons(courseId,selectedId){
+  const lesson=document.getElementById('grammarLesson'),items=grammarCatalog.filter(x=>String(x.course_id)===String(courseId));
+  lesson.innerHTML='<option value="">Chọn bài học</option>'+items.map(x=>`<option value="${Number(x.id)}">Bài ${String(x.lesson_number).padStart(2,'0')} · ${grammarEsc(x.lesson_title)} · ${grammarEsc(x.title)}</option>`).join('');
+  if(selectedId)lesson.value=String(selectedId);
+}
+async function openGrammarSet(id){
+  document.querySelector('.app-nav-btn[data-section="grammarSection"]')?.click();await loadGrammarCatalog();
+  const meta=grammarCatalog.find(x=>Number(x.id)===Number(id));if(meta){document.getElementById('grammarCourse').value=String(meta.course_id);fillGrammarLessons(meta.course_id,id)}
+  const empty=document.getElementById('grammarEmpty'),content=document.getElementById('grammarContent');empty.hidden=false;content.hidden=true;empty.textContent='Đang tải bài ngữ pháp...';
+  if(meta&&!grammarIsFree(meta)&&!(await hasFullAccess(meta.course_id))){empty.innerHTML=`🔒 Ngữ pháp này theo quyền của khóa <b>${grammarEsc(meta.course_title)}</b>.<br><button class="btn primary" style="margin-top:12px" id="grammarActivateCourse">Kích hoạt khóa học</button>`;document.getElementById('grammarActivateCourse').onclick=openAccess;return}
+  try{const r=await fetch(shadowApi('/grammar/set?id='+encodeURIComponent(id)),{cache:'no-store'}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được bài tập.');activeGrammar=j;renderGrammarSet()}catch(e){empty.textContent=e.message}
+}
+function renderGrammarSet(){
+  const set=activeGrammar?.set,questions=activeGrammar?.questions||[],empty=document.getElementById('grammarEmpty'),content=document.getElementById('grammarContent');if(!set)return;
+  document.getElementById('grammarTheory').innerHTML=`<span class="grammar-tag">NGỮ PHÁP</span><h2>${grammarEsc(set.title)}${set.pinyin?' · '+grammarEsc(set.pinyin):''}</h2><p>${grammarEsc(set.explanation||'')}</p>${set.formula?`<div class="grammar-formula">${grammarEsc(set.formula)}</div>`:''}${(set.examples||[]).map(x=>`<div class="grammar-example"><strong>${grammarEsc(x.hanzi)}</strong>${x.pinyin?`<br><span class="pinyin">${grammarEsc(x.pinyin)}</span>`:''}${x.vi?`<br><span class="meaning">${grammarEsc(x.vi)}</span>`:''}</div>`).join('')}`;
+  document.getElementById('grammarQuestions').innerHTML=questions.length?questions.map((q,i)=>`<div class="grammar-question" data-question="${i}"><h3>Câu ${i+1}. ${grammarEsc(q.prompt)}</h3>${(q.options||[]).map((o,k)=>`<label class="exercise-option"><input type="radio" name="grammarQ${i}" value="${k}"> ${grammarEsc(o)}</label>`).join('')}<div class="question-explain" hidden></div></div>`).join(''):'<p class="muted">Bài này chưa có câu hỏi trắc nghiệm.</p>';
+  document.getElementById('checkGrammarAnswers').hidden=!questions.length;document.getElementById('resetGrammarAnswers').hidden=!questions.length;document.getElementById('grammarScore').textContent='';empty.hidden=true;content.hidden=false;content.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function checkGrammarAnswers(){
+  const questions=activeGrammar?.questions||[];let correct=0,answered=0;
+  questions.forEach((q,i)=>{const box=document.querySelector(`.grammar-question[data-question="${i}"]`),chosen=box?.querySelector('input:checked');if(chosen)answered++;box?.querySelectorAll('.exercise-option').forEach((label,k)=>{label.classList.toggle('correct',k===Number(q.correct_index));label.classList.toggle('wrong',chosen&&Number(chosen.value)===k&&k!==Number(q.correct_index));label.querySelector('input').disabled=true});if(chosen&&Number(chosen.value)===Number(q.correct_index))correct++;const explain=box?.querySelector('.question-explain');if(explain){explain.hidden=false;explain.textContent=q.explanation||`Đáp án đúng: ${(q.options||[])[Number(q.correct_index)]||''}`}});
+  const pct=questions.length?Math.round(correct/questions.length*100):0;document.getElementById('grammarScore').textContent=`Kết quả: ${correct}/${questions.length} câu đúng · ${pct}%${answered<questions.length?' · Còn câu chưa trả lời':''}`;
+}
+document.getElementById('grammarCourse')?.addEventListener('change',e=>{fillGrammarLessons(e.target.value);document.getElementById('grammarContent').hidden=true;document.getElementById('grammarEmpty').hidden=false;document.getElementById('grammarEmpty').textContent='Chọn một bài học để bắt đầu.'});
+document.getElementById('grammarLesson')?.addEventListener('change',e=>{if(e.target.value)openGrammarSet(Number(e.target.value))});
+document.getElementById('checkGrammarAnswers')?.addEventListener('click',checkGrammarAnswers);
+document.getElementById('resetGrammarAnswers')?.addEventListener('click',renderGrammarSet);
+document.getElementById('grammarSearch')?.addEventListener('input',renderGrammarSearch);
+document.querySelector('.app-nav-btn[data-section="grammarSection"]')?.addEventListener('click',loadGrammarCatalog);
+
 // ===== KHÓA HỌC THỐNG NHẤT R6 =====
 let publicLearningCourses=[],selectedPublicCourse=null;
+function cleanPublicLessonTitle(title,number){return String(title||'').replace(new RegExp('^\\s*Bài\\s*0*'+Number(number)+'\\s*[—–:.-]*\\s*','i'),'').trim()||`Bài ${number}`}
 async function loadPublicLearningCourses(){
   const box=document.getElementById('learningPublicCourses');if(!box)return;
   try{const r=await fetch(api('/learning-courses'),{cache:'no-store'}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được khóa học.');publicLearningCourses=Array.isArray(j.courses)?j.courses:[];box.innerHTML='';
     if(!publicLearningCourses.length){box.innerHTML='<div class="learning-empty">Chưa có khóa học nào được xuất bản.</div>';return}
-    publicLearningCourses.forEach((c,i)=>{const b=document.createElement('button');b.className='learning-course-btn';b.innerHTML=`<b>${shadowEsc(c.icon||'课')} ${shadowEsc(c.title)}</b><div class="hint">${(c.lessons||[]).length} bài · ${c.access==='paid'?'Có phí':'Miễn phí'}</div>`;b.onclick=()=>selectPublicCourse(c,b);box.appendChild(b);if(i===0)b.click();});
+    publicLearningCourses.forEach((c,i)=>{const b=document.createElement('button');b.className='learning-course-btn';b.dataset.course=c.id;b.innerHTML=`<b>${shadowEsc(c.icon||'课')} ${shadowEsc(c.title)}</b><div class="hint">${(c.lessons||[]).length} bài · ${c.access==='paid'?'Khóa học có phí':'Miễn phí'}</div>${c.description?`<div class="hint" style="margin-top:5px">${shadowEsc(c.description)}</div>`:''}`;b.onclick=()=>selectPublicCourse(c,b);box.appendChild(b);if(i===0)b.click();});
+    await renderMyCourses();
   }catch(e){box.innerHTML=`<div class="learning-empty">${shadowEsc(e.message)}</div>`;}
 }
-function selectPublicCourse(course,button){
+async function renderMyCourses(){
+  const box=document.getElementById('myCoursesGrid');if(!box)return;
+  const entitlements=savedEntitlements(),owned=publicLearningCourses.filter(c=>c.access==='free'||entitlements[c.id]);
+  if(!owned.length){box.innerHTML='<div class="learning-empty">Bạn chưa kích hoạt khóa học nào. Bấm “Kích hoạt thêm khóa” và nhập mã được cấp.</div>';return}
+  box.innerHTML=owned.map(c=>{const shadows=(c.lessons||[]).reduce((sum,l)=>sum+(l.shadowing_videos||[]).length,0),e=entitlements[c.id];return `<article class="my-course-card"><span class="owned-badge">${c.access==='free'?'MIỄN PHÍ':'ĐÃ KÍCH HOẠT'}</span><h3>${shadowEsc(c.icon||'课')} ${shadowEsc(c.title)}</h3><div class="hint">${(c.lessons||[]).length} bài · ${shadows} video Shadowing${e?.expires_at?`<br>Quyền học đến ${new Date(e.expires_at).toLocaleDateString('vi-VN')}`:''}</div><button class="btn primary openOwnedCourse" data-course="${shadowEsc(c.id)}">Vào học và ôn Shadowing →</button></article>`}).join('');
+  document.querySelectorAll('.openOwnedCourse').forEach(b=>b.onclick=()=>openOwnedCourse(b.dataset.course));
+}
+async function openOwnedCourse(courseId){
+  const course=publicLearningCourses.find(c=>String(c.id)===String(courseId)),button=document.querySelector(`.learning-course-btn[data-course="${CSS.escape(String(courseId))}"]`);if(!course||!button)return;
+  await selectPublicCourse(course,button);button.scrollIntoView({behavior:'smooth',block:'center'});
+}
+async function selectPublicCourse(course,button){
   selectedPublicCourse=course;document.querySelectorAll('.learning-course-btn').forEach(x=>x.classList.remove('active'));button.classList.add('active');const box=document.getElementById('learningPublicLessons');box.innerHTML='';document.getElementById('learningPublicDetail').innerHTML='';
   if(!(course.lessons||[]).length){box.innerHTML='<div class="learning-empty">Khóa đã được tạo nhưng chưa có bài học. Hãy thêm bài trong Admin.</div>';return}
-  course.lessons.forEach((l,i)=>{const b=document.createElement('button');b.className='learning-lesson-btn';b.innerHTML=`<b>Bài ${String(l.number).padStart(2,'0')} · ${shadowEsc(l.title)}</b><div class="hint">${(l.videos||[]).length} bài giảng · ${l.shadowing?'Có Shadowing':'Chưa có Shadowing'} · ${(l.resources||[]).length} tài liệu</div>`;b.onclick=()=>renderPublicLesson(l,b);box.appendChild(b);if(i===0)b.click();});
+  const full=await hasFullAccess(course.id),allShadows=(course.lessons||[]).reduce((sum,l)=>sum+(l.shadowing_videos||[]).length,0);
+  if(full&&allShadows){const review=document.createElement('button');review.className='learning-lesson-btn';review.innerHTML=`<b>🎥 Ôn luyện Shadowing của khóa</b><div class="hint">${allShadows} video từ tất cả bài học</div>`;review.onclick=()=>renderCourseShadowReview(course,review);box.appendChild(review);review.click()}
+  course.lessons.forEach((l,i)=>{const shadowCount=(l.shadowing_videos||[]).length,locked=!full&&course.access==='paid'&&(i+1)>Number(course.free_lessons||0),b=document.createElement('button');b.className='learning-lesson-btn';b.innerHTML=`<b>${locked?'🔒 ':''}Bài ${String(l.number).padStart(2,'0')} · ${shadowEsc(cleanPublicLessonTitle(l.title,l.number))}</b><div class="hint">${(l.videos||[]).length} bài giảng · ${shadowCount?`${shadowCount} video Shadowing`:'Chưa có Shadowing'} · ${l.grammar_set_id?`${Number(l.question_count||0)} câu bài tập`:'Chưa có bài tập'} · ${Number(l.writing_count||0)} từ viết · ${(l.resources||[]).length} tài liệu</div>`;b.onclick=()=>locked?openAccess():renderPublicLesson(l,b);box.appendChild(b);if(i===0&&!allShadows)b.click();});
+}
+function renderCourseShadowReview(course,button){
+  document.querySelectorAll('.learning-lesson-btn').forEach(x=>x.classList.remove('active'));button.classList.add('active');const rows=[];(course.lessons||[]).forEach(l=>(l.shadowing_videos||[]).forEach((s,i)=>rows.push({lesson:l,title:s.title||`Shadowing ${i+1}`,id:s.id})));
+  document.getElementById('learningPublicDetail').innerHTML=`<div class="learning-detail"><div class="course-shadow-review"><div class="brand">ÔN LUYỆN THEO KHÓA</div><h3>🎥 Shadowing · ${shadowEsc(course.title)}</h3><p class="hint">Tất cả video Shadowing của khóa được gom tại đây để học viên luyện lại thuận tiện.</p></div><div class="review-shadow-list">${rows.map(x=>`<div class="review-shadow-item"><span><b>Bài ${String(x.lesson.number).padStart(2,'0')}</b> · ${shadowEsc(x.title)}</span><button class="btn primary" onclick="openLessonShadowing('${shadowEsc(course.id)}','${x.id}')">Luyện ngay</button></div>`).join('')}</div></div>`;
 }
 function renderPublicLesson(lesson,button){
-  document.querySelectorAll('.learning-lesson-btn').forEach(x=>x.classList.remove('active'));button.classList.add('active');const videos=lesson.videos||[],resources=lesson.resources||[],hasShadow=!!lesson.shadowing;
-  const parts=[['▶','Bài giảng',videos.length>0],['🎥','Shadowing',hasShadow],['✓','Bài tập',false],['✍','Viết chữ',true],['📄','Tài liệu',resources.length>0]];
-  document.getElementById('learningPublicDetail').innerHTML=`<div class="learning-detail"><h2>Bài ${String(lesson.number).padStart(2,'0')} · ${shadowEsc(lesson.title)}</h2><div class="lesson-parts">${parts.map(p=>`<div class="lesson-part ${p[2]?'ready':''}">${p[0]}<br>${p[1]}<br><small>${p[2]?'Có nội dung':'Chưa có'}</small></div>`).join('')}</div>${videos.map(v=>`<div class="learning-video"><span>▶ ${shadowEsc(v.title)}</span><a class="btn soft" href="${shadowEsc(v.youtube)}" target="_blank" rel="noopener">Mở bài giảng</a></div>`).join('')}${hasShadow?`<div class="learning-video"><span>🎥 ${shadowEsc(lesson.shadowing.title||'Luyện Shadowing')}</span><button class="btn primary" onclick="openLessonShadowing('${shadowEsc(selectedPublicCourse.id)}','${lesson.shadowing.id}')">Luyện ngay</button></div>`:''}${resources.map(r=>`<div class="learning-resource"><span>📄 ${shadowEsc(r.title)}</span><a class="btn soft" href="${shadowEsc(r.url)}" target="_blank" rel="noopener">${r.access_mode==='view'?'Xem':'Tải / mở'}</a></div>`).join('')}</div>`;
+  document.querySelectorAll('.learning-lesson-btn').forEach(x=>x.classList.remove('active'));button.classList.add('active');const videos=lesson.videos||[],resources=lesson.resources||[],shadows=lesson.shadowing_videos||[],hasShadow=shadows.length>0;
+  const hasWriting=Number(lesson.writing_count||0)>0,parts=[['▶','Bài giảng',videos.length>0],['🎥','Shadowing',hasShadow],['✓','Bài tập',!!lesson.grammar_set_id],['✍','Viết chữ',hasWriting],['📄','Tài liệu',resources.length>0]];
+  document.getElementById('learningPublicDetail').innerHTML=`<div class="learning-detail"><div class="brand">BÀI ${String(lesson.number).padStart(2,'0')}</div><h2>${shadowEsc(cleanPublicLessonTitle(lesson.title,lesson.number))}</h2><div class="lesson-parts">${parts.map(p=>`<div class="lesson-part ${p[2]?'ready':''}">${p[0]}<br>${p[1]}<br><small>${p[2]?'Sẵn sàng':'Chưa có'}</small></div>`).join('')}</div>${videos.map(v=>`<div class="learning-video"><span>▶ ${shadowEsc(v.title)}</span><a class="btn soft" href="${shadowEsc(v.youtube)}" target="_blank" rel="noopener">Mở bài giảng</a></div>`).join('')}${shadows.map((s,i)=>`<div class="learning-video"><span>🎥 ${shadowEsc(s.title||`Shadowing ${i+1}`)}</span><button class="btn primary" onclick="openLessonShadowing('${shadowEsc(selectedPublicCourse.id)}','${s.id}')">Luyện ngay</button></div>`).join('')}${lesson.grammar_set_id?`<div class="learning-video"><span>📚 ${shadowEsc(lesson.grammar_title||'Ngữ pháp & bài tập')}</span><button class="btn primary" onclick="openGrammarSet(${Number(lesson.grammar_set_id)})">Học và làm bài</button></div>`:''}${hasWriting?`<div class="learning-video"><span>✍ ${Number(lesson.writing_count)} từ luyện viết</span><button class="btn primary" onclick="openWritingLesson('${shadowEsc(selectedPublicCourse.id)}',${Number(lesson.number)})">Luyện viết</button></div>`:''}${resources.map(r=>`<div class="learning-resource"><span>📄 ${shadowEsc(r.title)}</span><a class="btn soft" href="${shadowEsc(r.url)}" target="_blank" rel="noopener">${r.access_mode==='view'?'Xem':'Tải / mở'}</a></div>`).join('')}${!videos.length&&!hasShadow&&!lesson.grammar_set_id&&!hasWriting&&!resources.length?'<div class="learning-empty">Bài học đã được tạo. Nội dung đang được cập nhật.</div>':''}</div>`;
+}
+
+let adultKidsData=null,adultKidsLanguage='',adultKidsCollection='';
+async function loadAdultKids(){
+  const box=document.getElementById('adultKidsSeries');if(!box||adultKidsData)return;
+  try{const r=await fetch(api('/aluni/kids-catalog'),{cache:'no-store'}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được kho nội dung.');adultKidsData=j;adultKidsLanguage=j.languages?.[0]?.code||'';adultKidsCollection='';renderAdultKids();}catch(e){box.innerHTML=`<div class="learning-empty">${shadowEsc(e.message)}</div>`}
+}
+function renderAdultKids(){
+  const data=adultKidsData||{languages:[],collections:[],series:[]};
+  document.getElementById('adultKidsLanguages').innerHTML=(data.languages||[]).map(x=>`<button class="kids-filter ${x.code===adultKidsLanguage?'active':''}" data-lang="${shadowEsc(x.code)}">${shadowEsc(x.native_name||'')} · ${shadowEsc(x.name)}</button>`).join('');
+  document.querySelectorAll('#adultKidsLanguages [data-lang]').forEach(b=>b.onclick=()=>{adultKidsLanguage=b.dataset.lang;renderAdultKids()});
+  document.getElementById('adultKidsCollections').innerHTML=`<button class="kids-filter ${!adultKidsCollection?'active':''}" data-collection="">Tất cả</button>`+(data.collections||[]).map(x=>`<button class="kids-filter ${x.code===adultKidsCollection?'active':''}" data-collection="${shadowEsc(x.code)}">${shadowEsc(x.icon||'🎬')} ${shadowEsc(x.title)}</button>`).join('');
+  document.querySelectorAll('#adultKidsCollections [data-collection]').forEach(b=>b.onclick=()=>{adultKidsCollection=b.dataset.collection;renderAdultKids()});
+  const series=(data.series||[]).filter(x=>(!adultKidsLanguage||x.language_code===adultKidsLanguage)&&(!adultKidsCollection||x.content_type===adultKidsCollection));
+  document.getElementById('adultKidsSeries').innerHTML=series.map(s=>`<article class="kids-series-card"><div class="kids-series-thumb" ${s.thumbnail_url?`style="background-image:url('${shadowEsc(s.thumbnail_url)}')"`:''}>${s.thumbnail_url?'':shadowEsc(s.collection_icon||'🎬')}</div><div class="kids-series-copy"><div class="kids-series-meta">${shadowEsc(s.collection_title||'Nội dung')} · ${shadowEsc(s.level_title||'')}</div><h3>${shadowEsc(s.title)}</h3><div class="hint">${shadowEsc(s.description||'')||`${(s.lessons||[]).length} tập luyện nghe`}</div><div class="kids-episode-list">${(s.lessons||[]).slice(0,6).map(ep=>`<div class="kids-episode"><span>Tập ${String(ep.lesson_number).padStart(2,'0')} · ${shadowEsc(ep.title)}</span>${ep.youtube_url?`<a href="${shadowEsc(ep.youtube_url)}" target="_blank" rel="noopener">Xem</a>`:''}</div>`).join('')}</div></div></article>`).join('')||'<div class="learning-empty">Chưa có Series được xuất bản trong mục này.</div>';
+}
+document.querySelector('.app-nav-btn[data-section="kidsPublicSection"]')?.addEventListener('click',loadAdultKids);
+async function openWritingLesson(courseId,lessonNumber){
+  document.querySelector('.app-nav-btn[data-section="writingSection"]')?.click();
+  if(!courses.length)await loadRemoteContent();
+  const course=getCourse(String(courseId));if(!course)return;
+  $('courseSelect').value=course.id;await renderLessons(course);
+  const index=(course.lessons||[]).findIndex(l=>Number(l.number??l.lesson_number)===Number(lessonNumber));
+  if(index>=0)await selectLesson(course,course.lessons[index],index,true);
 }
 async function openLessonShadowing(courseId,videoId){
   document.querySelector('.app-nav-btn[data-section="shadowSection"]')?.click();const c=document.getElementById('shadowCourse'),v=document.getElementById('shadowVideo');if(!shadowCourses.length)await loadShadowCourses();c.value=String(courseId);await loadShadowVideos(courseId);v.value=String(videoId);await loadShadowVideo(videoId);
@@ -1031,7 +1162,8 @@ async function loadShadowVideos(courseId){
   if(!courseId) return;
 
   try{
-    const r = await fetch(shadowApi('/shadowing/videos?course_id=' + encodeURIComponent(courseId)), {cache:'no-store'});
+    const entitlement=savedEntitlements()[courseId],headers=entitlement?.token?{Authorization:`Bearer ${entitlement.token}`} : {};
+    const r = await fetch(shadowApi('/shadowing/videos?course_id=' + encodeURIComponent(courseId)), {cache:'no-store',headers});
     const j = await r.json();
     shadowVideos = Array.isArray(j.videos) ? j.videos : [];
 
@@ -1050,7 +1182,10 @@ async function loadShadowVideos(courseId){
 async function loadShadowVideo(videoId){
   if(!videoId) return;
   try{
-    const r = await fetch(shadowApi('/shadowing/video?id=' + encodeURIComponent(videoId)), {cache:'no-store'});
+    const selected=shadowVideos.find(v=>String(v.id)===String(videoId));
+    if(selected?.locked){openAccess();document.getElementById('shadowVideo').value='';return}
+    const courseId=selected?.course_id||document.getElementById('shadowCourse')?.value,entitlement=savedEntitlements()[courseId],headers=entitlement?.token?{Authorization:`Bearer ${entitlement.token}`} : {};
+    const r = await fetch(shadowApi('/shadowing/video?id=' + encodeURIComponent(videoId)), {cache:'no-store',headers});
     const j = await r.json();
 
     if(!r.ok){
@@ -1330,6 +1465,9 @@ function setShadowSpeed(speed){
 }
 
 document.addEventListener('DOMContentLoaded', ()=>{
+  loadPublicLearningCourses();
+  document.getElementById('startLearningBtn')?.addEventListener('click',()=>document.querySelector('.my-courses-panel')?.scrollIntoView({behavior:'smooth',block:'start'}));
+  ['topActivateBtn','learningActivateBtn','myCoursesActivateBtn'].forEach(id=>document.getElementById(id)?.addEventListener('click',openAccess));
   const courseSel = document.getElementById('shadowCourse');
   const videoSel = document.getElementById('shadowVideo');
 
