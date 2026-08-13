@@ -500,7 +500,14 @@ body{background:radial-gradient(circle at 8% 0%,rgba(32,168,181,.14),transparent
 @media(max-width:900px){.my-courses-grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.my-courses-grid{grid-template-columns:1fr}.my-courses-head{align-items:flex-start;flex-direction:column}.review-shadow-item{align-items:flex-start;flex-direction:column}.review-shadow-item .btn{width:100%}}
 @media(max-width:1100px){.learning-grid{grid-template-columns:280px minmax(0,1fr)}.learning-column.detail-column{grid-column:1/-1}.student-hero{grid-template-columns:1fr}.student-side{grid-template-columns:1fr 1fr}}
 @media(max-width:820px){.wrap,.app-topbar{width:min(100% - 20px,780px)}.app-topbar{top:4px;align-items:flex-start}.app-brand-tagline{display:none}.app-brand-name{font-size:.88rem}.app-nav{justify-content:flex-start}.top-actions{display:none}.learning-grid{grid-template-columns:1fr}.learning-column.detail-column{grid-column:auto}.learning-list{max-height:none}.lesson-parts{grid-template-columns:repeat(2,1fr)}.student-side{grid-template-columns:1fr}.student-hero-main{padding:23px}.commerce-ready{align-items:flex-start;flex-direction:column}}
-@media(max-width:540px){.app-topbar{padding:7px}.app-brand-lockup{display:none}.app-nav-btn{padding:8px 10px;font-size:.82rem}.wrap{padding-top:18px}.student-hero h1{font-size:2rem}.student-hero-main{border-radius:19px}.quick-stats{grid-template-columns:1fr 1fr}.learning-video,.learning-resource{align-items:flex-start;flex-direction:column}.learning-video .btn,.learning-resource .btn{width:100%;text-align:center}}
+@media(max-width:540px){
+  .app-topbar{padding:7px;position:sticky;top:3px}
+  .app-brand-lockup{display:none}
+  .app-nav{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;overflow:visible;padding:0}
+  .app-nav-btn{width:100%;min-width:0;padding:8px 6px;border-radius:11px;font-size:.78rem;line-height:1.2;text-align:center;white-space:normal}
+  .app-nav-btn:nth-child(5){grid-column:1/-1}
+  .wrap{padding-top:18px}.student-hero h1{font-size:2rem}.student-hero-main{border-radius:19px}.quick-stats{grid-template-columns:1fr 1fr}.learning-video,.learning-resource{align-items:flex-start;flex-direction:column}.learning-video .btn,.learning-resource .btn{width:100%;text-align:center}
+}
 </style>
 </head>
 <body>
