@@ -649,7 +649,7 @@ body{background:radial-gradient(circle at 8% 0%,rgba(32,168,181,.14),transparent
 <script>
 const $=id=>document.getElementById(id);
 let courses = Array.isArray(window.ALUNI_DEFAULT_DATA) ? JSON.parse(JSON.stringify(window.ALUNI_DEFAULT_DATA)) : [];
-let selectedCourseObj=null, selectedLessonObj=null, writer=null, currentItem=null, currentChars=[], currentCharIndex=0, radicalMode=true, currentAudio=null;
+let selectedCourseObj=null, selectedLessonObj=null, writer=null, currentItem=null, currentChars=[], currentCharIndex=0, practiceItems=[], practiceItemIndex=0, radicalMode=true, currentAudio=null;
 const ACCESS_KEY='aluni_entitlements_v46';
 const DEVICE_KEY='aluni_device_id_v1';
 
@@ -743,7 +743,7 @@ async function selectLesson(course,lesson,index,fullKnown=null){
   selectedLessonObj=lesson;$('lessonSelect').value=lesson.id;renderItems(lesson.items||[],lesson.title||lesson.name);warmAudio(lesson.items||[]);
 }
 function renderItems(items,title){
-  $('resultsTitle').textContent=title||'Từ vựng';$('resultCount').textContent=`${items.length} mục`;const box=$('words');box.innerHTML='';
+  practiceItems=items||[];$('resultsTitle').textContent=title||'Từ vựng';$('resultCount').textContent=`${items.length} mục`;const box=$('words');box.innerHTML='';
   if(!items.length){box.innerHTML='<div class="empty">Không tìm thấy dữ liệu phù hợp.</div>';return}
   items.forEach(item=>{const d=document.createElement('div');d.className='word';d.innerHTML=`<button class="speak">🔊</button><div class="hanzi">${esc(item.hanzi)}</div><div class="pinyin">${esc(item.pinyin||'')}</div><div class="meaning">${esc(item.vi||'')}</div>`;d.querySelector('.speak').onclick=e=>{e.stopPropagation();speak(item.hanzi)};d.onclick=()=>openPractice(item);box.appendChild(d)})
 }
@@ -762,7 +762,13 @@ function doSearch(){
 }
 
 function extractChars(t){return [...String(t)].filter(c=>/\p{Script=Han}/u.test(c))}
-function openPractice(item){currentItem=item;currentChars=extractChars(item.hanzi);currentCharIndex=0;$('practiceWord').textContent=item.hanzi;$('practicePinyin').textContent=item.pinyin||'';$('practiceMeaning').textContent=item.vi||'';renderPills();$('practiceCard').classList.add('show');if(currentChars.length)buildWriter(currentChars[0],false);$('practiceCard').scrollIntoView({behavior:'smooth'})}
+function openPractice(item,scroll=true){currentItem=item;practiceItemIndex=Math.max(0,practiceItems.indexOf(item));currentChars=extractChars(item.hanzi);currentCharIndex=0;$('practiceWord').textContent=item.hanzi;$('practicePinyin').textContent=item.pinyin||'';$('practiceMeaning').textContent=item.vi||'';renderPills();$('practiceCard').classList.add('show');if(currentChars.length)buildWriter(currentChars[0],false);if(scroll)$('practiceCard').scrollIntoView({behavior:'smooth'})}
+function nextPracticeChar(){
+  if(!practiceItems.length||!currentChars.length)return;
+  if(currentCharIndex<currentChars.length-1){currentCharIndex++;renderPills();buildWriter(currentChars[currentCharIndex],false);return}
+  practiceItemIndex=(practiceItemIndex+1)%practiceItems.length;
+  openPractice(practiceItems[practiceItemIndex],false);
+}
 function renderPills(){const b=$('charPills');b.innerHTML='';currentChars.forEach((c,i)=>{const x=document.createElement('button');x.className='char-pill'+(i===currentCharIndex?' active':'');x.textContent=c;x.onclick=()=>{currentCharIndex=i;renderPills();buildWriter(c,false)};b.appendChild(x)})}
 function buildWriter(ch,quiz=false){$('writerTarget').innerHTML='';const size=Math.min(320,Math.max(240,innerWidth-70));writer=HanziWriter.create('writerTarget',ch,{width:size,height:size,padding:18,showOutline:true,showCharacter:!quiz,strokeAnimationSpeed:1,delayBetweenStrokes:180,showHintAfterMisses:2,highlightOnComplete:true,strokeColor:'#2e3a34',radicalColor:radicalMode?'#789976':null});if(quiz)writer.quiz();updateRadicalInfo(ch)}
 async function updateRadicalInfo(ch){
@@ -783,7 +789,7 @@ $('searchBtn').onclick=doSearch;$('searchInput').onkeydown=e=>{if(e.key==='Enter
 // Cửa sổ kích hoạt phải thuộc cấp toàn trang, không nằm trong riêng mục Viết chữ.
 document.body.appendChild($('accessModal'));
 $('accessActivateBtn').onclick=activate;$('accessCancelBtn').onclick=closeAccess;$('accessCloseBtn').onclick=closeAccess;$('accessModal').onclick=e=>{if(e.target===$('accessModal'))closeAccess()};
-$('animateBtn').onclick=()=>writer&&writer.animateCharacter();$('quizBtn').onclick=()=>currentChars.length&&buildWriter(currentChars[currentCharIndex],true);$('resetBtn').onclick=()=>currentChars.length&&buildWriter(currentChars[currentCharIndex],true);$('nextCharBtn').onclick=()=>{if(!currentChars.length)return;currentCharIndex=(currentCharIndex+1)%currentChars.length;renderPills();buildWriter(currentChars[currentCharIndex],false)};$('radicalBtn').onclick=()=>{radicalMode=!radicalMode;$('radicalBtn').textContent=`🎨 Tách bộ thủ: ${radicalMode?'BẬT':'TẮT'}`;if(currentChars.length)buildWriter(currentChars[currentCharIndex],false)};$('speakPractice').onclick=()=>currentItem&&speak(currentItem.hanzi);
+$('animateBtn').onclick=()=>writer&&writer.animateCharacter();$('quizBtn').onclick=()=>currentChars.length&&buildWriter(currentChars[currentCharIndex],true);$('resetBtn').onclick=()=>currentChars.length&&buildWriter(currentChars[currentCharIndex],true);$('nextCharBtn').onclick=nextPracticeChar;$('radicalBtn').onclick=()=>{radicalMode=!radicalMode;$('radicalBtn').textContent=`🎨 Tách bộ thủ: ${radicalMode?'BẬT':'TẮT'}`;if(currentChars.length)buildWriter(currentChars[currentCharIndex],false)};$('speakPractice').onclick=()=>currentItem&&speak(currentItem.hanzi);
 loadRemoteContent();
 
 document.querySelectorAll('.app-nav-btn').forEach(btn=>{
