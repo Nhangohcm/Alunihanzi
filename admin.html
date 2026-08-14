@@ -159,7 +159,7 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
     <div class="card">
       <div class="tablewrap">
         <table>
-          <thead><tr><th>Mã</th><th>Trạng thái</th><th>Người dùng</th><th>Kích hoạt</th><th>Hết hạn</th><th></th></tr></thead>
+          <thead><tr><th>Mã</th><th>Trạng thái</th><th>Học viên</th><th>Điện thoại/email</th><th>Kích hoạt</th><th>Hết hạn</th><th></th></tr></thead>
           <tbody id="codeBody"></tbody>
         </table>
       </div>
@@ -575,6 +575,7 @@ async function refreshCodes(){
       const tr=document.createElement('tr');
       tr.innerHTML=`<td><code>${x.code}</code></td>
         <td>${x.status==='unused'?'Chưa dùng':x.status==='active'?'Đang dùng':'Đã khóa'}</td>
+        <td>${esc(x.student_name||'—')}</td>
         <td>${x.identity||'—'}</td>
         <td>${fmt(x.activated_at)}</td>
         <td>${fmt(x.expires_at)}</td>
@@ -599,7 +600,7 @@ function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function cleanLessonTitle(title,number){return String(title||'').replace(new RegExp('^\\s*Bài\\s*0*'+Number(number)+'\\s*[—–:.-]*\\s*','i'),'').trim()||`Bài ${number}`}
 function downloadCodes(){
   if(!codes.length){$('codeStatus').textContent='Chưa có dữ liệu để tải.';return}
-  const rows=[['Mã','Khóa','Trạng thái','Người dùng','Kích hoạt','Hết hạn'],...codes.map(x=>[x.code,x.course_id,x.status,x.identity||'',x.activated_at||'',x.expires_at||''])];
+  const rows=[['Mã','Khóa','Trạng thái','Học viên','Điện thoại/email','Kích hoạt','Hết hạn'],...codes.map(x=>[x.code,x.course_id,x.status,x.student_name||'',x.identity||'',x.activated_at||'',x.expires_at||''])];
   const csv='\uFEFF'+rows.map(r=>r.map(csvEsc).join(',')).join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='aluni-ma-kich-hoat.csv';a.click();
 }

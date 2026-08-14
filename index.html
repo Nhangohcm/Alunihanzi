@@ -617,15 +617,15 @@ body{background:radial-gradient(circle at 8% 0%,rgba(32,168,181,.14),transparent
   <div class="access-box">
     <button class="access-close" id="accessCloseBtn">×</button>
     <div class="brand">TIẾNG TRUNG ALUNI</div>
-    <h3>🔑 Kích hoạt khóa học Aluni</h3>
-    <p class="hint">Nhập đúng 3 thông tin dưới đây. Mã sẽ tự nhận khóa học, không cần chọn khóa.</p>
+    <h3>🔑 Kích hoạt hoặc khôi phục quyền học</h3>
+    <p class="hint">Lần đầu hãy nhập thông tin và mã được cấp. Khi đổi máy, nhập lại đúng thông tin và mã cũ để khôi phục khóa học.</p>
     <input id="accessName" placeholder="Họ và tên" style="margin-bottom:9px">
     <input id="accessIdentity" placeholder="Số điện thoại hoặc email" style="margin-bottom:9px">
     <input id="accessCode" placeholder="Mã kích hoạt, ví dụ 50P-ABCD-EFGH">
     <div class="access-msg" id="accessMsg"></div>
     <div class="access-actions">
       <button class="btn ghost" id="accessCancelBtn">← Quay lại dùng miễn phí</button>
-      <button class="btn primary" id="accessActivateBtn">Kích hoạt khóa học</button>
+      <button class="btn primary" id="accessActivateBtn">Kích hoạt / Khôi phục</button>
     </div>
   </div>
 </div>
@@ -676,9 +676,15 @@ function saveEntitlement(item){const map=savedEntitlements();map[item.course_id]
 async function hasFullAccess(courseId){
   const course=getCourse(courseId),publicCourse=publicLearningCourses.find(c=>String(c.id)===String(courseId));
   if(isCurrentFreeCourse(publicCourse||course))return true;
-  // Mã đã được Worker xác thực khi kích hoạt. Dùng quyền đã lưu để mở bài ngay,
-  // tránh khóa lại khóa học chỉ vì lần kiểm tra mạng sau đó chậm hoặc lỗi.
-  return Boolean(savedEntitlements()[courseId]);
+  const e=savedEntitlements()[courseId];if(!e)return false;
+  try{
+    const r=await fetch(api('/access/verify'),{headers:{Authorization:`Bearer ${e.token}`}});
+    if(!r.ok)return false;
+    const j=await r.json();return j.valid===true;
+  }catch(err){
+    // Khi mất mạng tạm thời, giữ phiên đã lưu; nội dung trực tuyến vẫn tự báo lỗi riêng.
+    return true;
+  }
 }
 function renderCourseSelect(){
   const s=$('courseSelect');s.innerHTML='<option value="">Chọn khóa học</option>';
