@@ -159,10 +159,16 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
     <div class="card">
       <div class="tablewrap">
         <table>
-          <thead><tr><th>Mã</th><th>Trạng thái</th><th>Học viên</th><th>Điện thoại/email</th><th>Kích hoạt</th><th>Hết hạn</th><th></th></tr></thead>
+          <thead><tr><th>Mã</th><th>Trạng thái</th><th>Học viên</th><th>Điện thoại/email</th><th>Thiết bị</th><th>Kích hoạt</th><th>Hết hạn</th><th></th></tr></thead>
           <tbody id="codeBody"></tbody>
         </table>
       </div>
+    </div>
+    <div class="card">
+      <div class="row"><h2 style="margin-right:auto">⚠️ Cảnh báo thiết bị</h2><button class="ghost" id="refreshAccessAlerts">Làm mới cảnh báo</button></div>
+      <p class="muted">Hiện khi một mã đã đủ 2 thiết bị nhưng có thiết bị thứ ba cố truy cập. Hai thiết bị cũ không bị khóa.</p>
+      <div class="status" id="accessAlertStatus"></div>
+      <div class="tablewrap"><table><thead><tr><th>Thời gian</th><th>Mã/Học viên</th><th>Liên hệ</th><th>Thiết bị bị từ chối</th><th>Xử lý</th></tr></thead><tbody id="accessAlertBody"></tbody></table></div>
     </div>
   </section>
 
@@ -538,6 +544,7 @@ async function login(){
     await loadCourses();
     await loadLearningCourses();
     await refreshCodes();
+    await refreshAccessAlerts();
   }catch(e){
     const message=String(e&&e.message||'Lỗi không xác định');
     $('loginStatus').textContent=message==='Unauthorized'
@@ -577,18 +584,28 @@ async function refreshCodes(){
         <td>${x.status==='unused'?'Chưa dùng':x.status==='active'?'Đang dùng':'Đã khóa'}</td>
         <td>${esc(x.student_name||'—')}</td>
         <td>${x.identity||'—'}</td>
+        <td><b>${Number(x.device_count||0)}/2</b>${Number(x.alert_count||0)?`<br><span style="color:#b45309">⚠ ${Number(x.alert_count)} cảnh báo</span>`:''}</td>
         <td>${fmt(x.activated_at)}</td>
         <td>${fmt(x.expires_at)}</td>
-        <td><button class="ghost lock" data-id="${x.id}">${x.status==='blocked'?'Mở':'Khóa'}</button></td>`;
+        <td><button class="ghost resetDevices" data-id="${x.id}">Đặt lại thiết bị</button> <button class="ghost lock" data-id="${x.id}">${x.status==='blocked'?'Mở':'Khóa'}</button></td>`;
       $('codeBody').appendChild(tr);
     });
     document.querySelectorAll('.lock').forEach(b=>b.onclick=async()=>{
       await api('/admin/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:Number(b.dataset.id)})});
       refreshCodes();
     });
+    document.querySelectorAll('.resetDevices').forEach(b=>b.onclick=async()=>{
+      if(!confirm('Xóa danh sách thiết bị của mã này? Học viên sẽ phải kích hoạt lại trên các máy cần dùng.'))return;
+      await api('/admin/reset-devices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:Number(b.dataset.id)})});
+      await refreshCodes();await refreshAccessAlerts();
+    });
     $('codeStatus').textContent=`Có ${codes.length} mã.`;
   }catch(e){$('codeStatus').textContent=e.message}
 }
+async function refreshAccessAlerts(){
+  try{const j=await api('/admin/access-alerts'),alerts=j.alerts||[];$('accessAlertBody').innerHTML=alerts.map(x=>`<tr><td>${fmt(x.created_at)}</td><td><code>${esc(x.code)}</code><br>${esc(x.student_name||'—')}</td><td>${esc(x.identity||'—')}</td><td>${esc(x.device_label||'Thiết bị mới')}</td><td><button class="ghost resolveAlert" data-id="${x.id}">Đã xử lý</button> <button class="ghost alertReset" data-code-id="${x.code_id}">Đặt lại thiết bị</button></td></tr>`).join('')||'<tr><td colspan="5" class="muted">Không có cảnh báo mới.</td></tr>';$('accessAlertStatus').textContent=alerts.length?`Có ${alerts.length} cảnh báo cần xem.`:'Không có cảnh báo mới.';document.querySelectorAll('.resolveAlert').forEach(b=>b.onclick=async()=>{await api('/admin/resolve-alert',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:Number(b.dataset.id)})});await refreshAccessAlerts();await refreshCodes()});document.querySelectorAll('.alertReset').forEach(b=>b.onclick=async()=>{if(!confirm('Đặt lại toàn bộ thiết bị cho mã này?'))return;await api('/admin/reset-devices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:Number(b.dataset.codeId)})});await refreshAccessAlerts();await refreshCodes()})}catch(e){$('accessAlertStatus').textContent=e.message}
+}
+$('refreshAccessAlerts').onclick=refreshAccessAlerts;
 async function generate(){
   try{
     await api('/admin/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:$('codeCourse').value,count:Number($('count').value||1)})});

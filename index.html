@@ -651,6 +651,14 @@ const $=id=>document.getElementById(id);
 let courses = Array.isArray(window.ALUNI_DEFAULT_DATA) ? JSON.parse(JSON.stringify(window.ALUNI_DEFAULT_DATA)) : [];
 let selectedCourseObj=null, selectedLessonObj=null, writer=null, currentItem=null, currentChars=[], currentCharIndex=0, radicalMode=true, currentAudio=null;
 const ACCESS_KEY='aluni_entitlements_v46';
+const DEVICE_KEY='aluni_device_id_v1';
+
+function accessDeviceId(){
+  let id=localStorage.getItem(DEVICE_KEY)||'';
+  if(!id){id='dev-'+(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2));localStorage.setItem(DEVICE_KEY,id)}
+  return id;
+}
+function accessDeviceLabel(){return `${/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'Điện thoại':'Máy tính'} · ${navigator.platform||'Trình duyệt'}`}
 
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function norm(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ü/gi,'u').toLowerCase().replace(/[^a-z0-9]+/g,'')}
@@ -694,9 +702,9 @@ async function hasFullAccess(courseId){
   if(isCurrentFreeCourse(publicCourse||course))return true;
   const e=savedEntitlements()[courseId];if(!e)return false;
   try{
-    const r=await fetch(api('/access/verify'),{headers:{Authorization:`Bearer ${e.token}`}});
+    const r=await fetch(api('/access/verify'),{headers:{Authorization:`Bearer ${e.token}`,'X-Aluni-Device':accessDeviceId(),'X-Aluni-Device-Label':accessDeviceLabel()}});
     if(!r.ok)return false;
-    const j=await r.json();return j.valid===true;
+    const j=await r.json();if(j.token){e.token=j.token;saveEntitlement(e)}return j.valid===true;
   }catch(err){
     // Khi mất mạng tạm thời, giữ phiên đã lưu; nội dung trực tuyến vẫn tự báo lỗi riêng.
     return true;
@@ -765,7 +773,7 @@ function openAccess(){$('accessMsg').textContent='';$('accessModal').classList.a
 function closeAccess(){$('accessModal').classList.remove('show')}
 async function activate(){
   const name=$('accessName').value.trim(),identity=$('accessIdentity').value.trim(),code=$('accessCode').value.trim().toUpperCase(),msg=$('accessMsg');if(!name||!identity||!code){msg.textContent='Vui lòng nhập đủ họ tên, SĐT/email và mã khóa học.';msg.className='access-msg err';return}
-  msg.textContent='Đang kiểm tra...';try{const r=await fetch(api('/access/activate'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,identity,code})});const j=await r.json();if(!r.ok||!j.ok){msg.textContent=j.error||'Mã không hợp lệ.';msg.className='access-msg err';return}saveEntitlement(j);localStorage.setItem('aluni_student_profile_v49',JSON.stringify({name,identity}));msg.textContent='Kích hoạt thành công. Khóa học đã vào “Khóa học của tôi”.';msg.className='access-msg ok';setTimeout(async()=>{closeAccess();await renderMyCourses();const c=publicLearningCourses.find(x=>String(x.id)===String(j.course_id));if(c)openOwnedCourse(c.id)},500)}catch(e){msg.textContent='Lỗi kết nối hệ thống: '+(e?.message||'Failed to fetch');msg.className='access-msg err'}
+  msg.textContent='Đang kiểm tra...';try{const r=await fetch(api('/access/activate'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,identity,code,device_id:accessDeviceId(),device_label:accessDeviceLabel()})});const j=await r.json();if(!r.ok||!j.ok){msg.textContent=j.error||'Mã không hợp lệ.';msg.className='access-msg err';return}saveEntitlement(j);localStorage.setItem('aluni_student_profile_v49',JSON.stringify({name,identity}));msg.textContent='Kích hoạt thành công. Khóa học đã vào “Khóa học của tôi”.';msg.className='access-msg ok';setTimeout(async()=>{closeAccess();await renderMyCourses();const c=publicLearningCourses.find(x=>String(x.id)===String(j.course_id));if(c)openOwnedCourse(c.id)},500)}catch(e){msg.textContent='Lỗi kết nối hệ thống: '+(e?.message||'Failed to fetch');msg.className='access-msg err'}
 }
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.mode').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.mode).classList.add('active')});
 $('courseSelect').onchange=async()=>{const c=getCourse($('courseSelect').value);if(!c){$('lessonSelect').innerHTML='<option>Chọn bài học</option>';return}await renderLessons(c)};
