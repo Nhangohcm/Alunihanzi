@@ -658,7 +658,12 @@ function isCurrentFreeCourse(course){
   const text=[course?.id,course?.code,course?.slug,course?.title,course?.name].filter(Boolean).join(' ').toLowerCase();
   return text.includes('pinyin');
 }
-function freeCount(course){return isCurrentFreeCourse(course)?9999:0}
+function isFiftyPlusCourse(course){
+  const text=[course?.id,course?.code,course?.slug,course?.title,course?.name].filter(Boolean).join(' ').toLowerCase();
+  return text.includes('50plus')||text.includes('50+')||text.includes('50 plus');
+}
+// Pinyin miễn phí toàn bộ; riêng khóa 50+ mở 10 bài Viết chữ để học thử.
+function freeCount(course){return isCurrentFreeCourse(course)?9999:(isFiftyPlusCourse(course)?10:0)}
 function savedEntitlements(){
   try{
     const map=JSON.parse(localStorage.getItem(ACCESS_KEY)||'{}')||{},old=JSON.parse(localStorage.getItem('aluni_entitlement_50plus_v18')||'null');
@@ -671,8 +676,9 @@ function saveEntitlement(item){const map=savedEntitlements();map[item.course_id]
 async function hasFullAccess(courseId){
   const course=getCourse(courseId),publicCourse=publicLearningCourses.find(c=>String(c.id)===String(courseId));
   if(isCurrentFreeCourse(publicCourse||course))return true;
-  const e=savedEntitlements()[courseId];if(!e)return false;
-  try{const r=await fetch(api('/access/verify'),{headers:{Authorization:`Bearer ${e.token}`}});return r.ok}catch(err){return true}
+  // Mã đã được Worker xác thực khi kích hoạt. Dùng quyền đã lưu để mở bài ngay,
+  // tránh khóa lại khóa học chỉ vì lần kiểm tra mạng sau đó chậm hoặc lỗi.
+  return Boolean(savedEntitlements()[courseId]);
 }
 function renderCourseSelect(){
   const s=$('courseSelect');s.innerHTML='<option value="">Chọn khóa học</option>';
@@ -982,9 +988,23 @@ document.querySelector('.app-nav-btn[data-section="grammarSection"]')?.addEventL
 // ===== KHÓA HỌC THỐNG NHẤT R6 =====
 let publicLearningCourses=[],selectedPublicCourse=null;
 function cleanPublicLessonTitle(title,number){return String(title||'').replace(new RegExp('^\\s*Bài\\s*0*'+Number(number)+'\\s*[—–:.-]*\\s*','i'),'').trim()||`Bài ${number}`}
+function publicCourseKey(course){
+  const title=String(course?.title||course?.name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ');
+  if(title.includes('npcr')||title.includes('tan giao trinh han ngu thuc dung'))return'npcr';
+  return title.trim()||String(course?.id||'');
+}
+function dedupePublicCourses(list){
+  const result=[],positions=new Map();
+  for(const course of list){
+    const key=publicCourseKey(course),oldIndex=positions.get(key);
+    if(oldIndex===undefined){positions.set(key,result.length);result.push(course);continue}
+    if((course.lessons||[]).length>(result[oldIndex].lessons||[]).length)result[oldIndex]=course;
+  }
+  return result;
+}
 async function loadPublicLearningCourses(){
   const box=document.getElementById('learningPublicCourses');if(!box)return;
-  try{const r=await fetch(api('/learning-courses'),{cache:'no-store'}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được khóa học.');publicLearningCourses=Array.isArray(j.courses)?j.courses:[];box.innerHTML='';
+  try{const r=await fetch(api('/learning-courses'),{cache:'no-store'}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được khóa học.');publicLearningCourses=dedupePublicCourses(Array.isArray(j.courses)?j.courses:[]);box.innerHTML='';
     if(!publicLearningCourses.length){box.innerHTML='<div class="learning-empty">Chưa có khóa học nào được xuất bản.</div>';return}
     publicLearningCourses.forEach(c=>{const b=document.createElement('button');b.className='learning-course-btn';b.dataset.course=c.id;b.innerHTML=`<b>${shadowEsc(c.icon||'课')} ${shadowEsc(c.title)}</b><div class="hint">${(c.lessons||[]).length} bài · ${isCurrentFreeCourse(c)?'Miễn phí':'Khóa học có phí'}</div>${c.description?`<div class="hint" style="margin-top:5px">${shadowEsc(c.description)}</div>`:''}`;b.onclick=()=>openExploredCourse(c,b);box.appendChild(b);});
     await renderMyCourses();
