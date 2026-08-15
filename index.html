@@ -108,6 +108,7 @@ input,select{width:100%;border:1px solid var(--line);border-radius:13px;backgrou
   color:white;
   border-color:var(--green);
 }
+.app-nav-btn:nth-child(4){margin-left:12px}
 .aluni-section{display:none}
 .aluni-section.active{display:block}
 .module-header{text-align:center;padding:16px 4px 20px}
@@ -522,7 +523,7 @@ body{background:radial-gradient(circle at 8% 0%,rgba(32,168,181,.14),transparent
   .app-brand-lockup{display:none}
   .app-nav{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;overflow:visible;padding:0}
   .app-nav-btn{width:100%;min-width:0;padding:8px 6px;border-radius:11px;font-size:.78rem;line-height:1.2;text-align:center;white-space:normal}
-  .app-nav-btn:nth-child(5){grid-column:1/-1}
+  .app-nav-btn:nth-child(4){margin-left:0}
   .wrap{padding-top:18px}.student-hero h1{font-size:2rem}.student-hero-main{border-radius:19px}.quick-stats{grid-template-columns:1fr 1fr}.learning-video,.learning-resource{align-items:flex-start;flex-direction:column}.learning-video .btn,.learning-resource .btn{width:100%;text-align:center}
 }
 </style>
@@ -532,10 +533,10 @@ body{background:radial-gradient(circle at 8% 0%,rgba(32,168,181,.14),transparent
   <div class="app-brand-lockup"><div class="app-logo">海</div><div><div class="app-brand-name">TIẾNG TRUNG ALUNI</div><div class="app-brand-tagline">Học nhẹ · Nhớ dai · Phản xạ tự nhiên</div></div></div>
   <nav class="app-nav">
     <button class="app-nav-btn active" data-section="writingSection">✍ Viết chữ</button>
-    <button class="app-nav-btn" data-section="learningSection">🎓 Khóa học của tôi</button>
     <button class="app-nav-btn" data-section="shadowSection">🎥 Shadowing</button>
+    <button class="app-nav-btn" data-section="grammarSection">📚 Ngữ pháp</button>
+    <button class="app-nav-btn" data-section="learningSection">🎓 Khóa học của tôi</button>
     <button class="app-nav-btn" data-section="kidsPublicSection">🎬 Hoạt hình</button>
-    <button class="app-nav-btn" data-section="grammarSection">📚 Ngữ pháp & Bài tập</button>
     <button class="app-nav-btn" data-section="aiSpeakSection">🤖 AI Speak</button>
   </nav>
   <div class="top-actions"><button class="top-activate" id="topActivateBtn">🔑 Kích hoạt khóa học</button></div>
@@ -635,7 +636,8 @@ body{background:radial-gradient(circle at 8% 0%,rgba(32,168,181,.14),transparent
     <button class="access-close" id="accessCloseBtn">×</button>
     <div class="brand">TIẾNG TRUNG ALUNI</div>
     <h3>🔑 Kích hoạt hoặc khôi phục quyền học</h3>
-    <p class="hint">Lần đầu hãy nhập thông tin và mã được cấp. Khi đổi máy, nhập lại đúng thông tin và mã cũ để khôi phục khóa học.</p>
+    <p class="hint">Lần đầu hãy nhập thông tin và mã được cấp. Khi đổi máy hoặc mở web trong trình duyệt của Zalo, nhập lại đúng thông tin và mã cũ để khôi phục khóa học.</p>
+    <p class="hint" id="inAppBrowserHint" hidden style="padding:10px 12px;border-radius:12px;background:#fff4d8;color:#76551c"><b>Đang mở trong Zalo/Facebook.</b> Trình duyệt này không dùng chung quyền đã lưu với biểu tượng Aluni trên màn hình chính. Hãy chọn “Mở bằng trình duyệt/Chrome” hoặc khôi phục bằng mã cũ tại đây.</p>
     <input id="accessName" placeholder="Họ và tên" style="margin-bottom:9px">
     <input id="accessIdentity" placeholder="Số điện thoại hoặc email" style="margin-bottom:9px">
     <input id="accessCode" placeholder="Mã kích hoạt, ví dụ 50P-ABCD-EFGH">
@@ -649,6 +651,7 @@ body{background:radial-gradient(circle at 8% 0%,rgba(32,168,181,.14),transparent
 
 <script>
 const $=id=>document.getElementById(id);
+if(/Zalo|FBAN|FBAV|Instagram|Line\//i.test(navigator.userAgent)){document.getElementById('inAppBrowserHint').hidden=false}
 let courses = Array.isArray(window.ALUNI_DEFAULT_DATA) ? JSON.parse(JSON.stringify(window.ALUNI_DEFAULT_DATA)) : [];
 let selectedCourseObj=null, selectedLessonObj=null, writer=null, currentItem=null, currentChars=[], currentCharIndex=0, practiceItems=[], practiceItemIndex=0, radicalMode=true, currentAudio=null;
 const ACCESS_KEY='aluni_entitlements_v46';
@@ -835,7 +838,7 @@ if(demoCheck){
 </section>
 
 
-<section class="aluni-section" id="aiSpeakSection"><div style="width:100%;margin:0;overflow:hidden"><iframe src="ai-speak-test.html?v=50.10-stable" title="Tiếng Trung Aluni AI Speak" allow="microphone" style="display:block;width:100%;height:calc(100dvh - 88px);min-height:680px;border:0;background:#f4f6fb"></iframe></div></section>
+<section class="aluni-section" id="aiSpeakSection"><div style="width:100%;margin:0;overflow:hidden"><iframe src="ai-speak-test.html?v=50.11-mobile-sync" title="Tiếng Trung Aluni AI Speak" allow="microphone" style="display:block;width:100%;height:calc(100dvh - 88px);min-height:680px;border:0;background:#f4f6fb"></iframe></div></section>
 
 <section class="aluni-section" id="shadowSection">
   <div class="shadow-study-bar"><button class="shadow-study-back" id="shadowStudyBack" type="button">← Quay lại bài học</button><div class="shadow-study-title" id="shadowStudyTitle">Shadowing</div></div>
@@ -949,7 +952,7 @@ if(demoCheck){
   <div class="wrap">
     <div class="module-header">
       <div class="brand">TIẾNG TRUNG ALUNI</div>
-      <h1>Ngữ pháp & Bài tập</h1>
+      <h1>Ngữ pháp</h1>
       <p>Học ngắn gọn · xem ví dụ · làm bài ngay trong cùng một bài học.</p>
     </div>
     <div class="module-card grammar-search-box">
