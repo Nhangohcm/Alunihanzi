@@ -653,7 +653,7 @@ body{background:radial-gradient(circle at 8% 0%,rgba(32,168,181,.14),transparent
 const $=id=>document.getElementById(id);
 if(/Zalo|FBAN|FBAV|Instagram|Line\//i.test(navigator.userAgent)){document.getElementById('inAppBrowserHint').hidden=false}
 let courses = Array.isArray(window.ALUNI_DEFAULT_DATA) ? JSON.parse(JSON.stringify(window.ALUNI_DEFAULT_DATA)) : [];
-let selectedCourseObj=null, selectedLessonObj=null, writer=null, currentItem=null, currentChars=[], currentCharIndex=0, practiceItems=[], practiceItemIndex=0, radicalMode=true, currentAudio=null;
+let selectedCourseObj=null, selectedLessonObj=null, writer=null, currentItem=null, currentChars=[], currentCharIndex=0, practiceItems=[], practiceItemIndex=0, radicalMode=true, currentAudio=null, currentSpeechSeq=0;
 const ACCESS_KEY='aluni_entitlements_v46';
 const DEVICE_KEY='aluni_device_id_v1';
 
@@ -753,11 +753,27 @@ function renderItems(items,title){
 }
 function ttsUrl(text){const ep=String(window.ALUNI_TTS_ENDPOINT||'').trim();if(!ep)return'';const sep=ep.includes('?')?'&':'?';return `${ep}${sep}text=${encodeURIComponent(text)}&v=${encodeURIComponent(window.ALUNI_TTS_VERSION||'1')}`}
 function speak(text){
-  const u=ttsUrl(text);if(!u)return;
+  const speechSeq=++currentSpeechSeq;
   if(currentAudio){currentAudio.onerror=null;try{currentAudio.pause()}catch(e){}currentAudio=null}
+  if('speechSynthesis' in window){
+    try{
+      speechSynthesis.cancel();
+      const utterance=new SpeechSynthesisUtterance(String(text||''));
+      const voices=speechSynthesis.getVoices();
+      const zhVoice=voices.find(v=>/^zh[-_](CN|Hans)/i.test(v.lang))||voices.find(v=>/^zh/i.test(v.lang));
+      if(zhVoice)utterance.voice=zhVoice;
+      utterance.lang='zh-CN';utterance.rate=.82;utterance.pitch=1;
+      utterance.onerror=()=>{if(speechSeq===currentSpeechSeq)speakFromServer(text)};
+      speechSynthesis.speak(utterance);return;
+    }catch(e){}
+  }
+  speakFromServer(text);
+}
+function speakFromServer(text){
+  const u=ttsUrl(text);if(!u)return;
   const a=new Audio(u);currentAudio=a;a.play().catch(()=>{$('status').textContent='Hãy bấm lại nút loa.'});
 }
-function warmAudio(items){(items||[]).slice(0,12).forEach((x,i)=>setTimeout(()=>fetch(ttsUrl(x.hanzi),{cache:'force-cache'}).catch(()=>{}),i*220))}
+function warmAudio(){if('speechSynthesis' in window)speechSynthesis.getVoices()}
 function doSearch(){
   const raw=$('searchInput').value.trim();if(!raw)return renderItems([],'Kết quả tìm kiếm');const q=norm(raw),exact=[],near=[];
   courses.forEach(c=>(c.lessons||[]).forEach(l=>(l.items||[]).forEach(it=>{const h=String(it.hanzi||'').trim(),p=norm(it.pinyin),v=norm(it.vi);if(h===raw)exact.push(it);else{let score=0;if(isHan(raw)&&h.includes(raw))score=70;if(!isHan(raw)){if(p===q)score=100;else if(p.startsWith(q))score=90;else if(q.length>=2&&p.includes(q))score=80;if(v===q)score=Math.max(score,95);else if(v.startsWith(q))score=Math.max(score,75);else if(q.length>=2&&v.includes(q))score=Math.max(score,60)}if(score)near.push({...it,_score:score})}})));
@@ -838,7 +854,7 @@ if(demoCheck){
 </section>
 
 
-<section class="aluni-section" id="aiSpeakSection"><div style="width:100%;margin:0;overflow:hidden"><iframe src="ai-speak-test.html?v=50.14-mobile-connect-fix" title="Tiếng Trung Aluni AI Speak" allow="microphone" style="display:block;width:100%;height:calc(100dvh - 88px);min-height:680px;border:0;background:#f4f6fb"></iframe></div></section>
+<section class="aluni-section" id="aiSpeakSection"><div style="width:100%;margin:0;overflow:hidden"><iframe src="ai-speak-test.html?v=50.15-ai-worker-audio" title="Tiếng Trung Aluni AI Speak" allow="microphone" style="display:block;width:100%;height:calc(100dvh - 88px);min-height:680px;border:0;background:#f4f6fb"></iframe></div></section>
 
 <section class="aluni-section" id="shadowSection">
   <div class="shadow-study-bar"><button class="shadow-study-back" id="shadowStudyBack" type="button">← Quay lại bài học</button><div class="shadow-study-title" id="shadowStudyTitle">Shadowing</div></div>
