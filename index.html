@@ -654,6 +654,7 @@ const $=id=>document.getElementById(id);
 if(/Zalo|FBAN|FBAV|Instagram|Line\//i.test(navigator.userAgent)){document.getElementById('inAppBrowserHint').hidden=false}
 let courses = Array.isArray(window.ALUNI_DEFAULT_DATA) ? JSON.parse(JSON.stringify(window.ALUNI_DEFAULT_DATA)) : [];
 let selectedCourseObj=null, selectedLessonObj=null, writer=null, currentItem=null, currentChars=[], currentCharIndex=0, practiceItems=[], practiceItemIndex=0, radicalMode=true, currentAudio=null, currentSpeechSeq=0;
+const ttsAudioCache=new Map(),ttsWarmQueue=new Map();
 const ACCESS_KEY='aluni_entitlements_v46';
 const DEVICE_KEY='aluni_device_id_v1';
 
@@ -755,6 +756,13 @@ function ttsUrl(text){const ep=String(window.ALUNI_TTS_ENDPOINT||'').trim();if(!
 function speak(text){
   const speechSeq=++currentSpeechSeq;
   if(currentAudio){currentAudio.onerror=null;try{currentAudio.pause()}catch(e){}currentAudio=null}
+  const cached=ttsAudioCache.get(String(text||''));
+  if(cached){
+    const a=new Audio(cached);currentAudio=a;a.play().catch(()=>speakWithDeviceVoice(text,speechSeq));return;
+  }
+  speakWithDeviceVoice(text,speechSeq);
+}
+function speakWithDeviceVoice(text,speechSeq){
   if('speechSynthesis' in window){
     try{
       speechSynthesis.cancel();
@@ -773,7 +781,17 @@ function speakFromServer(text){
   const u=ttsUrl(text);if(!u)return;
   const a=new Audio(u);currentAudio=a;a.play().catch(()=>{$('status').textContent='Hãy bấm lại nút loa.'});
 }
-function warmAudio(){if('speechSynthesis' in window)speechSynthesis.getVoices()}
+async function cacheTts(text){
+  text=String(text||'').trim();if(!text||ttsAudioCache.has(text)||ttsWarmQueue.has(text))return;
+  const u=ttsUrl(text);if(!u)return;
+  const job=fetch(u,{cache:'force-cache'}).then(r=>{if(!r.ok)throw new Error('tts');return r.blob()}).then(blob=>{
+    if(blob.size>100){const old=ttsAudioCache.get(text);if(old)URL.revokeObjectURL(old);ttsAudioCache.set(text,URL.createObjectURL(blob))}
+  }).catch(()=>{}).finally(()=>ttsWarmQueue.delete(text));ttsWarmQueue.set(text,job);return job;
+}
+function warmAudio(items=[]){
+  if('speechSynthesis' in window){speechSynthesis.getVoices();if('onvoiceschanged'in speechSynthesis)speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices()}
+  (items||[]).map(x=>x?.hanzi).filter(Boolean).slice(0,18).forEach((text,i)=>setTimeout(()=>cacheTts(text),i*80));
+}
 function doSearch(){
   const raw=$('searchInput').value.trim();if(!raw)return renderItems([],'Kết quả tìm kiếm');const q=norm(raw),exact=[],near=[];
   courses.forEach(c=>(c.lessons||[]).forEach(l=>(l.items||[]).forEach(it=>{const h=String(it.hanzi||'').trim(),p=norm(it.pinyin),v=norm(it.vi);if(h===raw)exact.push(it);else{let score=0;if(isHan(raw)&&h.includes(raw))score=70;if(!isHan(raw)){if(p===q)score=100;else if(p.startsWith(q))score=90;else if(q.length>=2&&p.includes(q))score=80;if(v===q)score=Math.max(score,95);else if(v.startsWith(q))score=Math.max(score,75);else if(q.length>=2&&v.includes(q))score=Math.max(score,60)}if(score)near.push({...it,_score:score})}})));
