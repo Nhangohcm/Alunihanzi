@@ -285,18 +285,24 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
       <div id="learningLessonList"></div>
     </div>
 
-    <div class="card">
-      <h2>⬆️ Nhập cả khóa bằng file</h2>
+    <div class="card" id="bulkCourseImportCard">
+      <h2>🚀 Nhập khóa học & Shadowing hàng loạt</h2>
+      <p class="muted">Một quy trình cho toàn bộ khóa: tạo bài, gắn link YouTube bài giảng, gắn link video Shadowing, rồi tự ghép nhiều file SRT/XLSX theo <b>số bài hoặc mã bài trong tên file</b>.</p>
       <div class="grid2">
         <div><label>Chọn khóa</label><select id="learningImportCourse"></select></div>
-        <div><label>File CSV hoặc XLSX</label><input id="learningFile" type="file" accept=".csv,.xlsx,.xls"></div>
+        <div><label>1. Danh sách bài và link YouTube — CSV/XLSX</label><input id="learningFile" type="file" accept=".csv,.xlsx,.xls"></div>
       </div>
-      <p class="muted">Mỗi video hoặc tài liệu là một dòng. Khi nhập lại, chỉ video và tài liệu của các bài có trong file được cập nhật; Ngữ pháp, Bài tập và Viết chữ vẫn được giữ nguyên.</p>
-      <div class="sample">lesson_number,lesson_title,video_title,youtube_url,resource_title,resource_url
-1,Làm quen Pinyin,Video 1,https://youtu.be/...,Sách Pinyin,https://...pdf
-1,Làm quen Pinyin,Video 2,https://youtu.be/...,,
-2,Bốn thanh điệu,Video 1,https://youtu.be/...,Bài tập,https://...pdf</div>
-      <div class="row" style="margin-top:10px"><button class="primary" id="importLearningBtn">⬆ Nhập nội dung khóa</button><button class="ghost" id="learningTemplateBtn">⬇ Tải file mẫu CSV</button></div>
+      <div class="grid2" style="margin-top:12px">
+        <div><label>2. Chọn cùng lúc nhiều file SRT</label><input id="courseBulkSrt" type="file" accept=".srt" multiple></div>
+        <div><label>3. Chọn cùng lúc nhiều file XLSX/CSV phụ đề</label><input id="courseBulkTranscript" type="file" accept=".xlsx,.xls,.csv" multiple></div>
+      </div>
+      <p class="muted">Quy ước nên dùng: <b>K50_B01.srt</b> đi cùng <b>K50_B01.xlsx</b>. Hệ thống lấy số sau B/Bài/Lesson để ghép đúng Bài 01. XLSX gồm Hanzi, Pinyin, Tiếng Việt và phải có số dòng bằng SRT.</p>
+      <div class="sample">lesson_number,lesson_code,lesson_title,lesson_video_title,lesson_video_url,shadowing_title,shadowing_video_url
+1,K50_B01,Giới thiệu bản thân,Bài giảng 01,https://youtu.be/...,Luyện nói 01,https://youtu.be/...
+2,K50_B02,Hỏi tên,Bài giảng 02,https://youtu.be/...,Luyện nói 02,https://youtu.be/...</div>
+      <div class="row" style="margin-top:10px"><button class="ghost" id="previewBulkCourse">👁 Kiểm tra trước</button><button class="primary" id="runBulkCourse" disabled>⬆ Nhập toàn bộ khóa</button><button class="ghost" id="learningTemplateBtn">⬇ Tải file mẫu XLSX</button></div>
+      <div class="status" id="bulkCourseStatus"></div>
+      <div id="bulkCoursePreview" class="tablewrap" hidden></div>
     </div>
 
     <div class="card">
@@ -771,14 +777,48 @@ async function saveLearningCourse(){
     $('learningStatus').textContent=$('learningPublished').value==='1'?'Đã lưu và xuất bản khóa học.':'Đã lưu bản nháp.';$('learningId').value=j.id;await loadLearningCourses();$('manageLearningCourse').value=j.id;$('learningImportCourse').value=j.id;await loadLearningContent();$('learningCourseFormMode').textContent='CHẾ ĐỘ CHỈNH SỬA';$('learningCourseFormTitle').textContent='Chỉnh sửa khóa học';
   }catch(e){$('learningStatus').textContent=e.message}
 }
-async function importLearning(){
-  const file=$('learningFile').files[0],courseId=$('learningImportCourse').value;
-  if(!courseId||!file){$('learningStatus').textContent='Chọn khóa và file CSV/XLSX.';return}
-  try{const rows=await parseFile(file);const j=await api('/admin/learning/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:courseId,rows})});$('learningStatus').textContent=`Đã nhập ${j.lesson_count} bài. Nếu khóa đã xuất bản, trang học viên sẽ tự cập nhật.`;await loadLearningCourses()}catch(e){$('learningStatus').textContent=e.message}
+let bulkCourseDraft=null;
+function bulkRowValue(row,...keys){for(const key of keys){const found=Object.keys(row||{}).find(k=>String(k).trim().toLowerCase()===key);if(found!==undefined&&String(row[found]??'').trim())return String(row[found]).trim()}return''}
+function lessonNumberFromName(name){const s=String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();const tagged=s.match(/(?:^|[^a-z])(bai|b|lesson)[ _.-]*0*(\d{1,4})(?:\D|$)/i);if(tagged)return Number(tagged[2]);const leading=s.match(/^\D*0*(\d{1,4})(?:\D|$)/);return leading?Number(leading[1]):null}
+function fileForLesson(files,number){return files.find(f=>lessonNumberFromName(f.name)===Number(number))||null}
+async function buildBulkCourseDraft(){
+  const courseId=$('learningImportCourse').value,file=$('learningFile').files[0];
+  if(!courseId||!file)throw new Error('Hãy chọn khóa học và file danh sách bài.');
+  const raw=await parseFile(file),srts=[...$('courseBulkSrt').files],books=[...$('courseBulkTranscript').files],seen=new Set(),lessons=[];
+  for(const row of raw){
+    const number=Number(bulkRowValue(row,'lesson_number','so_bai','bai'));if(!Number.isInteger(number)||number<0)continue;
+    const title=bulkRowValue(row,'lesson_title','ten_bai')||`Bài ${String(number).padStart(2,'0')}`;
+    const lectureUrl=bulkRowValue(row,'lesson_video_url','youtube_url','link_bai_giang');
+    const lectureTitle=bulkRowValue(row,'lesson_video_title','video_title','ten_video_bai_giang')||title;
+    const shadowUrl=bulkRowValue(row,'shadowing_video_url','shadow_url','link_shadowing');
+    const shadowTitle=bulkRowValue(row,'shadowing_title','ten_shadowing')||title;
+    const code=bulkRowValue(row,'lesson_code','ma_bai');
+    if(seen.has(number))continue;seen.add(number);
+    const srt=fileForLesson(srts,number),book=fileForLesson(books,number);let segments=null,error='';
+    if(srt){try{const timings=await parseSrtFile(srt),transcript=book?await parseTranscriptFile(book):timings.map(x=>({hanzi:x.srt_text,pinyin:'',vi:''}));if(!timings.length)throw new Error('SRT rỗng');if(timings.length!==transcript.length)throw new Error(`SRT ${timings.length} câu ≠ XLSX ${transcript.length} dòng`);segments=timings.map((t,i)=>({start_sec:t.start_sec,end_sec:t.end_sec,hanzi:String(transcript[i]?.hanzi||t.srt_text),pinyin:String(transcript[i]?.pinyin||''),vi:String(transcript[i]?.vi||'')}))}catch(e){error=e.message}}
+    lessons.push({number,code,title,lectureTitle,lectureUrl,shadowTitle,shadowUrl,srt,book,segments,error});
+  }
+  if(!lessons.length)throw new Error('Không tìm thấy bài hợp lệ trong file. Cần có cột lesson_number.');
+  return{courseId,lessons,raw};
+}
+async function previewBulkCourseImport(){
+  const status=$('bulkCourseStatus'),box=$('bulkCoursePreview');status.textContent='Đang đọc và ghép file...';$('runBulkCourse').disabled=true;
+  try{bulkCourseDraft=await buildBulkCourseDraft();box.hidden=false;box.innerHTML=`<table><thead><tr><th>Bài</th><th>Video bài giảng</th><th>Video Shadowing</th><th>SRT</th><th>XLSX</th><th>Kiểm tra</th></tr></thead><tbody>${bulkCourseDraft.lessons.map(x=>`<tr><td><b>${x.number}. ${esc(x.title)}</b><br><span class="muted">${esc(x.code||'Chưa có mã bài')}</span></td><td>${x.lectureUrl?'<span class="ok">Có link</span>':'<span class="err">Thiếu link</span>'}</td><td>${x.shadowUrl?'<span class="ok">Có link</span>':'—'}</td><td>${x.srt?esc(x.srt.name):'<span class="err">Chưa ghép</span>'}</td><td>${x.book?esc(x.book.name):'<span class="muted">Không có</span>'}</td><td>${x.error?`<span class="err">${esc(x.error)}</span>`:x.segments?`<span class="ok">Sẵn sàng · ${x.segments.length} câu</span>`:x.shadowUrl?'<span class="err">Thiếu SRT</span>':'Chỉ nhập bài giảng'}</td></tr>`).join('')}</tbody></table>`;
+    const bad=bulkCourseDraft.lessons.filter(x=>x.error||(x.shadowUrl&&!x.segments));$('runBulkCourse').disabled=!!bad.length;status.textContent=bad.length?`Có ${bad.length} bài Shadowing chưa hợp lệ. Hệ thống chưa cho nhập để tránh ghép nhầm.`:`Đã kiểm tra ${bulkCourseDraft.lessons.length} bài. Có thể nhập toàn bộ khóa.`;
+  }catch(e){bulkCourseDraft=null;box.hidden=true;status.textContent=e.message}
+}
+async function runBulkCourseImport(){
+  if(!bulkCourseDraft)return;const btn=$('runBulkCourse'),status=$('bulkCourseStatus');btn.disabled=true;
+  try{
+    const learningRows=bulkCourseDraft.lessons.map(x=>({lesson_number:x.number,lesson_title:x.title,video_title:x.lectureTitle,youtube_url:x.lectureUrl,resource_title:'',resource_url:''}));
+    const imported=await api('/admin/learning/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:bulkCourseDraft.courseId,rows:learningRows})});
+    let shadowDone=0;for(const x of bulkCourseDraft.lessons){if(!x.shadowUrl||!x.segments)continue;status.textContent=`Đã tạo bài. Đang lưu Shadowing ${shadowDone+1}...`;await api('/admin/shadowing/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:bulkCourseDraft.courseId,lesson_number:x.number,title:x.shadowTitle,youtube_url:x.shadowUrl,free_override:0,active:1,segments:x.segments})});shadowDone++}
+    status.textContent=`Hoàn tất: ${imported.lesson_count||bulkCourseDraft.lessons.length} bài học, ${shadowDone} video Shadowing.`;await loadLearningCourses();$('manageLearningCourse').value=bulkCourseDraft.courseId;await loadLearningContent();
+  }catch(e){status.textContent='Dừng nhập: '+e.message}finally{btn.disabled=false}
 }
 function learningTemplate(){
-  const t='\uFEFFlesson_number,lesson_title,video_title,youtube_url,resource_title,resource_url\r\n00,Giới thiệu khóa học,Video 1,https://youtu.be/...,Giới thiệu,https://example.com/gioi-thieu.pdf\r\n01,Làm quen Pinyin,Video 1,https://youtu.be/...,Sách Pinyin,https://example.com/sach.pdf\r\n01,Làm quen Pinyin,Video 2,https://youtu.be/...,,\r\n02,Bốn thanh điệu,Video 1,https://youtu.be/...,Bài tập,https://example.com/bai-tap.pdf\r\n';
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download='mau-khoa-hoc-video-aluni.csv';a.click();
+  const wb=XLSX.utils.book_new(),rows=[{lesson_number:1,lesson_code:'K50_B01',lesson_title:'Giới thiệu bản thân',lesson_video_title:'Bài giảng 01',lesson_video_url:'https://youtu.be/...',shadowing_title:'Luyện nói 01',shadowing_video_url:'https://youtu.be/...'},{lesson_number:2,lesson_code:'K50_B02',lesson_title:'Hỏi tên',lesson_video_title:'Bài giảng 02',lesson_video_url:'https://youtu.be/...',shadowing_title:'Luyện nói 02',shadowing_video_url:'https://youtu.be/...'}];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'DANH_SACH_BAI');XLSX.writeFile(wb,'mau-nhap-khoa-hoc-shadowing-hang-loat.xlsx');
 }
 
 let grammarImportData=null;
@@ -1041,7 +1081,8 @@ $('saveLearningCourse').onclick=saveLearningCourse;
 $('clearLearningForm').onclick=clearLearningForm;
 $('openNewCourseForm').onclick=openNewLearningCourse;
 $('openEditCourseForm').onclick=openSelectedLearningCourse;
-$('importLearningBtn').onclick=importLearning;
+$('previewBulkCourse').onclick=previewBulkCourseImport;
+$('runBulkCourse').onclick=runBulkCourseImport;
 $('learningTemplateBtn').onclick=learningTemplate;
 $('previewGrammarImport').onclick=previewGrammarWorkbook;
 $('runGrammarImport').onclick=runGrammarWorkbookImport;
