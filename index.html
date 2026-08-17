@@ -25,8 +25,8 @@ input,select{width:100%;border:1px solid var(--line);border-radius:13px;backgrou
 .hero-demo h2{margin:4px 0 6px}.demo-words{font-size:1.35rem;font-weight:850;letter-spacing:.08em;margin:8px 0}.free-chip{display:inline-block;background:#e7f0e4;color:#45604c;border-radius:999px;padding:5px 9px;font-size:.8rem;font-weight:850}
 .course-strip{display:flex;gap:7px;overflow:auto;padding-bottom:4px}.lesson-chip{white-space:nowrap;border:1px solid var(--line);background:white;border-radius:999px;padding:8px 11px;font-size:.86rem;font-weight:800}.lesson-chip.locked{background:#f3ead9;color:var(--lock)}
 .section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.section-head h2{margin:0;font-size:1.25rem}.count{font-size:.84rem;background:var(--warm);padding:6px 9px;border-radius:999px;color:var(--muted)}
-.words{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.word{border:1px solid var(--line);background:white;border-radius:17px;padding:14px;text-align:center;min-height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}.hanzi{font-size:clamp(1.7rem,5vw,2.4rem);font-weight:800}.pinyin{margin-top:6px;color:var(--green);font-weight:750}.meaning{margin-top:4px;color:var(--muted);font-size:.94rem}.speak{position:absolute;right:8px;top:8px;border:0;background:var(--green2);border-radius:999px;width:34px;height:34px}.empty{text-align:center;color:var(--muted);padding:28px 10px;grid-column:1/-1}
-.practice{display:none}.practice.show{display:block}.practice-top{text-align:center}.word-big{font-size:clamp(2.2rem,8vw,4.5rem);font-weight:850}.char-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:12px 0}.char-pill{border:1px solid var(--line);background:white;border-radius:12px;padding:8px 13px;font-size:1.35rem}.char-pill.active{background:var(--green);color:white;border-color:var(--green)}
+.words{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.word{border:1px solid var(--line);background:white;border-radius:17px;padding:12px 14px;text-align:center;min-height:118px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}.hanzi{font-size:clamp(1.7rem,5vw,2.4rem);font-weight:800}.pinyin{margin-top:4px;color:var(--green);font-weight:750;line-height:1.25}.meaning{margin-top:2px;color:var(--muted);font-size:.9rem;line-height:1.25}.word .pinyin,.word .meaning{width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pinyin.loading{color:#9aa39b;font-size:.82rem;font-weight:650}.speak{position:absolute;right:8px;top:8px;border:0;background:var(--green2);border-radius:999px;width:34px;height:34px}.empty{text-align:center;color:var(--muted);padding:28px 10px;grid-column:1/-1}
+.practice{display:none}.practice.show{display:block}.practice-top{text-align:center}.word-big{font-size:clamp(2.2rem,8vw,4.5rem);font-weight:850}.practice-meta{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;margin-top:2px}.practice-meta .pinyin,.practice-meta .meaning{margin-top:0}.practice-meta .meaning:before{content:"·";margin-right:7px;color:var(--line)}.char-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:10px 0}.char-pill{border:1px solid var(--line);background:white;border-radius:12px;padding:8px 13px;font-size:1.35rem}.char-pill.active{background:var(--green);color:white;border-color:var(--green)}
 .writerbox{position:relative;width:min(340px,86vw);height:min(340px,86vw);margin:16px auto;background:#fff;border:2px solid #b9c7ba;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .writerbox:before,.writerbox:after{content:"";position:absolute;z-index:0;pointer-events:none;background:#c9d2ca}
 .writerbox:before{left:50%;top:0;bottom:0;width:1px;transform:translateX(-.5px)}
@@ -596,8 +596,7 @@ body{background:radial-gradient(circle at 8% 0%,rgba(32,168,181,.14),transparent
   <div class="practice-top">
     <div class="brand">LUYỆN VIẾT</div>
     <div class="word-big" id="practiceWord"></div>
-    <div class="pinyin" id="practicePinyin"></div>
-    <div class="meaning" id="practiceMeaning"></div>
+    <div class="practice-meta"><div class="pinyin" id="practicePinyin"></div><div class="meaning" id="practiceMeaning"></div></div>
     <div class="char-pills" id="charPills"></div>
     <button class="btn soft" id="speakPractice">🔊 Nghe từ</button>
   </div>
@@ -755,7 +754,25 @@ async function selectLesson(course,lesson,index,fullKnown=null){
 function renderItems(items,title){
   practiceItems=items||[];$('resultsTitle').textContent=title||'Từ vựng';$('resultCount').textContent=`${items.length} mục`;const box=$('words');box.innerHTML='';
   if(!items.length){box.innerHTML='<div class="empty">Không tìm thấy dữ liệu phù hợp.</div>';return}
-  items.forEach(item=>{const d=document.createElement('div');d.className='word';d.innerHTML=`<button class="speak">🔊</button><div class="hanzi">${esc(item.hanzi)}</div><div class="pinyin">${esc(item.pinyin||'')}</div><div class="meaning">${esc(item.vi||'')}</div>`;d.querySelector('.speak').onclick=e=>{e.stopPropagation();speak(item.hanzi)};d.onclick=()=>openPractice(item);box.appendChild(d)})
+  items.forEach(item=>{const d=document.createElement('div'),needsPinyin=!String(item.pinyin||'').trim()&&isHan(item.hanzi);d.className='word';d.innerHTML=`<button class="speak">🔊</button><div class="hanzi">${esc(item.hanzi)}</div><div class="pinyin${needsPinyin?' loading':''}">${esc(item.pinyin||(needsPinyin?'Đang tải pinyin…':''))}</div><div class="meaning">${esc(item.vi||'')}</div>`;d.querySelector('.speak').onclick=e=>{e.stopPropagation();speak(item.hanzi)};d.onclick=()=>openPractice(item);box.appendChild(d);if(needsPinyin)fillWritingPinyin(item,d.querySelector('.pinyin'))})
+}
+const writingPinyinCache=new Map();
+async function getWritingPinyin(hanzi){
+  hanzi=String(hanzi||'').trim();if(!hanzi||!isHan(hanzi))return'';
+  if(writingPinyinCache.has(hanzi))return writingPinyinCache.get(hanzi);
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),7000);
+  try{
+    const url=`https://translate.googleapis.com/translate_a/single?client=gtx&sl=zh-CN&tl=vi&dt=t&dt=rm&q=${encodeURIComponent(hanzi)}`;
+    const r=await fetch(url,{signal:controller.signal});if(!r.ok)throw new Error('pinyin');
+    const data=await r.json();let pinyin='';
+    if(Array.isArray(data?.[0]))for(const row of data[0]){const candidate=[row?.[3],row?.[2]].find(x=>typeof x==='string'&&/[a-zA-ZüÜāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/u.test(x)&&!isHan(x));if(candidate){pinyin=candidate.trim();break}}
+    writingPinyinCache.set(hanzi,pinyin);return pinyin;
+  }catch(e){writingPinyinCache.set(hanzi,'');return''}finally{clearTimeout(timer)}
+}
+async function fillWritingPinyin(item,node){
+  const pinyin=await getWritingPinyin(item.hanzi);if(pinyin)item.pinyin=pinyin;
+  if(node){node.textContent=pinyin||'Chưa có pinyin';node.classList.remove('loading')}
+  if(currentItem===item){$('practicePinyin').textContent=pinyin||'Chưa có pinyin';$('practicePinyin').classList.remove('loading')}
 }
 function ttsUrl(text){const ep=String(window.ALUNI_TTS_ENDPOINT||'').trim();if(!ep)return'';const sep=ep.includes('?')?'&':'?';return `${ep}${sep}text=${encodeURIComponent(text)}&v=${encodeURIComponent(window.ALUNI_TTS_VERSION||'1')}`}
 function speak(text){
@@ -804,7 +821,7 @@ async function translateVietnameseForWriting(raw){
     const r=await fetch(url,{signal:controller.signal});if(!r.ok)throw new Error('translate');
     const j=await r.json(),hanzi=(j?.[0]||[]).map(x=>x?.[0]||'').join('').trim();
     if(!hanzi||!isHan(hanzi))throw new Error('empty');
-    return {hanzi,pinyin:'',vi:raw,_translated:true};
+    return {hanzi,pinyin:await getWritingPinyin(hanzi),vi:raw,_translated:true};
   }finally{clearTimeout(timer)}
 }
 async function doSearch(){
@@ -822,7 +839,7 @@ async function doSearch(){
 }
 
 function extractChars(t){return [...String(t)].filter(c=>/\p{Script=Han}/u.test(c))}
-function openPractice(item,scroll=true){currentItem=item;practiceItemIndex=Math.max(0,practiceItems.indexOf(item));currentChars=extractChars(item.hanzi);currentCharIndex=0;$('practiceWord').textContent=item.hanzi;$('practicePinyin').textContent=item.pinyin||'';$('practiceMeaning').textContent=item.vi||'';renderPills();$('practiceCard').classList.add('show');if(currentChars.length)buildWriter(currentChars[0],false);if(scroll)$('practiceCard').scrollIntoView({behavior:'smooth'})}
+function openPractice(item,scroll=true){currentItem=item;practiceItemIndex=Math.max(0,practiceItems.indexOf(item));currentChars=extractChars(item.hanzi);currentCharIndex=0;$('practiceWord').textContent=item.hanzi;const needsPinyin=!String(item.pinyin||'').trim()&&isHan(item.hanzi);$('practicePinyin').textContent=item.pinyin||(needsPinyin?'Đang tải pinyin…':'');$('practicePinyin').classList.toggle('loading',needsPinyin);if(needsPinyin)fillWritingPinyin(item,null);$('practiceMeaning').textContent=item.vi||'';renderPills();$('practiceCard').classList.add('show');if(currentChars.length)buildWriter(currentChars[0],false);if(scroll)$('practiceCard').scrollIntoView({behavior:'smooth'})}
 function nextPracticeChar(){
   if(!practiceItems.length||!currentChars.length)return;
   if(currentCharIndex<currentChars.length-1){currentCharIndex++;renderPills();buildWriter(currentChars[currentCharIndex],false);return}
