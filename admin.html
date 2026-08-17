@@ -144,15 +144,17 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
     <div class="card">
       <h2>Mã kích hoạt</h2>
       <div class="grid">
-        <div><label>Khóa học</label><select id="codeCourse"><option value="50plus">50+ Phản xạ</option></select></div>
+        <div><label>Loại quyền</label><select id="codeType"><option value="course">Khóa học — COURSE_ACCESS</option><option value="shadowing">Shadowing theo năm — SHADOWING_PASS</option></select></div>
+        <div><label id="codeProductLabel">Khóa học</label><select id="codeCourse"><option value="50plus">50+ Phản xạ</option></select></div>
         <div><label>Số mã cần tạo</label><input id="count" type="number" min="1" max="200" value="20"></div>
-        <div></div>
       </div>
       <div class="row" style="margin-top:10px">
         <button class="primary" id="generateBtn">Tạo mã</button>
+        <button class="ghost" id="setupShadowPass" style="display:none">Khởi tạo gói Shadowing 1 năm</button>
         <button class="ghost" id="refreshCodes">Làm mới danh sách</button>
         <button class="ghost" id="downloadCodes">⬇ Tải CSV</button>
       </div>
+      <p class="muted" id="codeTypeHelp">Mã khóa học mở nội dung và Shadowing thuộc đúng khóa đã mua.</p>
       <div class="status" id="codeStatus"></div>
     </div>
 
@@ -500,6 +502,7 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
 const base=String(window.ALUNI_API_BASE||'').replace(/\/+$/,'');
 const $=id=>document.getElementById(id);
 let codes=[],courses=[],learningCourses=[],adminSecret='';
+const SHADOWING_PASS_ID='shadowing-pass';
 let shadowDraftSegments=[];
 let editingShadowId=null;
 let shadowCourseLessons=[];
@@ -575,6 +578,9 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
 
 async function refreshCodes(){
   try{
+    if($('codeType').value==='shadowing'&&!courses.some(c=>String(c.id)===SHADOWING_PASS_ID)){
+      codes=[];$('codeBody').innerHTML='';$('codeStatus').textContent='Chưa có gói Shadowing. Hãy bấm “Khởi tạo gói Shadowing 1 năm”.';return;
+    }
     const j=await api('/admin/codes?course_id='+encodeURIComponent($('codeCourse').value));
     codes=j.codes||[];
     $('codeBody').innerHTML='';
@@ -608,8 +614,26 @@ async function refreshAccessAlerts(){
 $('refreshAccessAlerts').onclick=refreshAccessAlerts;
 async function generate(){
   try{
-    await api('/admin/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:$('codeCourse').value,count:Number($('count').value||1)})});
+    const isShadow=$('codeType').value==='shadowing',courseId=isShadow?SHADOWING_PASS_ID:$('codeCourse').value;
+    if(isShadow&&!courses.some(c=>String(c.id)===SHADOWING_PASS_ID))throw new Error('Hãy bấm “Khởi tạo gói Shadowing 1 năm” trước khi tạo mã.');
+    await api('/admin/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:courseId,count:Number($('count').value||1),entitlement_type:isShadow?'SHADOWING_PASS':'COURSE_ACCESS',duration_days:isShadow?365:undefined})});
     await refreshCodes();
+  }catch(e){$('codeStatus').textContent=e.message}
+}
+function syncCodeType(refresh=true){
+  const isShadow=$('codeType').value==='shadowing',select=$('codeCourse');
+  $('codeProductLabel').textContent=isShadow?'Gói quyền':'Khóa học';$('setupShadowPass').style.display=isShadow?'inline-block':'none';
+  [...select.options].forEach(o=>o.hidden=isShadow?String(o.value)!==SHADOWING_PASS_ID:String(o.value)===SHADOWING_PASS_ID);
+  if(isShadow){select.value=SHADOWING_PASS_ID;$('codeTypeHelp').textContent='Mã SHADOWING_PASS mở kho Shadowing độc lập và Hoạt hình trong 365 ngày; không mở các khóa học trả phí.'}
+  else{const first=[...select.options].find(o=>!o.hidden);if(first&&(!select.value||select.selectedOptions[0]?.hidden))select.value=first.value;$('codeTypeHelp').textContent='Mã COURSE_ACCESS mở nội dung và Shadowing thuộc đúng khóa đã mua.'}
+  if(refresh)refreshCodes();
+}
+async function setupShadowPass(){
+  try{
+    if(courses.some(c=>String(c.id)===SHADOWING_PASS_ID)){$('codeStatus').textContent='Gói Shadowing 1 năm đã tồn tại và sẵn sàng tạo mã.';return}
+    await api('/admin/learning/course',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:SHADOWING_PASS_ID,title:'Gói Shadowing toàn kho · 1 năm',icon:'影',access:'paid',grammar_access:'course',free_lessons:0,sort_order:999,published:false,description:'Sản phẩm quyền ẩn: mở kho Shadowing độc lập và Hoạt hình, không mở khóa học.'})});
+    await api('/admin/shadowing/rule',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:SHADOWING_PASS_ID,access_mode:'paid_all',free_lessons:0})});
+    await loadCourses();$('codeType').value='shadowing';syncCodeType(false);$('codeStatus').textContent='Đã khởi tạo gói Shadowing 1 năm. Bây giờ có thể tạo mã riêng.';
   }catch(e){$('codeStatus').textContent=e.message}
 }
 function csvEsc(v){return '"'+String(v??'').replace(/"/g,'""')+'"'}
@@ -635,16 +659,19 @@ async function loadCourses(){
     $('codeCourse').innerHTML='';
     if($('writingManageCourse'))$('writingManageCourse').innerHTML='';
     courses.forEach(c=>{
-      $('importCourse').add(new Option(c.name,c.id));
-      $('shadowAdminCourse').add(new Option(c.name,c.id));
       $('codeCourse').add(new Option(c.name,c.id));
-      if($('writingManageCourse'))$('writingManageCourse').add(new Option(`${c.name} (${c.lesson_count||0} bài)`,c.id));
+      if(String(c.id)!==SHADOWING_PASS_ID){
+        $('importCourse').add(new Option(c.name,c.id));
+        $('shadowAdminCourse').add(new Option(c.name,c.id));
+        if($('writingManageCourse'))$('writingManageCourse').add(new Option(`${c.name} (${c.lesson_count||0} bài)`,c.id));
+      }
     });
     if(selectedShadow&&courses.some(c=>String(c.id)===String(selectedShadow)))$('shadowAdminCourse').value=selectedShadow;
     if(selectedWriting&&courses.some(c=>String(c.id)===String(selectedWriting)))$('writingManageCourse').value=selectedWriting;
     if(selectedImport&&courses.some(c=>String(c.id)===String(selectedImport)))$('importCourse').value=selectedImport;
     if(selectedCode&&courses.some(c=>String(c.id)===String(selectedCode)))$('codeCourse').value=selectedCode;
-    $('contentStatus').textContent=`Có ${courses.length} khóa được tạo từ tab Khóa học.`;
+    syncCodeType(false);
+    $('contentStatus').textContent=`Có ${courses.filter(c=>String(c.id)!==SHADOWING_PASS_ID).length} khóa được tạo từ tab Khóa học.`;
     if($('writingManageCourse')&&courses.length)await loadWritingContent();
   }catch(e){$('contentStatus').textContent=e.message}
 }
@@ -1001,6 +1028,9 @@ $('loginBtn').onclick=login;
 $('adminKey').onkeydown=e=>{if(e.key==='Enter')login()};
 $('logoutBtn').onclick=logout;
 $('generateBtn').onclick=generate;
+$('codeType').onchange=()=>syncCodeType();
+$('codeCourse').onchange=refreshCodes;
+$('setupShadowPass').onclick=setupShadowPass;
 $('refreshCodes').onclick=refreshCodes;
 $('downloadCodes').onclick=downloadCodes;
 $('importBtn').onclick=doImport;
