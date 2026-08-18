@@ -36,6 +36,7 @@ input,select{width:100%;border:1px solid var(--line);border-radius:13px;backgrou
 #writerTarget{position:relative;z-index:1;line-height:0}.actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}.status{text-align:center;min-height:24px;color:var(--muted);margin-top:10px;font-weight:700}
 .radical-legend{text-align:center;margin-top:9px;color:var(--muted);font-size:.88rem}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 5px 0 10px}.dot.rad{background:#789976}.dot.rest{background:#2e3a34}.radical-info{width:min(620px,94%);margin:14px auto 0;padding:14px 16px;border:1px solid var(--line);background:#faf7f0;border-radius:16px;text-align:left}.ri{display:grid;grid-template-columns:100px 1fr;gap:8px;margin:4px 0}.rk{color:var(--muted);font-weight:800}.rv{font-weight:650}
 .access-modal{position:fixed;inset:0;background:rgba(25,35,30,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:9999}.access-modal.show{display:flex}.access-box{position:relative;width:min(470px,100%);background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.22)}.access-close{position:absolute;right:12px;top:10px;width:36px;height:36px;border-radius:999px;border:1px solid var(--line);background:white;font-size:1.2rem}.access-msg{min-height:22px;margin-top:10px;font-weight:750}.access-msg.err{color:#a24d46}.access-msg.ok{color:#39734d}.access-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
+.sales-popup{position:fixed;inset:0;z-index:10050;display:grid;place-items:center;padding:16px;background:rgba(25,31,55,.55);backdrop-filter:blur(4px)}.sales-popup[hidden]{display:none}.sales-poster{position:relative;width:min(500px,100%);overflow:hidden;border-radius:25px;background:linear-gradient(145deg,#536bea,#8264e9 62%,#9b69da);color:#fff;box-shadow:0 24px 80px rgba(20,28,70,.34)}.sales-poster-image{display:block;width:100%;max-height:72vh;object-fit:contain;background:#fff}.sales-poster-content{padding:28px}.sales-popup-close{position:absolute;z-index:2;right:12px;top:12px;width:40px;height:40px;border:0;border-radius:50%;background:rgba(255,255,255,.94);color:#17213c;font-size:1.3rem;cursor:pointer}.sales-brand{font-size:.82rem;font-weight:900;letter-spacing:.12em;opacity:.9}.sales-poster h2{margin:10px 0 16px;font-size:clamp(1.55rem,5vw,2.35rem);line-height:1.15}.sales-prices{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.sales-price{padding:13px 6px;border:1px solid rgba(255,255,255,.3);border-radius:15px;background:rgba(255,255,255,.14);text-align:center}.sales-price b{display:block;font-size:1.15rem}.sales-benefit{margin:16px 0;line-height:1.5}.sales-buy{display:block;padding:13px 18px;border-radius:14px;background:#fff;color:#465bd2;text-align:center;font-weight:950;text-decoration:none}.sales-use-free{display:block;width:100%;margin-top:8px;border:0;background:transparent;color:#fff;font-weight:800;cursor:pointer}@media(max-width:520px){.sales-poster-content{padding:23px 18px}.sales-prices{grid-template-columns:1fr}.sales-price{display:flex;justify-content:space-between;padding:9px 13px}}
 
 .contact-card{
   margin-top:16px;
@@ -687,6 +688,19 @@ body{background:radial-gradient(circle at 8% 0%,rgba(32,168,181,.14),transparent
   </div>
 </div>
 
+<div class="sales-popup" id="salesPopup" hidden>
+  <div class="sales-poster" role="dialog" aria-modal="true" aria-label="Ưu đãi học toàn bộ website">
+    <button class="sales-popup-close" id="salesPopupClose" aria-label="Đóng">×</button>
+    <img class="sales-poster-image" id="salesPopupImage" alt="Ưu đãi học toàn bộ Tiếng Trung Aluni" hidden>
+    <div class="sales-poster-content" id="salesPopupContent">
+      <div class="sales-brand">TIẾNG TRUNG ALUNI</div><h2>Học mọi khóa học chỉ với</h2>
+      <div class="sales-prices"><div class="sales-price"><b>100K</b><span>01 tháng</span></div><div class="sales-price"><b>300K</b><span>06 tháng</span></div><div class="sales-price"><b>600K</b><span>12 tháng</span></div></div>
+      <p class="sales-benefit">Tận hưởng trọn bộ quyền lợi: các khóa học, kho Shadowing, hoạt hình, Ngữ pháp, Viết chữ và nhiều nội dung mới.</p>
+      <a class="sales-buy" id="salesBuyNow" href="#" target="_blank" rel="noopener">Mua ngay</a><button class="sales-use-free" id="salesUseFree">Đóng và dùng web bình thường</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const $=id=>document.getElementById(id);
 if(/Zalo|FBAN|FBAV|Instagram|Line\//i.test(navigator.userAgent)){document.getElementById('inAppBrowserHint').hidden=false}
@@ -695,6 +709,7 @@ let selectedCourseObj=null, selectedLessonObj=null, writer=null, currentItem=nul
 const ttsAudioCache=new Map(),ttsWarmQueue=new Map();
 const ACCESS_KEY='aluni_entitlements_v46';
 const SHADOWING_PASS_ID='shadowing-pass';
+const ALL_ACCESS_ID='all-access';
 const DEVICE_KEY='aluni_device_id_v1';
 
 function accessDeviceId(){
@@ -741,10 +756,11 @@ function savedEntitlements(){
   }catch(e){return{}}
 }
 function saveEntitlement(item){const map=savedEntitlements();map[item.course_id]=item;localStorage.setItem(ACCESS_KEY,JSON.stringify(map));return map}
+function entitlementFor(courseId){const map=savedEntitlements();return map[courseId]||map[ALL_ACCESS_ID]||null}
 async function hasFullAccess(courseId){
   const course=getCourse(courseId),publicCourse=publicLearningCourses.find(c=>String(c.id)===String(courseId));
   if(isCurrentFreeCourse(publicCourse||course))return true;
-  const e=savedEntitlements()[courseId];if(!e)return false;
+  const e=entitlementFor(courseId);if(!e)return false;
   try{
     const r=await fetch(api('/access/verify'),{headers:{Authorization:`Bearer ${e.token}`,'X-Aluni-Device':accessDeviceId(),'X-Aluni-Device-Label':accessDeviceLabel()}});
     if(!r.ok)return false;
@@ -964,7 +980,7 @@ function openAccess(){$('accessMsg').textContent='';$('accessModal').classList.a
 function closeAccess(){$('accessModal').classList.remove('show')}
 async function activate(){
   const name=$('accessName').value.trim(),identity=$('accessIdentity').value.trim(),code=$('accessCode').value.trim().toUpperCase(),msg=$('accessMsg');if(!name||!identity||!code){msg.textContent='Vui lòng nhập đủ họ tên, SĐT/email và mã khóa học.';msg.className='access-msg err';return}
-  msg.textContent='Đang kiểm tra...';try{const r=await fetch(api('/access/activate'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,identity,code,device_id:accessDeviceId(),device_label:accessDeviceLabel()})});const j=await r.json();if(!r.ok||!j.ok){msg.textContent=j.error||'Mã không hợp lệ.';msg.className='access-msg err';return}saveEntitlement(j);localStorage.setItem('aluni_student_profile_v49',JSON.stringify({name,identity}));const isShadow=String(j.course_id)===SHADOWING_PASS_ID;msg.textContent=isShadow?'Kích hoạt gói Shadowing thành công. Quyền dùng có hiệu lực theo thời hạn của mã.':'Kích hoạt thành công. Khóa học đã vào “Khóa học của tôi”.';msg.className='access-msg ok';setTimeout(async()=>{closeAccess();await renderMyCourses();if(isShadow){setActiveAppSection('shadowSection');selectShadowMode('channel');return}const c=publicLearningCourses.find(x=>String(x.id)===String(j.course_id));if(c)openOwnedCourse(c.id)},500)}catch(e){msg.textContent='Lỗi kết nối hệ thống: '+(e?.message||'Failed to fetch');msg.className='access-msg err'}
+  msg.textContent='Đang kiểm tra...';try{const r=await fetch(api('/access/activate'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,identity,code,device_id:accessDeviceId(),device_label:accessDeviceLabel()})});const j=await r.json();if(!r.ok||!j.ok){msg.textContent=j.error||'Mã không hợp lệ.';msg.className='access-msg err';return}saveEntitlement(j);localStorage.setItem('aluni_student_profile_v49',JSON.stringify({name,identity}));const isShadow=String(j.course_id)===SHADOWING_PASS_ID,isAll=String(j.course_id)===ALL_ACCESS_ID;msg.textContent=isAll?'Kích hoạt toàn bộ website thành công.':isShadow?'Kích hoạt gói Shadowing thành công. Quyền dùng có hiệu lực theo thời hạn của mã.':'Kích hoạt thành công. Khóa học đã vào “Khóa học của tôi”.';msg.className='access-msg ok';setTimeout(async()=>{closeAccess();await renderMyCourses();if(isAll)return;if(isShadow){setActiveAppSection('shadowSection');selectShadowMode('channel');return}const c=publicLearningCourses.find(x=>String(x.id)===String(j.course_id));if(c)openOwnedCourse(c.id)},500)}catch(e){msg.textContent='Lỗi kết nối hệ thống: '+(e?.message||'Failed to fetch');msg.className='access-msg err'}
 }
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.mode').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.mode).classList.add('active')});
 $('courseSelect').onchange=async()=>{const c=getCourse($('courseSelect').value);if(!c){$('lessonSelect').innerHTML='<option>Chọn bài học</option>';return}await renderLessons(c)};
@@ -975,6 +991,9 @@ $('writingDictClose').onclick=closeWritingDictionary;$('writingDictDismiss').onc
 // Cửa sổ kích hoạt phải thuộc cấp toàn trang, không nằm trong riêng mục Viết chữ.
 document.body.appendChild($('accessModal'));
 $('accessActivateBtn').onclick=activate;$('accessCancelBtn').onclick=closeAccess;$('accessCloseBtn').onclick=closeAccess;$('accessModal').onclick=e=>{if(e.target===$('accessModal'))closeAccess()};
+function closeSalesPopup(){$('salesPopup').hidden=true;sessionStorage.setItem('aluni_sales_popup_seen','1')}
+function setupSalesPopup(){const url=String(window.ALUNI_SALES_PAGE_URL||'#'),image=String(window.ALUNI_SALES_POPUP_IMAGE||'');$('salesBuyNow').href=url;$('salesBuyNow').onclick=e=>{if(url==='#'){e.preventDefault();closeSalesPopup();openAccess()}};if(image){$('salesPopupImage').src=image;$('salesPopupImage').hidden=false;$('salesPopupContent').hidden=true;$('salesPopupImage').onclick=()=>$('salesBuyNow').click()}if(!savedEntitlements()[ALL_ACCESS_ID]&&!sessionStorage.getItem('aluni_sales_popup_seen'))setTimeout(()=>{$('salesPopup').hidden=false},900)}
+$('salesPopupClose').onclick=closeSalesPopup;$('salesUseFree').onclick=closeSalesPopup;$('salesPopup').onclick=e=>{if(e.target===$('salesPopup'))closeSalesPopup()};setupSalesPopup();
 $('animateBtn').onclick=()=>writer&&writer.animateCharacter();$('quizBtn').onclick=()=>currentChars.length&&buildWriter(currentChars[currentCharIndex],true);$('resetBtn').onclick=()=>currentChars.length&&buildWriter(currentChars[currentCharIndex],true);$('nextCharBtn').onclick=nextPracticeChar;$('radicalBtn').onclick=()=>{radicalMode=!radicalMode;$('radicalBtn').textContent=`🎨 Tách bộ thủ: ${radicalMode?'BẬT':'TẮT'}`;if(currentChars.length)buildWriter(currentChars[currentCharIndex],false)};$('speakPractice').onclick=()=>currentItem&&speak(currentItem.hanzi);
 loadRemoteContent();
 
@@ -1251,9 +1270,9 @@ async function loadPublicLearningCourses(){
 }
 async function renderMyCourses(){
   const box=document.getElementById('myCoursesGrid');if(!box)return;
-  const entitlements=savedEntitlements(),owned=publicLearningCourses.filter(c=>isCurrentFreeCourse(c)||entitlements[c.id]);
+  const entitlements=savedEntitlements(),all=entitlements[ALL_ACCESS_ID],owned=publicLearningCourses.filter(c=>isCurrentFreeCourse(c)||entitlements[c.id]||all);
   if(!owned.length){box.innerHTML='<div class="learning-empty">Bạn chưa có khóa học nào. Hãy dùng nút “Kích hoạt khóa học” trên thanh đầu trang.</div>';return}
-  box.innerHTML=owned.map(c=>{const shadows=(c.lessons||[]).reduce((sum,l)=>sum+(l.shadowing_videos||[]).length,0),e=entitlements[c.id];return `<article class="my-course-card"><span class="owned-badge">${isCurrentFreeCourse(c)?'MIỄN PHÍ':'ĐÃ KÍCH HOẠT'}</span><h3>${shadowEsc(c.icon||'课')} ${shadowEsc(c.title)}</h3><div class="hint">${(c.lessons||[]).length} bài · Mini Shadowing dùng chung ${shadows} video${e?.expires_at?`<br>Quyền học đến ${new Date(e.expires_at).toLocaleDateString('vi-VN')}`:''}</div><div class="my-course-actions"><button class="btn primary openOwnedCourse" data-course="${shadowEsc(c.id)}">Học đầy đủ</button>${shadows?`<button class="btn ghost openMiniCourse" data-course="${shadowEsc(c.id)}">Ôn nhanh Shadowing</button>`:''}</div></article>`}).join('');
+  box.innerHTML=owned.map(c=>{const shadows=(c.lessons||[]).reduce((sum,l)=>sum+(l.shadowing_videos||[]).length,0),e=entitlements[c.id]||all;return `<article class="my-course-card"><span class="owned-badge">${isCurrentFreeCourse(c)?'MIỄN PHÍ':all?'TOÀN WEB':'ĐÃ KÍCH HOẠT'}</span><h3>${shadowEsc(c.icon||'课')} ${shadowEsc(c.title)}</h3><div class="hint">${(c.lessons||[]).length} bài · Mini Shadowing dùng chung ${shadows} video${e?.expires_at?`<br>Quyền học đến ${new Date(e.expires_at).toLocaleDateString('vi-VN')}`:''}</div><div class="my-course-actions"><button class="btn primary openOwnedCourse" data-course="${shadowEsc(c.id)}">Học đầy đủ</button>${shadows?`<button class="btn ghost openMiniCourse" data-course="${shadowEsc(c.id)}">Ôn nhanh Shadowing</button>`:''}</div></article>`}).join('');
   document.querySelectorAll('.openOwnedCourse').forEach(b=>b.onclick=()=>openOwnedCourse(b.dataset.course));document.querySelectorAll('.openMiniCourse').forEach(b=>b.onclick=()=>openMiniCourse(b.dataset.course));
 }
 async function openOwnedCourse(courseId){
@@ -1363,10 +1382,10 @@ let showShadowVi = true;
 let shadowSuggestionsLoaded = false;
 let mediaPlaylists=[];
 
-async function loadMediaPlaylists(){try{const headers={};const ents=savedEntitlements();const token=ents[SHADOWING_PASS_ID]?.token||Object.values(ents).find(x=>x?.token)?.token;if(token)headers.Authorization=`Bearer ${token}`;const r=await fetch(shadowApi('/media/catalog?audience=shadowing'),{cache:'no-store',headers}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được playlist.');mediaPlaylists=j.playlists||[];const s=$('shadowChannelPlaylist');s.innerHTML='<option value="">Chọn kênh → playlist</option>';mediaPlaylists.forEach(p=>s.add(new Option(`${p.channel_name} → ${p.title}`,p.id)));$('shadowNote').textContent=mediaPlaylists.length?'Chọn kênh, playlist và video để bắt đầu.':'Chưa có playlist theo kênh được xuất bản.'}catch(e){$('shadowNote').textContent=e.message}}
+async function loadMediaPlaylists(){try{const headers={};const ents=savedEntitlements();const token=ents[ALL_ACCESS_ID]?.token||ents[SHADOWING_PASS_ID]?.token||Object.values(ents).find(x=>x?.token)?.token;if(token)headers.Authorization=`Bearer ${token}`;const r=await fetch(shadowApi('/media/catalog?audience=shadowing'),{cache:'no-store',headers}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được playlist.');mediaPlaylists=j.playlists||[];const s=$('shadowChannelPlaylist');s.innerHTML='<option value="">Chọn kênh → playlist</option>';mediaPlaylists.forEach(p=>s.add(new Option(`${p.channel_name} → ${p.title}`,p.id)));$('shadowNote').textContent=mediaPlaylists.length?'Chọn kênh, playlist và video để bắt đầu.':'Chưa có playlist theo kênh được xuất bản.'}catch(e){$('shadowNote').textContent=e.message}}
 function selectShadowMode(mode){const channel=mode==='channel';$('shadowModeCourse').classList.toggle('active',!channel);$('shadowModeChannel').classList.toggle('active',channel);$('shadowCoursePicker').hidden=channel;$('shadowVideoPicker').hidden=channel;$('shadowChannelPicker').hidden=!channel;$('shadowChannelVideoPicker').hidden=!channel;$('shadowPlayerCard').style.display='none';if(channel)loadMediaPlaylists();else loadShadowCourses()}
 function renderMediaVideoOptions(){const p=mediaPlaylists.find(x=>x.id===$('shadowChannelPlaylist').value),s=$('shadowChannelVideo');s.innerHTML='<option value="">Chọn video</option>';for(const x of (p?.items||[]))s.add(new Option(`${x.locked?'🔒 ':''}${x.item_number}. ${x.title}`,x.id));$('shadowNote').textContent=p?`Có ${(p.items||[]).length} video trong playlist.`:'Chọn playlist.'}
-async function loadMediaVideo(id){const p=mediaPlaylists.find(x=>(x.items||[]).some(i=>String(i.id)===String(id))),item=(p?.items||[]).find(i=>String(i.id)===String(id));if(item?.locked){openAccess();$('shadowChannelVideo').value='';return}try{const ent=item?.product_course_id?savedEntitlements()[item.product_course_id]:null,headers=ent?.token?{Authorization:`Bearer ${ent.token}`}:{},r=await fetch(shadowApi('/media/item?id='+encodeURIComponent(id)),{cache:'no-store',headers}),j=await r.json();if(!r.ok){if(j.locked)openAccess();throw new Error(j.error||`HTTP ${r.status}`)}shadowSegments=j.segments||[];shadowCurrentIndex=-1;renderShadowTranscript();renderShadowLive(-1);const ytId=youtubeIdFromUrl(j.video.youtube_url||j.item.youtube_url);$('shadowPlayerCard').style.display='grid';$('shadowNote').textContent=j.item.title;if(shadowPlayer&&shadowPlayer.loadVideoById)shadowPlayer.loadVideoById(ytId);else shadowPlayer=new YT.Player('youtubePlayer',{videoId:ytId,events:{onReady:startShadowSync,onStateChange:startShadowSync}});startShadowSync()}catch(e){$('shadowNote').textContent=e.message}}
+async function loadMediaVideo(id){const p=mediaPlaylists.find(x=>(x.items||[]).some(i=>String(i.id)===String(id))),item=(p?.items||[]).find(i=>String(i.id)===String(id));if(item?.locked){openAccess();$('shadowChannelVideo').value='';return}try{const ent=item?.product_course_id?entitlementFor(item.product_course_id):savedEntitlements()[ALL_ACCESS_ID],headers=ent?.token?{Authorization:`Bearer ${ent.token}`}:{},r=await fetch(shadowApi('/media/item?id='+encodeURIComponent(id)),{cache:'no-store',headers}),j=await r.json();if(!r.ok){if(j.locked)openAccess();throw new Error(j.error||`HTTP ${r.status}`)}shadowSegments=j.segments||[];shadowCurrentIndex=-1;renderShadowTranscript();renderShadowLive(-1);const ytId=youtubeIdFromUrl(j.video.youtube_url||j.item.youtube_url);$('shadowPlayerCard').style.display='grid';$('shadowNote').textContent=j.item.title;if(shadowPlayer&&shadowPlayer.loadVideoById)shadowPlayer.loadVideoById(ytId);else shadowPlayer=new YT.Player('youtubePlayer',{videoId:ytId,events:{onReady:startShadowSync,onStateChange:startShadowSync}});startShadowSync()}catch(e){$('shadowNote').textContent=e.message}}
 
 function shadowApi(path){
   const base = String(window.ALUNI_API_BASE || '').replace(/\/+$/,'');
@@ -1489,7 +1508,7 @@ async function loadShadowVideos(courseId){
   if(!courseId) return;
 
   try{
-    const entitlement=savedEntitlements()[courseId],headers=entitlement?.token?{Authorization:`Bearer ${entitlement.token}`} : {};
+    const entitlement=entitlementFor(courseId),headers=entitlement?.token?{Authorization:`Bearer ${entitlement.token}`} : {};
     const r = await fetch(shadowApi('/shadowing/videos?course_id=' + encodeURIComponent(courseId)), {cache:'no-store',headers});
     const j = await r.json();
     shadowVideos = Array.isArray(j.videos) ? j.videos : [];
@@ -1511,7 +1530,7 @@ async function loadShadowVideo(videoId){
   try{
     const selected=shadowVideos.find(v=>String(v.id)===String(videoId));
     if(selected?.locked){openAccess();document.getElementById('shadowVideo').value='';return}
-    const courseId=selected?.course_id||document.getElementById('shadowCourse')?.value,entitlement=savedEntitlements()[courseId],headers=entitlement?.token?{Authorization:`Bearer ${entitlement.token}`} : {};
+    const courseId=selected?.course_id||document.getElementById('shadowCourse')?.value,entitlement=entitlementFor(courseId),headers=entitlement?.token?{Authorization:`Bearer ${entitlement.token}`} : {};
     const r = await fetch(shadowApi('/shadowing/video?id=' + encodeURIComponent(videoId)), {cache:'no-store',headers});
     const j = await r.json();
 
