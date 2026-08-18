@@ -755,15 +755,40 @@ async function loadLearningCourses(){
       $('learningImportCourse').add(new Option(c.title,c.id));
       $('manageLearningCourse').add(new Option(c.title,c.id));
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${Number(c.sort_order||0)}</td><td><b>${c.title}</b><br><span class="muted">${c.id}</span></td><td>${c.access==='paid'?'Có phí':'Miễn phí'}</td><td>${c.lesson_count||0}</td><td>${Number(c.published)?'<span class="badge">Đã xuất bản</span>':'Lưu nháp'}</td><td><div class="course-actions"><button class="primary manageLearning" data-id="${c.id}">Quản lý bài</button><button class="ghost editLearning" data-id="${c.id}">Sửa khóa</button></div></td>`;
+      const isPublished=Number(c.published)===1,isProtected=c.id===SHADOWING_PASS_ID;
+      tr.innerHTML=`<td>${Number(c.sort_order||0)}</td><td><b>${esc(c.title)}</b><br><span class="muted">${esc(c.id)}</span></td><td>${c.access==='paid'?'Có phí':'Miễn phí'}</td><td>${c.lesson_count||0}</td><td>${isPublished?'<span class="badge">Đã xuất bản</span>':'<span class="muted">Đang ẩn</span>'}</td><td><div class="course-actions"><button class="primary manageLearning" data-id="${esc(c.id)}">Quản lý bài</button><button class="ghost editLearning" data-id="${esc(c.id)}">Sửa khóa</button>${!isProtected?`<button class="ghost toggleLearningCourse" data-id="${esc(c.id)}">${isPublished?'🙈 Ẩn':'👁 Hiện'}</button><button class="danger deleteLearningCourse" data-id="${esc(c.id)}">🗑 Xóa</button>`:''}</div></td>`;
       $('learningCourseBody').appendChild(tr);
     });
     document.querySelectorAll('.editLearning').forEach(b=>b.onclick=()=>editLearningCourse(b.dataset.id));
     document.querySelectorAll('.manageLearning').forEach(b=>b.onclick=()=>manageLearningCourseById(b.dataset.id));
+    document.querySelectorAll('.toggleLearningCourse').forEach(b=>b.onclick=()=>toggleLearningCourse(b.dataset.id));
+    document.querySelectorAll('.deleteLearningCourse').forEach(b=>b.onclick=()=>deleteLearningCourse(b.dataset.id));
     if(selected&&learningCourses.some(c=>c.id===selected))$('manageLearningCourse').value=selected;
     $('learningStatus').textContent=`Có ${learningCourses.length} khóa học trong hệ thống.`;
     if(learningCourses.length)await loadLearningContent();else $('learningLessonList').innerHTML='';
   }catch(e){$('learningStatus').textContent=e.message}
+}
+async function toggleLearningCourse(id){
+  const c=learningCourses.find(x=>x.id===id);if(!c)return;
+  const nextPublished=Number(c.published)!==1;
+  if(!confirm(`${nextPublished?'Hiện':'Ẩn'} khóa “${c.title}”?\n\n${nextPublished?'Học viên sẽ nhìn thấy khóa khi có quyền truy cập.':'Toàn bộ bài và nội dung vẫn được giữ nguyên.'}`))return;
+  try{
+    await api('/admin/learning/course',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:c.id,title:c.title||c.name,icon:c.icon||'课',access:c.access||'paid',grammar_access:c.grammar_access||'course',free_lessons:Number(c.free_lessons||0),sort_order:Number(c.sort_order||0),published:nextPublished,description:c.description||''})});
+    await loadLearningCourses();$('learningStatus').textContent=`Đã ${nextPublished?'hiện':'ẩn'} khóa “${c.title}”. Dữ liệu bên trong được giữ nguyên.`;
+  }catch(e){$('learningStatus').textContent='Không thể đổi trạng thái: '+e.message}
+}
+async function deleteLearningCourse(id){
+  const c=learningCourses.find(x=>x.id===id);if(!c||id===SHADOWING_PASS_ID)return;
+  const count=Number(c.lesson_count||0);
+  if(count===0){if(!confirm(`Xóa khóa trống “${c.title}”?\n\nThao tác này không thể hoàn tác.`))return}
+  else{
+    const typed=prompt(`CẢNH BÁO: khóa “${c.title}” có ${count} bài.\nXóa khóa có thể xóa toàn bộ nội dung liên kết.\n\nGõ XOA để xác nhận:`);
+    if(String(typed||'').trim().toUpperCase()!=='XOA'){$('learningStatus').textContent='Đã hủy xóa khóa.';return}
+  }
+  try{
+    await api('/admin/learning/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:'course',id:c.id})});
+    await loadLearningCourses();$('learningStatus').textContent=`Đã xóa khóa “${c.title}”.`;
+  }catch(e){$('learningStatus').textContent='Không thể xóa khóa: '+e.message}
 }
 async function manageLearningCourseById(id){
   $('manageLearningCourse').value=id;
