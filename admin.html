@@ -227,11 +227,13 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
       </div>
     </div>
 
-    <div class="card">
-      <div class="course-form-head"><div><h2>⚙️ Thông tin khóa học</h2><p class="muted" style="margin:5px 0 0">Tạo mới hoặc chọn một khóa bên dưới để chỉnh sửa.</p></div><div class="course-form-actions"><button class="primary" id="openNewCourseForm">＋ Tạo khóa mới</button><button class="ghost" id="openEditCourseForm">✎ Sửa khóa đang chọn</button></div></div>
+    <div class="card" id="courseModeCard">
+      <h2>1. Chọn công việc</h2>
+      <div class="row"><button class="primary" id="openNewCourseForm">＋ Tạo khóa học mới</button><button class="ghost" id="openEditCourseForm">✎ Sửa khóa cũ</button></div>
+      <div id="oldCoursePicker" hidden style="margin-top:14px"><label>Chọn đúng khóa cần sửa</label><div class="grid2"><select id="editCoursePicker"><option value="">— Chọn khóa học —</option></select><button class="primary" id="confirmEditCourse">Mở khóa đã chọn</button></div><div class="status" id="activeCourseNotice">Tên, mã khóa và số bài sẽ hiện ở đây.</div></div>
     </div>
     <div class="card course-form-card" id="learningCourseFormCard">
-      <h2 id="learningCourseFormTitle">Tạo khóa học mới</h2>
+      <h2 id="learningCourseFormTitle">2. Thông tin khóa học</h2>
       <span class="course-form-mode" id="learningCourseFormMode">CHẾ ĐỘ TẠO MỚI</span>
       <p class="muted">Khóa chỉ xuất hiện ở trang học viên khi anh bật <b>Xuất bản</b>.</p>
       <div class="grid">
@@ -249,25 +251,25 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
         <b>✓ Tự động có Mini Shadowing đi kèm</b>
         <p class="muted" style="margin:5px 0 0">Mini Shadowing dùng chung video và quyền kích hoạt của khóa chính, không tạo bản sao dữ liệu. Khi bài có Shadowing, học viên sẽ thấy nút <b>Ôn nhanh Shadowing</b>.</p>
       </div>
-      <div class="shadow-course-rule" style="margin-top:12px">
-        <b>Quyền xem Ngữ pháp & Bài tập</b>
-        <p class="muted" style="margin:5px 0 10px">Chọn miễn phí toàn bộ để mọi bài ngữ pháp hiện tại và thêm mới của khóa đều mở cho học viên.</p>
-        <select id="learningGrammarAccess"><option value="course">Theo quyền của khóa học</option><option value="free_all">Miễn phí toàn bộ Ngữ pháp & Bài tập</option></select>
-      </div>
-      <div class="shadow-course-rule" style="margin-top:12px">
-        <b>Quyền xem Shadowing của khóa</b>
-        <p class="muted" style="margin:5px 0 10px">Quy tắc chung đặt tại khóa học, không đặt trong từng video.</p>
-        <div class="grid2">
-          <div><label>Quyền xem</label><select id="learningShadowAccess"><option value="free_first">Miễn phí X bài đầu</option><option value="paid_all">Toàn bộ theo quyền của khóa</option></select></div>
-          <div><label>Số bài Shadowing miễn phí</label><input id="learningShadowFreeLessons" type="number" min="0" value="0"></div>
-        </div>
-      </div>
+      <input type="hidden" id="learningGrammarAccess" value="course"><input type="hidden" id="learningShadowAccess" value="paid_all"><input type="hidden" id="learningShadowFreeLessons" value="0">
       <div class="row" style="margin-top:10px"><button class="primary" id="saveLearningCourse">Lưu khóa học</button><button class="ghost" id="clearLearningForm">Hủy và đóng</button></div>
       <div class="status" id="learningStatus"></div>
     </div>
 
+    <div class="card" id="coursePermissionCard">
+      <h2>3. Quyền chung toàn khóa</h2><p class="muted">Chọn khóa có cần mã hay không, sau đó ghi chính xác các số bài được học miễn phí. Ví dụ: <b>1, 2, 5</b>.</p>
+      <div class="grid2"><div><label>Quyền toàn khóa</label><select id="globalCourseAccess"><option value="free">Miễn phí toàn bộ khóa</option><option value="paid">Cần mã kích hoạt</option></select></div><div><label>Các bài miễn phí</label><input id="globalFreeLessons" placeholder="1, 2, 3"></div></div>
+      <div class="row" style="margin-top:10px"><button class="primary" id="saveAccessSettings">Lưu toàn bộ cài đặt quyền</button></div><div class="status" id="accessSettingsStatus">Hãy chọn một khóa cũ hoặc lưu khóa mới trước.</div>
+    </div>
+
+    <div class="card module-access-card" data-module="video"><h2>4. Video bài giảng</h2><div class="grid2"><select class="moduleAccessMode" data-module="video"><option value="inherit">Áp dụng theo quyền toàn khóa</option><option value="custom">Miễn phí các bài riêng</option></select><input class="moduleFreeLessons" data-module="video" placeholder="Số bài, ví dụ: 1, 4"></div><button class="ghost moduleOpen" data-target="learningLessonManager">Quản lý video theo bài</button></div>
+    <div class="card module-access-card" data-module="shadowing"><h2>5. Shadowing</h2><div class="grid2"><select class="moduleAccessMode" data-module="shadowing"><option value="inherit">Áp dụng theo quyền toàn khóa</option><option value="custom">Miễn phí các bài riêng</option></select><input class="moduleFreeLessons" data-module="shadowing" placeholder="Số bài, ví dụ: 1, 4"></div><button class="ghost modulePane" data-pane-target="shadowPane">Mở tab Shadowing của khóa này</button></div>
+    <div class="card module-access-card" data-module="writing"><h2>6. Viết chữ</h2><div class="grid2"><select class="moduleAccessMode" data-module="writing"><option value="inherit">Áp dụng theo quyền toàn khóa</option><option value="custom">Miễn phí các bài riêng</option></select><input class="moduleFreeLessons" data-module="writing" placeholder="Số bài, ví dụ: 1, 4"></div><button class="ghost modulePane" data-pane-target="writingPane">Mở tab Viết chữ Hán của khóa này</button></div>
+    <div class="card module-access-card" data-module="grammar"><h2>7. Ngữ pháp & Bài tập</h2><div class="grid2"><select class="moduleAccessMode" data-module="grammar"><option value="inherit">Áp dụng theo quyền toàn khóa</option><option value="custom">Miễn phí các bài riêng</option></select><input class="moduleFreeLessons" data-module="grammar" placeholder="Số bài, ví dụ: 1, 4"></div><button class="ghost modulePane" data-pane-target="grammarPane">Mở tab Ngữ pháp của khóa này</button></div>
+    <div class="card module-access-card" data-module="resource"><h2>8. Tài liệu</h2><div class="grid2"><select class="moduleAccessMode" data-module="resource"><option value="inherit">Áp dụng theo quyền toàn khóa</option><option value="custom">Miễn phí các bài riêng</option></select><input class="moduleFreeLessons" data-module="resource" placeholder="Số bài, ví dụ: 1, 4"></div><button class="ghost moduleOpen" data-target="learningLessonManager">Quản lý tài liệu theo bài</button></div>
+
     <div class="card manager-anchor" id="learningLessonManager">
-      <h2>🗂️ Danh sách và nội dung từng bài</h2>
+      <h2>Video, tài liệu và danh sách nội dung từng bài</h2>
       <p class="muted">Chọn khóa → tạo hoặc mở một bài → thêm/sửa video, tải tài liệu và xem trạng thái Ngữ pháp, Bài tập, Viết chữ, Shadowing của chính bài đó.</p>
       <div class="course-manager-head">
         <div><label>Chọn khóa học</label><select id="manageLearningCourse"></select></div>
@@ -763,11 +765,12 @@ async function loadLearningCourses(){
     $('statLessonCount').textContent=learningCourses.reduce((sum,c)=>sum+Number(c.lesson_count||0),0);
     $('statPublishedCount').textContent=learningCourses.filter(c=>Number(c.published)).length;
     const selected=$('manageLearningCourse').value;
-    $('learningImportCourse').innerHTML='';$('manageLearningCourse').innerHTML='';$('lessonListImportCourse').innerHTML='';$('learningCourseBody').innerHTML='';
+    $('learningImportCourse').innerHTML='';$('manageLearningCourse').innerHTML='';$('lessonListImportCourse').innerHTML='';$('editCoursePicker').innerHTML='<option value="">— Chọn khóa học —</option>';$('learningCourseBody').innerHTML='';
     learningCourses.forEach(c=>{
       $('learningImportCourse').add(new Option(c.title,c.id));
       $('manageLearningCourse').add(new Option(c.title,c.id));
       $('lessonListImportCourse').add(new Option(`${c.title} (${c.lesson_count||0} bài)`,c.id));
+      $('editCoursePicker').add(new Option(`${c.title} · ${c.id} · ${c.lesson_count||0} bài`,c.id));
       const tr=document.createElement('tr');
       const isPublished=Number(c.published)===1,isProtected=c.id===SHADOWING_PASS_ID;
       tr.innerHTML=`<td>${Number(c.sort_order||0)}</td><td><b>${esc(c.title)}</b><br><span class="muted">${esc(c.id)}</span></td><td>${c.access==='paid'?'Có phí':'Miễn phí'}</td><td>${c.lesson_count||0}</td><td>${isPublished?'<span class="badge">Đã xuất bản</span>':'<span class="muted">Đang ẩn</span>'}</td><td><div class="course-actions"><button class="primary manageLearning" data-id="${esc(c.id)}">Quản lý bài</button><button class="ghost editLearning" data-id="${esc(c.id)}">Sửa khóa</button>${!isProtected?`<button class="ghost toggleLearningCourse" data-id="${esc(c.id)}">${isPublished?'🙈 Ẩn':'👁 Hiện'}</button><button class="danger deleteLearningCourse" data-id="${esc(c.id)}">🗑 Xóa</button>`:''}</div></td>`;
@@ -800,7 +803,7 @@ async function deleteLearningCourse(id){
     if(String(typed||'').trim().toUpperCase()!=='XOA'){$('learningStatus').textContent='Đã hủy xóa khóa.';return}
   }
   try{
-    await api('/admin/learning/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:'course',id:c.id})});
+    await api('/admin/learning/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:'course',id:c.id,confirm:count>0?'XOA':''})});
     await loadLearningCourses();$('learningStatus').textContent=`Đã xóa khóa “${c.title}”.`;
   }catch(e){$('learningStatus').textContent='Không thể xóa khóa: '+e.message}
 }
@@ -812,17 +815,33 @@ async function manageLearningCourseById(id){
 }
 async function editLearningCourse(id){
   const c=learningCourses.find(x=>x.id===id);if(!c)return;
+  await selectLearningCourseEverywhere(id);
   $('learningCourseFormCard').classList.add('open');$('learningCourseFormTitle').textContent='Chỉnh sửa khóa học';$('learningCourseFormMode').textContent='CHẾ ĐỘ CHỈNH SỬA';
   $('learningId').value=c.id;$('learningId').readOnly=true;$('learningTitle').value=c.title||'';$('learningIcon').value=c.icon||'课';$('learningAccess').value=c.access||'free';$('learningGrammarAccess').value=c.grammar_access||'course';$('learningSort').value=Number(c.sort_order||0);$('learningPublished').value=Number(c.published)?'1':'0';$('learningDescription').value=c.description||'';
   try{const j=await api('/admin/shadowing/rule?course_id='+encodeURIComponent(c.id));const rule=j.rule||{};$('learningShadowAccess').value=rule.access_mode||'paid_all';$('learningShadowFreeLessons').value=Number(rule.free_lessons||0)}catch(e){$('learningShadowAccess').value='paid_all';$('learningShadowFreeLessons').value=0}
-  $('learningStatus').textContent='Đang sửa khóa '+c.title+'.';$('learningCourseFormCard').scrollIntoView({behavior:'smooth',block:'start'});
+  $('learningStatus').textContent=`Đang sửa “${c.title}” · mã ${c.id} · ${c.lesson_count||0} bài.`;$('activeCourseNotice').textContent=$('learningStatus').textContent;await loadAccessSettings(id);$('learningCourseFormCard').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function clearLearningForm(){
   $('learningId').value='';$('learningId').readOnly=false;$('learningTitle').value='';$('learningIcon').value='拼';$('learningAccess').value='free';$('learningGrammarAccess').value='course';$('learningSort').value='0';$('learningPublished').value='0';$('learningDescription').value='';$('learningShadowAccess').value='paid_all';$('learningShadowFreeLessons').value=0;
   $('learningCourseFormCard').classList.remove('open');$('learningStatus').textContent='';
 }
 function openNewLearningCourse(){clearLearningForm();$('learningCourseFormCard').classList.add('open');$('learningCourseFormTitle').textContent='Tạo khóa học mới';$('learningCourseFormMode').textContent='CHẾ ĐỘ TẠO MỚI';$('learningId').focus()}
-function openSelectedLearningCourse(){const id=$('manageLearningCourse').value;if(!id){$('learningStatus').textContent='Chưa có khóa học để sửa.';return}editLearningCourse(id)}
+function openSelectedLearningCourse(){$('oldCoursePicker').hidden=false;$('editCoursePicker').focus()}
+function lessonListValue(text){return [...new Set(String(text||'').split(/[^0-9]+/).filter(Boolean).map(Number).filter(Number.isInteger))].sort((a,b)=>a-b)}
+async function selectLearningCourseEverywhere(id){
+  const c=learningCourses.find(x=>x.id===id);if(!c)return;
+  for(const name of ['manageLearningCourse','learningImportCourse','lessonListImportCourse','grammarImportCourse','grammarManageCourse','writingManageCourse','shadowAdminCourse']){const el=$(name);if(el&&[...el.options].some(o=>o.value===id))el.value=id}
+  $('editCoursePicker').value=id;localStorage.setItem('aluni_admin_active_course',id);$('statActiveCourse').textContent=c.title;$('activeCourseNotice').textContent=`Đang chọn: ${c.title} · ${c.id} · ${c.lesson_count||0} bài`;
+  await loadLearningContent();
+}
+async function loadAccessSettings(id){
+  try{const j=await api('/admin/learning/access-settings?course_id='+encodeURIComponent(id)),s=j.settings||{};$('globalCourseAccess').value=s.course_access||'free';$('globalFreeLessons').value=(s.global_free_lessons||[]).join(', ');for(const module of ['video','shadowing','writing','grammar','resource']){const r=s.modules?.[module]||{};document.querySelector(`.moduleAccessMode[data-module="${module}"]`).value=r.mode||'inherit';const input=document.querySelector(`.moduleFreeLessons[data-module="${module}"]`);input.value=(r.free_lessons||[]).join(', ');input.disabled=(r.mode||'inherit')==='inherit'}$('accessSettingsStatus').textContent='Đã tải quyền của khóa đang chọn.'}catch(e){$('accessSettingsStatus').textContent=e.message}
+}
+async function saveAccessSettings(){
+  const id=$('manageLearningCourse').value;if(!id){$('accessSettingsStatus').textContent='Hãy chọn khóa học trước.';return}
+  const modules={};for(const module of ['video','shadowing','writing','grammar','resource'])modules[module]={mode:document.querySelector(`.moduleAccessMode[data-module="${module}"]`).value,free_lessons:lessonListValue(document.querySelector(`.moduleFreeLessons[data-module="${module}"]`).value)};
+  try{await api('/admin/learning/access-settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:id,course_access:$('globalCourseAccess').value,global_free_lessons:lessonListValue($('globalFreeLessons').value),modules})});$('accessSettingsStatus').textContent='Đã lưu quyền toàn khóa và 5 phần nội dung.';await loadLearningCourses();await selectLearningCourseEverywhere(id)}catch(e){$('accessSettingsStatus').textContent=e.message}
+}
 async function saveLearningCourse(){
   try{
     const id=$('learningId').value.trim(),title=$('learningTitle').value.trim();
@@ -1193,6 +1212,12 @@ $('saveLearningCourse').onclick=saveLearningCourse;
 $('clearLearningForm').onclick=clearLearningForm;
 $('openNewCourseForm').onclick=openNewLearningCourse;
 $('openEditCourseForm').onclick=openSelectedLearningCourse;
+$('confirmEditCourse').onclick=()=>{const id=$('editCoursePicker').value;if(id)editLearningCourse(id);else $('activeCourseNotice').textContent='Hãy chọn một khóa trong danh sách.'};
+$('editCoursePicker').onchange=()=>{const c=learningCourses.find(x=>x.id===$('editCoursePicker').value);$('activeCourseNotice').textContent=c?`Đã chọn: ${c.title} · ${c.id} · ${c.lesson_count||0} bài`:'Tên, mã khóa và số bài sẽ hiện ở đây.'};
+$('saveAccessSettings').onclick=saveAccessSettings;
+document.querySelectorAll('.moduleAccessMode').forEach(el=>el.onchange=()=>{const input=document.querySelector(`.moduleFreeLessons[data-module="${el.dataset.module}"]`);input.disabled=el.value==='inherit';if(input.disabled)input.value=''});
+document.querySelectorAll('.moduleOpen').forEach(b=>b.onclick=()=>$(b.dataset.target)?.scrollIntoView({behavior:'smooth',block:'start'}));
+document.querySelectorAll('.modulePane').forEach(b=>b.onclick=async()=>{const id=$('manageLearningCourse').value;document.querySelector(`[data-pane="${b.dataset.paneTarget}"]`)?.click();if(id)await selectLearningCourseEverywhere(id)});
 $('previewBulkCourse').onclick=previewBulkCourseImport;
 $('runBulkCourse').onclick=runBulkCourseImport;
 $('learningTemplateBtn').onclick=learningTemplate;
@@ -1211,7 +1236,7 @@ $('grammarImportCourse').onchange=()=>{grammarImportData=null;$('runGrammarImpor
 $('grammarImportScope').onchange=()=>{if(grammarImportData)previewGrammarWorkbook()};
 $('grammarManageCourse').onchange=loadGrammarContent;
 $('refreshGrammarContent').onclick=loadGrammarContent;
-$('manageLearningCourse').onchange=loadLearningContent;
+$('manageLearningCourse').onchange=async()=>{const id=$('manageLearningCourse').value;await selectLearningCourseEverywhere(id);await loadAccessSettings(id)};
 $('refreshLearningContent').onclick=loadLearningContent;
 $('addLearningLesson').onclick=addLearningLesson;
 $('addBatchLessons').onclick=addBatchLessons;
