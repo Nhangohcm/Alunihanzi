@@ -336,14 +336,15 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
 
     <div class="card">
       <h2>Nhập ngữ pháp & bài tập hàng loạt</h2>
-      <p class="muted">Một file XLSX có thể chứa nhiều khóa, nhiều bài và ba sheet <b>NGU_PHAP</b>, <b>VI_DU</b>, <b>BAI_TAP</b>. Có thể chỉ thay bài tập mà vẫn giữ nguyên lý thuyết và ví dụ cũ.</p>
+      <p class="muted">Khóa học và các bài phải được tạo trước tại tab <b>Khóa học</b>. Sau đó chọn khóa đích ở đây; hệ thống sẽ ghép nội dung trong file vào đúng số bài của khóa đã chọn.</p>
       <div class="grid">
+        <div><label>Khóa học đích</label><select id="grammarImportCourse"><option value="">— Chọn khóa học đã tạo —</option></select></div>
         <div><label>File XLSX chuẩn</label><input id="grammarImportFile" type="file" accept=".xlsx,.xls"></div>
         <div><label>Phạm vi cập nhật</label><select id="grammarImportScope"><option value="auto">Tự nhận theo sheet có trong file</option><option value="all">Cả ngữ pháp và bài tập</option><option value="theory">Chỉ ngữ pháp & ví dụ</option><option value="exercises">Chỉ bài tập</option></select></div>
         <div><label>Trạng thái sau khi nhập</label><select id="grammarImportPublished"><option value="file">Theo cột published trong file</option><option value="1">Hiện cho học viên</option><option value="0">Lưu nháp / Ẩn</option></select></div>
       </div>
       <div class="row" style="margin-top:10px"><button class="ghost" id="previewGrammarImport">👁 Xem trước</button><button class="primary" id="runGrammarImport" disabled>⬆ Nhập dữ liệu</button><button class="ghost" id="grammarXlsxTemplate">⬇ Tải file XLSX mẫu</button></div>
-      <div class="status" id="grammarImportStatus">Chọn file rồi bấm “Xem trước”. Hệ thống chưa lưu ngay khi vừa chọn file.</div>
+      <div class="status" id="grammarImportStatus">Chọn khóa học đích và file, sau đó bấm “Xem trước”. Hệ thống chưa lưu ngay.</div>
       <div class="tablewrap" id="grammarImportPreview" hidden></div>
     </div>
 
@@ -744,6 +745,7 @@ async function loadWritingContent(){
 async function loadLearningCourses(){
   try{
     const j=await api('/admin/learning/courses');learningCourses=j.courses||[];
+    syncGrammarImportCourses();
     $('statCourseCount').textContent=learningCourses.length;
     $('statLessonCount').textContent=learningCourses.reduce((sum,c)=>sum+Number(c.lesson_count||0),0);
     $('statPublishedCount').textContent=learningCourses.filter(c=>Number(c.published)).length;
@@ -844,16 +846,23 @@ function learningTemplate(){
 }
 
 let grammarImportData=null;
+function syncGrammarImportCourses(){
+  const select=$('grammarImportCourse');if(!select)return;
+  const selected=select.value;select.innerHTML='<option value="">— Chọn khóa học đã tạo —</option>';
+  learningCourses.forEach(c=>select.add(new Option(`${c.title} (${c.lesson_count||0} bài)`,c.id)));
+  select.add(new Option('Theo course_id trong file (nâng cao)','__file__'));
+  if([...select.options].some(o=>o.value===selected))select.value=selected;
+}
 function normalizeImportRow(row){const out={};Object.entries(row||{}).forEach(([k,v])=>out[String(k).trim().toLowerCase()]=v);return out}
 function importKey(row){return `${String(row.course_id||'').trim()}|${Number(row.lesson_number)}`}
 function sheetRows(wb,name){const actual=wb.SheetNames.find(x=>x.trim().toUpperCase()===name);return actual?XLSX.utils.sheet_to_json(wb.Sheets[actual],{defval:''}).map(normalizeImportRow):[]}
 function publishedValue(v){const s=String(v??'').trim().toLowerCase();return !['0','false','no','ẩn','an','nháp','nhap'].includes(s)}
 function correctIndex(v,options){const s=String(v??'').trim().toUpperCase();const n=/^[A-Z]$/.test(s)?s.charCodeAt(0)-65:Number(s)-1;if(!Number.isInteger(n)||n<0||n>=options.length)throw new Error(`Đáp án “${v}” không hợp lệ.`);return n}
-async function readGrammarWorkbook(file){
+async function readGrammarWorkbook(file,targetCourseId){
   const wb=XLSX.read(await file.arrayBuffer(),{type:'array'}),theory=sheetRows(wb,'NGU_PHAP'),examples=sheetRows(wb,'VI_DU'),questions=sheetRows(wb,'BAI_TAP');
   if(!theory.length&&!examples.length&&!questions.length)throw new Error('Không thấy sheet NGU_PHAP, VI_DU hoặc BAI_TAP.');
   const groups=new Map();
-  const get=r=>{if(!String(r.course_id||'').trim()||r.lesson_number==='')throw new Error('Mỗi dòng cần course_id và lesson_number.');const number=Number(r.lesson_number);if(!Number.isInteger(number)||number<0)throw new Error(`lesson_number “${r.lesson_number}” không hợp lệ.`);const k=importKey(r);if(!groups.has(k))groups.set(k,{course_id:String(r.course_id).trim(),lesson_number:number,theory:null,examples:[],questions:[]});return groups.get(k)};
+  const get=r=>{const courseId=targetCourseId||String(r.course_id||'').trim();if(!courseId||r.lesson_number==='')throw new Error(targetCourseId?'Mỗi dòng cần lesson_number.':'Mỗi dòng cần course_id và lesson_number.');const number=Number(r.lesson_number);if(!Number.isInteger(number)||number<0)throw new Error(`lesson_number “${r.lesson_number}” không hợp lệ.`);const k=`${courseId}|${number}`;if(!groups.has(k))groups.set(k,{course_id:courseId,lesson_number:number,theory:null,examples:[],questions:[]});return groups.get(k)};
   theory.forEach(r=>{const g=get(r);if(!String(r.title||'').trim())throw new Error(`NGU_PHAP ${g.course_id} bài ${g.lesson_number} thiếu title.`);g.theory={title:String(r.title).trim(),pinyin:String(r.pinyin||''),explanation:String(r.explanation||''),formula:String(r.formula||''),published:publishedValue(r.published)}});
   examples.sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0)).forEach(r=>{const g=get(r);if(String(r.hanzi||'').trim())g.examples.push({hanzi:String(r.hanzi).trim(),pinyin:String(r.pinyin||''),vi:String(r.vi||'')})});
   questions.sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0)).forEach(r=>{const g=get(r),options=['option_a','option_b','option_c','option_d'].map(k=>String(r[k]||'').trim()).filter(Boolean);if(!String(r.prompt||'').trim()||options.length<2)throw new Error(`BAI_TAP ${g.course_id} bài ${g.lesson_number} cần câu hỏi và ít nhất 2 lựa chọn.`);g.questions.push({prompt:String(r.prompt).trim(),options,correct_index:correctIndex(r.correct,options),explanation:String(r.explanation||''),sort_order:Number(r.sort_order||g.questions.length+1)})});
@@ -867,8 +876,8 @@ async function resolveGrammarLessons(data){
 }
 function chosenGrammarScope(data){const selected=$('grammarImportScope').value;if(selected!=='auto')return selected;if(data.hasTheory&&data.hasExercises)return'all';if(data.hasTheory)return'theory';return'exercises'}
 async function previewGrammarWorkbook(){
-  const file=$('grammarImportFile').files[0];if(!file){$('grammarImportStatus').textContent='Hãy chọn file XLSX.';return}
-  try{let data=await readGrammarWorkbook(file);data=await resolveGrammarLessons(data);const scope=chosenGrammarScope(data),missing=data.groups.filter(g=>!g.lesson);grammarImportData=data;$('grammarImportPreview').hidden=false;$('grammarImportPreview').innerHTML=`<table><thead><tr><th>Khóa</th><th>Bài</th><th>Ngữ pháp</th><th>Ví dụ</th><th>Bài tập</th><th>Kiểm tra</th></tr></thead><tbody>${data.groups.map(g=>`<tr><td>${esc(g.course_id)}</td><td>${g.lesson_number}</td><td>${esc(g.theory?.title||'—')}</td><td>${g.examples.length}</td><td>${g.questions.length}</td><td>${g.lesson?'<span class="ok">Sẵn sàng</span>':'<span class="err">Chưa tạo tại Khóa học</span>'}</td></tr>`).join('')}</tbody></table>`;$('runGrammarImport').disabled=!!missing.length;$('grammarImportStatus').textContent=missing.length?`Có ${missing.length} bài chưa tồn tại. Hãy sang tab Khóa học tạo đúng khóa/bài rồi quay lại xem trước lần nữa.`:`Sẵn sàng nhập ${data.groups.length} bài · phạm vi: ${scope==='all'?'cả hai':scope==='theory'?'ngữ pháp & ví dụ':'chỉ bài tập'}.`;}
+  const courseChoice=$('grammarImportCourse').value,file=$('grammarImportFile').files[0];if(!courseChoice){$('grammarImportStatus').textContent='Hãy chọn khóa học đích đã tạo ở tab Khóa học.';return}if(!file){$('grammarImportStatus').textContent='Hãy chọn file XLSX.';return}
+  try{const targetCourseId=courseChoice==='__file__'?'':courseChoice;let data=await readGrammarWorkbook(file,targetCourseId);data=await resolveGrammarLessons(data);const scope=chosenGrammarScope(data),missing=data.groups.filter(g=>!g.lesson),course=learningCourses.find(c=>c.id===targetCourseId),courseLabel=course?.title||'theo mã trong file';grammarImportData=data;$('grammarImportPreview').hidden=false;$('grammarImportPreview').innerHTML=`<table><thead><tr><th>Khóa</th><th>Bài</th><th>Ngữ pháp</th><th>Ví dụ</th><th>Bài tập</th><th>Kiểm tra</th></tr></thead><tbody>${data.groups.map(g=>`<tr><td>${esc(learningCourses.find(c=>c.id===g.course_id)?.title||g.course_id)}</td><td>${g.lesson_number}</td><td>${esc(g.theory?.title||'—')}</td><td>${g.examples.length}</td><td>${g.questions.length}</td><td>${g.lesson?'<span class="ok">Sẵn sàng</span>':'<span class="err">Chưa tạo tại Khóa học</span>'}</td></tr>`).join('')}</tbody></table>`;$('runGrammarImport').disabled=!!missing.length;$('grammarImportStatus').textContent=missing.length?`Khóa “${courseLabel}” còn ${missing.length} bài trong file chưa được tạo. Hãy tạo đủ bài ở tab Khóa học rồi xem trước lại.`:`Khóa đích: ${courseLabel} · Sẵn sàng nhập ${data.groups.length} bài · phạm vi: ${scope==='all'?'cả hai':scope==='theory'?'ngữ pháp & ví dụ':'chỉ bài tập'}.`;}
   catch(e){grammarImportData=null;$('runGrammarImport').disabled=true;$('grammarImportStatus').textContent=e.message}
 }
 async function runGrammarWorkbookImport(){
@@ -894,6 +903,7 @@ async function loadGrammarCourses(){
     const selected=$('grammarManageCourse').value;
     const j=await api('/admin/learning/courses');
     learningCourses=j.courses||[];
+    syncGrammarImportCourses();
     $('grammarManageCourse').innerHTML='';
     learningCourses.forEach(c=>$('grammarManageCourse').add(new Option(`${c.title} (${c.lesson_count||0} bài)`,c.id)));
     if(selected&&learningCourses.some(c=>c.id===selected))$('grammarManageCourse').value=selected;
@@ -1112,6 +1122,7 @@ $('grammarXlsxTemplate').onclick=downloadGrammarXlsxTemplate;
 $('openLearningFromGrammar').onclick=()=>document.querySelector('[data-pane="learningPane"]').click();
 $('openLearningFromWriting').onclick=()=>document.querySelector('[data-pane="learningPane"]').click();
 $('grammarImportFile').onchange=()=>{grammarImportData=null;$('runGrammarImport').disabled=true;$('grammarImportPreview').hidden=true;$('grammarImportStatus').textContent='Bấm “Xem trước” để kiểm tra file.'};
+$('grammarImportCourse').onchange=()=>{grammarImportData=null;$('runGrammarImport').disabled=true;$('grammarImportPreview').hidden=true;$('grammarImportStatus').textContent=$('grammarImportCourse').value?'Đã chọn khóa học. Chọn file rồi bấm “Xem trước”.':'Hãy chọn khóa học đích đã tạo ở tab Khóa học.'};
 $('grammarImportScope').onchange=()=>{if(grammarImportData)previewGrammarWorkbook()};
 $('grammarManageCourse').onchange=loadGrammarContent;
 $('refreshGrammarContent').onclick=loadGrammarContent;
