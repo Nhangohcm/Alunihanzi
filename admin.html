@@ -285,6 +285,19 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
       <div id="learningLessonList"></div>
     </div>
 
+    <div class="card" id="lessonListImportCard">
+      <h2>📥 Tạo bài trống hàng loạt từ file</h2>
+      <p class="muted">Dùng sau khi đã tạo khóa học. Hệ thống chỉ thêm bài chưa có, không ghi đè và không xóa các bài cũ.</p>
+      <div class="grid2">
+        <div><label>Khóa học đích</label><select id="lessonListImportCourse"></select></div>
+        <div><label>File danh sách bài — XLSX/CSV</label><input id="lessonListImportFile" type="file" accept=".xlsx,.xls,.csv"></div>
+      </div>
+      <p class="muted">File chỉ cần hai cột: <b>lesson_number</b> và <b>lesson_title</b>.</p>
+      <div class="row" style="margin-top:10px"><button class="ghost" id="previewLessonListImport">👁 Kiểm tra trước</button><button class="primary" id="runLessonListImport" disabled>＋ Thêm các bài mới</button><button class="ghost" id="lessonListTemplateBtn">⬇ Tải file mẫu</button></div>
+      <div class="status" id="lessonListImportStatus">Chọn khóa học và file, sau đó bấm “Kiểm tra trước”.</div>
+      <div class="tablewrap" id="lessonListImportPreview" hidden></div>
+    </div>
+
     <div class="card" id="bulkCourseImportCard">
       <h2>🚀 Nhập khóa học & Shadowing hàng loạt</h2>
       <p class="muted">Một quy trình cho toàn bộ khóa: tạo bài, gắn link YouTube bài giảng, gắn link video Shadowing, rồi tự ghép nhiều file SRT/XLSX theo <b>số bài hoặc mã bài trong tên file</b>.</p>
@@ -750,10 +763,11 @@ async function loadLearningCourses(){
     $('statLessonCount').textContent=learningCourses.reduce((sum,c)=>sum+Number(c.lesson_count||0),0);
     $('statPublishedCount').textContent=learningCourses.filter(c=>Number(c.published)).length;
     const selected=$('manageLearningCourse').value;
-    $('learningImportCourse').innerHTML='';$('manageLearningCourse').innerHTML='';$('learningCourseBody').innerHTML='';
+    $('learningImportCourse').innerHTML='';$('manageLearningCourse').innerHTML='';$('lessonListImportCourse').innerHTML='';$('learningCourseBody').innerHTML='';
     learningCourses.forEach(c=>{
       $('learningImportCourse').add(new Option(c.title,c.id));
       $('manageLearningCourse').add(new Option(c.title,c.id));
+      $('lessonListImportCourse').add(new Option(`${c.title} (${c.lesson_count||0} bài)`,c.id));
       const tr=document.createElement('tr');
       const isPublished=Number(c.published)===1,isProtected=c.id===SHADOWING_PASS_ID;
       tr.innerHTML=`<td>${Number(c.sort_order||0)}</td><td><b>${esc(c.title)}</b><br><span class="muted">${esc(c.id)}</span></td><td>${c.access==='paid'?'Có phí':'Miễn phí'}</td><td>${c.lesson_count||0}</td><td>${isPublished?'<span class="badge">Đã xuất bản</span>':'<span class="muted">Đang ẩn</span>'}</td><td><div class="course-actions"><button class="primary manageLearning" data-id="${esc(c.id)}">Quản lý bài</button><button class="ghost editLearning" data-id="${esc(c.id)}">Sửa khóa</button>${!isProtected?`<button class="ghost toggleLearningCourse" data-id="${esc(c.id)}">${isPublished?'🙈 Ẩn':'👁 Hiện'}</button><button class="danger deleteLearningCourse" data-id="${esc(c.id)}">🗑 Xóa</button>`:''}</div></td>`;
@@ -868,6 +882,47 @@ async function runBulkCourseImport(){
 function learningTemplate(){
   const wb=XLSX.utils.book_new(),rows=[{lesson_number:1,lesson_code:'K50_B01',lesson_title:'Giới thiệu bản thân',lesson_video_title:'Bài giảng 01',lesson_video_url:'https://youtu.be/...',shadowing_title:'Luyện nói 01',shadowing_video_url:'https://youtu.be/...',is_free:1},{lesson_number:2,lesson_code:'K50_B02',lesson_title:'Hỏi tên',lesson_video_title:'Bài giảng 02',lesson_video_url:'https://youtu.be/...',shadowing_title:'Luyện nói 02',shadowing_video_url:'https://youtu.be/...',is_free:0}];
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'DANH_SACH_BAI');XLSX.writeFile(wb,'mau-nhap-khoa-hoc-shadowing-hang-loat.xlsx');
+}
+
+let lessonListImportData=null;
+async function buildLessonListImport(){
+  const courseId=$('lessonListImportCourse').value,file=$('lessonListImportFile').files[0];
+  if(!courseId)throw new Error('Hãy chọn khóa học đích.');if(!file)throw new Error('Hãy chọn file XLSX hoặc CSV.');
+  const raw=await parseFile(file),rows=[],seen=new Set();
+  raw.forEach((row,index)=>{
+    const numberText=bulkRowValue(row,'lesson_number','so_bai','số bài','bai','bài'),title=bulkRowValue(row,'lesson_title','ten_bai','tên bài','title');
+    const number=Number(numberText),errors=[];
+    if(numberText===''||!Number.isInteger(number)||number<0)errors.push('Số bài không hợp lệ');
+    if(!title)errors.push('Thiếu tên bài');
+    if(Number.isInteger(number)&&seen.has(number))errors.push('Trùng số bài trong file');
+    if(Number.isInteger(number))seen.add(number);
+    rows.push({sourceRow:index+2,number,title,errors});
+  });
+  if(!rows.length)throw new Error('File không có dòng dữ liệu.');
+  const current=await api('/admin/learning/course-content?course_id='+encodeURIComponent(courseId)),existing=new Map((current.lessons||[]).map(l=>[Number(l.lesson_number),l]));
+  rows.forEach(r=>{r.existing=existing.get(r.number)||null;r.state=r.errors.length?'error':r.existing?'existing':'new'});
+  return{courseId,rows,newRows:rows.filter(r=>r.state==='new'),invalidRows:rows.filter(r=>r.state==='error'),existingRows:rows.filter(r=>r.state==='existing')};
+}
+async function previewLessonListImport(){
+  const status=$('lessonListImportStatus'),box=$('lessonListImportPreview');status.textContent='Đang kiểm tra danh sách...';$('runLessonListImport').disabled=true;
+  try{
+    lessonListImportData=await buildLessonListImport();const data=lessonListImportData,course=learningCourses.find(c=>c.id===data.courseId);
+    box.hidden=false;box.innerHTML=`<table><thead><tr><th>Dòng</th><th>Số bài</th><th>Tên bài</th><th>Kết quả</th></tr></thead><tbody>${data.rows.map(r=>`<tr><td>${r.sourceRow}</td><td>${Number.isFinite(r.number)?r.number:'—'}</td><td>${esc(r.title||'—')}</td><td>${r.state==='new'?'<span class="ok">Sẽ thêm mới</span>':r.state==='existing'?'<span class="muted">Đã có — bỏ qua</span>':`<span class="err">${esc(r.errors.join(', '))}</span>`}</td></tr>`).join('')}</tbody></table>`;
+    $('runLessonListImport').disabled=!!data.invalidRows.length||!data.newRows.length;
+    status.textContent=data.invalidRows.length?`Có ${data.invalidRows.length} dòng lỗi. Hãy sửa file rồi kiểm tra lại.`:`Khóa “${course?.title||data.courseId}”: ${data.newRows.length} bài mới sẽ được thêm, ${data.existingRows.length} bài đã có sẽ được bỏ qua.`;
+  }catch(e){lessonListImportData=null;box.hidden=true;status.textContent=e.message}
+}
+async function runLessonListImport(){
+  if(!lessonListImportData)return;const data=lessonListImportData,btn=$('runLessonListImport'),status=$('lessonListImportStatus');btn.disabled=true;
+  try{
+    let done=0;for(const row of data.newRows){status.textContent=`Đang tạo bài ${row.number} (${done+1}/${data.newRows.length})...`;await api('/admin/learning/lesson',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:data.courseId,lesson_number:row.number,title:row.title})});done++}
+    await loadLearningCourses();$('manageLearningCourse').value=data.courseId;$('lessonListImportCourse').value=data.courseId;await loadLearningContent();
+    lessonListImportData=null;$('lessonListImportPreview').hidden=true;status.textContent=`Đã thêm thành công ${done} bài mới. Các bài cũ được giữ nguyên.`;
+  }catch(e){status.textContent='Dừng nhập: '+e.message}finally{btn.disabled=false}
+}
+function lessonListTemplate(){
+  const wb=XLSX.utils.book_new(),rows=[{lesson_number:11,lesson_title:'Tên bài 11'},{lesson_number:12,lesson_title:'Tên bài 12'},{lesson_number:13,lesson_title:'Tên bài 13'}];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'DANH_SACH_BAI');XLSX.writeFile(wb,'mau-tao-bai-trong-hang-loat.xlsx');
 }
 
 let grammarImportData=null;
@@ -1141,6 +1196,11 @@ $('openEditCourseForm').onclick=openSelectedLearningCourse;
 $('previewBulkCourse').onclick=previewBulkCourseImport;
 $('runBulkCourse').onclick=runBulkCourseImport;
 $('learningTemplateBtn').onclick=learningTemplate;
+$('previewLessonListImport').onclick=previewLessonListImport;
+$('runLessonListImport').onclick=runLessonListImport;
+$('lessonListTemplateBtn').onclick=lessonListTemplate;
+$('lessonListImportFile').onchange=()=>{lessonListImportData=null;$('runLessonListImport').disabled=true;$('lessonListImportPreview').hidden=true;$('lessonListImportStatus').textContent='Bấm “Kiểm tra trước” để đối chiếu với các bài đã có.'};
+$('lessonListImportCourse').onchange=()=>{lessonListImportData=null;$('runLessonListImport').disabled=true;$('lessonListImportPreview').hidden=true;$('lessonListImportStatus').textContent='Đã chọn khóa học. Chọn file rồi bấm “Kiểm tra trước”.'};
 $('previewGrammarImport').onclick=previewGrammarWorkbook;
 $('runGrammarImport').onclick=runGrammarWorkbookImport;
 $('grammarXlsxTemplate').onclick=downloadGrammarXlsxTemplate;
