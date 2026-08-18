@@ -182,6 +182,12 @@ input,select{width:100%;border:1px solid var(--line);border-radius:13px;backgrou
   border-color:#a9b8a7;
 }
 .transcript-zh{font-size:1.15rem;font-weight:850}
+.shadow-chunks{display:flex;flex-wrap:wrap;justify-content:center;gap:7px 8px;line-height:1.35}
+.transcript-line .shadow-chunks{justify-content:flex-start}
+.shadow-chunk{display:inline-flex;align-items:center;padding:4px 9px;border:1px solid #d9dfec;border-radius:10px;background:#fff;color:inherit;cursor:pointer;transition:.14s ease;box-shadow:0 2px 5px rgba(38,56,47,.04)}
+.shadow-chunk:hover,.shadow-chunk:active{border-color:#8fa0ef;background:#f1f4ff;color:#4056c5}
+.shadow-chunk.playing{border-color:#4f67e8;background:#4f67e8;color:#fff;box-shadow:0 5px 13px rgba(79,103,232,.22)}
+.shadow-chunk-punctuation{padding-left:2px;padding-right:2px;border-color:transparent;background:transparent;box-shadow:none;cursor:default}
 .transcript-py{color:var(--green);font-weight:700;margin-top:2px}
 .transcript-vi{color:var(--muted);font-size:.92rem;margin-top:2px}
 .shadow-live{
@@ -510,6 +516,18 @@ body{background:radial-gradient(circle at 8% 0%,rgba(32,168,181,.14),transparent
 /* Full-screen course workspace and compact Shadowing classroom layout. */
 .course-drawer{width:100vw;max-width:none}.shadow-live{min-height:92px;padding:10px 14px;margin-top:10px}.shadow-live-hint{margin-top:3px}.shadow-live .transcript-zh{font-size:1.28rem}.transcript-toggle{margin-top:8px}
 @media(min-width:781px){
+  /* Viết chữ trên laptop: gom phần thông tin từ thành hai hàng ngắn để ô viết và nút thao tác xuất hiện sớm. */
+  .writing-study-mode #writingSection .wrap{padding-top:62px}
+  .writing-study-mode .writing-study-bar{padding-top:7px;padding-bottom:7px}
+  .writing-study-mode .practice{padding-top:12px}
+  .writing-study-mode .practice-top{display:grid;grid-template-columns:auto auto minmax(180px,auto) auto;grid-template-areas:"label word meta listen" "label pills pills listen";align-items:center;justify-content:center;column-gap:14px;row-gap:5px;text-align:left}
+  .writing-study-mode .practice-top>.brand{grid-area:label;writing-mode:vertical-rl;transform:rotate(180deg);font-size:.7rem}
+  .writing-study-mode .word-big{grid-area:word;font-size:clamp(2.5rem,4vw,3.5rem);line-height:1}
+  .writing-study-mode .practice-meta{grid-area:meta;justify-content:flex-start;margin:0;max-width:360px}
+  .writing-study-mode .char-pills{grid-area:pills;justify-content:flex-start;margin:0;gap:6px}
+  .writing-study-mode .char-pill{padding:5px 11px;font-size:1.15rem}
+  .writing-study-mode #speakPractice{grid-area:listen;padding:10px 13px}
+  .writing-study-mode .writerbox{margin-top:10px;margin-bottom:10px}
   #shadowPlayerCard:not(.transcript-mode){grid-template-columns:minmax(0,1fr);justify-items:center}
   #shadowPlayerCard:not(.transcript-mode)>.shadow-main{width:min(100%,1100px)}
   #shadowPlayerCard:not(.transcript-mode) .video-frame{width:min(100%,calc(54vh * 16 / 9),960px);margin:0 auto}
@@ -1487,6 +1505,34 @@ function shadowHanziHtml(value){
   }).join('');
 }
 
+function shadowChunksForSegment(segment){
+  const raw = segment?.chunks ?? segment?.chunk ?? segment?.phrases ?? '';
+  let chunks = [];
+  if(Array.isArray(raw)) chunks = raw.map(x=>typeof x === 'string' ? x : (x?.text || x?.hanzi || ''));
+  else if(String(raw).trim()) chunks = String(raw).split(/\s*[|｜]\s*/u);
+
+  if(!chunks.length){
+    const text = String(segment?.hanzi || '').trim();
+    chunks = shadowSegmenter
+      ? Array.from(shadowSegmenter.segment(text), x=>x.segment)
+      : Array.from(text);
+  }
+
+  const merged=[];
+  chunks.map(x=>String(x||'').trim()).filter(Boolean).forEach(part=>{
+    if(/^[，。！？、；：,.!?;:）】》”’]+$/u.test(part) && merged.length) merged[merged.length-1] += part;
+    else merged.push(part);
+  });
+  return merged.length ? merged : [String(segment?.hanzi || '')];
+}
+
+function shadowChunkHtml(segment){
+  return `<span class="shadow-chunks">${shadowChunksForSegment(segment).map((part,index)=>{
+    const punctuation = !/[\u3400-\u9fffA-Za-z0-9]/u.test(part);
+    return `<span class="shadow-chunk${punctuation?' shadow-chunk-punctuation':''}" data-chunk-index="${index}" data-chunk="${shadowEsc(part)}" title="${punctuation?'':'Chạm để nghe riêng cụm này'}">${shadowEsc(part)}</span>`;
+  }).join('')}</span>`;
+}
+
 function closeWordPopup(){
   const popup = document.getElementById('wordPopup');
   if(popup) popup.hidden = true;
@@ -1574,7 +1620,7 @@ function renderShadowTranscript(){
     line.className = 'transcript-line';
     line.dataset.index = i;
     line.innerHTML = `
-      <div class="transcript-zh">${shadowHanziHtml(s.hanzi)}</div>
+      <div class="transcript-zh">${shadowChunkHtml(s)}</div>
       <div class="transcript-py" style="${showShadowPinyin?'':'display:none'}">${s.pinyin || ''}</div>
       <div class="transcript-vi" style="${showShadowVi?'':'display:none'}">${s.vi || ''}</div>
     `;
@@ -1619,7 +1665,7 @@ function renderShadowLive(index){
   if(counter) counter.textContent = s ? `${index + 1} / ${shadowSegments.length}` : `0 / ${shadowSegments.length}`;
   if(!live || !s) return;
   live.innerHTML = `
-    <div class="transcript-zh">${shadowHanziHtml(s.hanzi)}</div>
+    <div class="transcript-zh">${shadowChunkHtml(s)}</div>
     <div class="transcript-py" style="${showShadowPinyin?'':'display:none'}">${shadowEsc(s.pinyin || '')}</div>
     <div class="transcript-vi" style="${showShadowVi?'':'display:none'}">${shadowEsc(s.vi || '')}</div>
     <div class="shadow-live-hint">Chạm vào ô để nghe lại câu này</div>
@@ -1662,12 +1708,23 @@ function syncShadow(){
     highlightShadowLine(found);
   }
 
+  if(found !== -1) updateShadowChunkProgress(found, t);
+
   if(repeatCurrentLine && shadowCurrentIndex >= 0){
     const s = shadowSegments[shadowCurrentIndex];
     if(t >= Number(s.end_sec)){
       shadowPlayer.seekTo(Number(s.start_sec), true);
     }
   }
+}
+
+function updateShadowChunkProgress(segmentIndex,time){
+  const s=shadowSegments[segmentIndex];
+  if(!s)return;
+  const chunks=shadowChunksForSegment(s),start=Number(s.start_sec||0),end=Math.max(start+.1,Number(s.end_sec||start+.1));
+  const progress=Math.max(0,Math.min(.999,(Number(time)-start)/(end-start)));
+  const active=Math.min(chunks.length-1,Math.floor(progress*chunks.length));
+  document.querySelectorAll(`#shadowLive .shadow-chunk, #shadowTranscript .transcript-line[data-index="${segmentIndex}"] .shadow-chunk`).forEach(el=>el.classList.toggle('playing',Number(el.dataset.chunkIndex)===active));
 }
 
 function startShadowSync(){
@@ -1685,6 +1742,12 @@ document.addEventListener('DOMContentLoaded', ()=>{
   loadPublicLearningCourses();
   document.getElementById('startLearningBtn')?.addEventListener('click',()=>document.querySelector('.my-courses-panel')?.scrollIntoView({behavior:'smooth',block:'start'}));
   document.addEventListener('click',e=>{const button=e.target.closest('#topActivateBtn');if(!button)return;e.preventDefault();openAccess()});
+  document.addEventListener('click',e=>{
+    const chunk=e.target.closest('.shadow-chunk');
+    if(!chunk || chunk.classList.contains('shadow-chunk-punctuation')) return;
+    e.preventDefault();e.stopPropagation();
+    speak(chunk.dataset.chunk || chunk.textContent.trim());
+  });
   document.getElementById('exploreCoursesBtn')?.addEventListener('click',()=>openCourseDrawer('explore','Tất cả khóa học Aluni'));
   document.getElementById('courseDrawerBack')?.addEventListener('click',backCourseDrawer);
   document.getElementById('courseDrawerClose')?.addEventListener('click',closeCourseDrawer);
