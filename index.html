@@ -182,12 +182,6 @@ input,select{width:100%;border:1px solid var(--line);border-radius:13px;backgrou
   border-color:#a9b8a7;
 }
 .transcript-zh{font-size:1.15rem;font-weight:850}
-.shadow-chunks{display:flex;flex-wrap:wrap;justify-content:center;gap:7px 8px;line-height:1.35}
-.transcript-line .shadow-chunks{justify-content:flex-start}
-.shadow-chunk{display:inline-flex;align-items:center;padding:4px 9px;border:1px solid #d9dfec;border-radius:10px;background:#fff;color:inherit;cursor:pointer;transition:.14s ease;box-shadow:0 2px 5px rgba(38,56,47,.04)}
-.shadow-chunk:hover,.shadow-chunk:active{border-color:#8fa0ef;background:#f1f4ff;color:#4056c5}
-.shadow-chunk.playing{border-color:#4f67e8;background:#4f67e8;color:#fff;box-shadow:0 5px 13px rgba(79,103,232,.22)}
-.shadow-chunk-punctuation{padding-left:2px;padding-right:2px;border-color:transparent;background:transparent;box-shadow:none;cursor:default}
 .transcript-py{color:var(--green);font-weight:700;margin-top:2px}
 .transcript-vi{color:var(--muted);font-size:.92rem;margin-top:2px}
 .shadow-live{
@@ -1518,32 +1512,8 @@ function shadowHanziHtml(value){
   }).join('');
 }
 
-function shadowChunksForSegment(segment){
-  const raw = segment?.chunks ?? segment?.chunk ?? segment?.phrases ?? '';
-  let chunks = [];
-  if(Array.isArray(raw)) chunks = raw.map(x=>typeof x === 'string' ? x : (x?.text || x?.hanzi || ''));
-  else if(String(raw).trim()) chunks = String(raw).split(/\s*[|｜]\s*/u);
-
-  if(!chunks.length){
-    const text = String(segment?.hanzi || '').trim();
-    chunks = shadowSegmenter
-      ? Array.from(shadowSegmenter.segment(text), x=>x.segment)
-      : Array.from(text);
-  }
-
-  const merged=[];
-  chunks.map(x=>String(x||'').trim()).filter(Boolean).forEach(part=>{
-    if(/^[，。！？、；：,.!?;:）】》”’]+$/u.test(part) && merged.length) merged[merged.length-1] += part;
-    else merged.push(part);
-  });
-  return merged.length ? merged : [String(segment?.hanzi || '')];
-}
-
 function shadowChunkHtml(segment){
-  return `<span class="shadow-chunks">${shadowChunksForSegment(segment).map((part,index)=>{
-    const punctuation = !/[\u3400-\u9fffA-Za-z0-9]/u.test(part);
-    return `<span class="shadow-chunk${punctuation?' shadow-chunk-punctuation':''}" data-chunk-index="${index}" data-chunk="${shadowEsc(part)}" title="${punctuation?'':'Chạm để tra từ/cụm'}">${shadowEsc(part)}</span>`;
-  }).join('')}</span>`;
+  return shadowHanziHtml(segment?.hanzi || '');
 }
 
 function closeWordPopup(){
@@ -1639,7 +1609,8 @@ function renderShadowTranscript(){
       <div class="transcript-py" style="${showShadowPinyin?'':'display:none'}">${s.pinyin || ''}</div>
       <div class="transcript-vi" style="${showShadowVi?'':'display:none'}">${s.vi || ''}</div>
     `;
-    line.addEventListener('click', ()=>{
+    line.addEventListener('click', event=>{
+      if(event.target.closest('.zh-token')) return;
       shadowCurrentIndex = i;
       if(shadowPlayer && shadowPlayer.seekTo){
         shadowPlayer.seekTo(Number(s.start_sec || 0), true);
@@ -1723,23 +1694,12 @@ function syncShadow(){
     highlightShadowLine(found);
   }
 
-  if(found !== -1) updateShadowChunkProgress(found, t);
-
   if(repeatCurrentLine && shadowCurrentIndex >= 0){
     const s = shadowSegments[shadowCurrentIndex];
     if(t >= Number(s.end_sec)){
       shadowPlayer.seekTo(Number(s.start_sec), true);
     }
   }
-}
-
-function updateShadowChunkProgress(segmentIndex,time){
-  const s=shadowSegments[segmentIndex];
-  if(!s)return;
-  const chunks=shadowChunksForSegment(s),start=Number(s.start_sec||0),end=Math.max(start+.1,Number(s.end_sec||start+.1));
-  const progress=Math.max(0,Math.min(.999,(Number(time)-start)/(end-start)));
-  const active=Math.min(chunks.length-1,Math.floor(progress*chunks.length));
-  document.querySelectorAll(`#shadowLive .shadow-chunk, #shadowTranscript .transcript-line[data-index="${segmentIndex}"] .shadow-chunk`).forEach(el=>el.classList.toggle('playing',Number(el.dataset.chunkIndex)===active));
 }
 
 function startShadowSync(){
@@ -1757,12 +1717,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
   loadPublicLearningCourses();
   document.getElementById('startLearningBtn')?.addEventListener('click',()=>document.querySelector('.my-courses-panel')?.scrollIntoView({behavior:'smooth',block:'start'}));
   document.addEventListener('click',e=>{const button=e.target.closest('#topActivateBtn');if(!button)return;e.preventDefault();openAccess()});
-  document.addEventListener('click',e=>{
-    const chunk=e.target.closest('.shadow-chunk');
-    if(!chunk || chunk.classList.contains('shadow-chunk-punctuation')) return;
-    e.preventDefault();e.stopPropagation();
-    showWordMeaning(chunk.dataset.chunk || chunk.textContent.trim());
-  });
   document.getElementById('exploreCoursesBtn')?.addEventListener('click',()=>openCourseDrawer('explore','Tất cả khóa học Aluni'));
   document.getElementById('courseDrawerBack')?.addEventListener('click',backCourseDrawer);
   document.getElementById('courseDrawerClose')?.addEventListener('click',closeCourseDrawer);
@@ -1799,7 +1753,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   const liveBox = document.getElementById('shadowLive');
   if(liveBox) liveBox.addEventListener('click', event=>{
-    if(event.target.closest('.shadow-chunk')) return;
+    if(event.target.closest('.zh-token')) return;
     goToShadowLine(shadowCurrentIndex < 0 ? 0 : shadowCurrentIndex);
   });
 
