@@ -26,6 +26,8 @@ input,select{width:100%;border:1px solid var(--line);border-radius:13px;backgrou
 .course-strip{display:flex;gap:7px;overflow:auto;padding-bottom:4px}.lesson-chip{white-space:nowrap;border:1px solid var(--line);background:white;border-radius:999px;padding:8px 11px;font-size:.86rem;font-weight:800}.lesson-chip.locked{background:#f3ead9;color:var(--lock)}
 .section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.section-head h2{margin:0;font-size:1.25rem}.count{font-size:.84rem;background:var(--warm);padding:6px 9px;border-radius:999px;color:var(--muted)}
 .words{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.word{border:1px solid var(--line);background:white;border-radius:17px;padding:12px 14px;text-align:center;min-height:118px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}.hanzi{font-size:clamp(1.7rem,5vw,2.4rem);font-weight:800}.pinyin{margin-top:4px;color:var(--green);font-weight:750;line-height:1.25}.meaning{margin-top:2px;color:var(--muted);font-size:.9rem;line-height:1.25}.word .pinyin,.word .meaning{width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pinyin.loading{color:#9aa39b;font-size:.82rem;font-weight:650}.speak{position:absolute;right:8px;top:8px;border:0;background:var(--green2);border-radius:999px;width:34px;height:34px}.empty{text-align:center;color:var(--muted);padding:28px 10px;grid-column:1/-1}
+.word-write-hint{margin-top:7px;color:#5360cf;font-size:.78rem;font-weight:850}.word-dict-btn{margin-top:7px;border:1px solid #d8deee;border-radius:10px;background:#f7f8fc;color:#4e5870;padding:6px 10px;font-size:.78rem;font-weight:850;cursor:pointer}.word-dict-btn:hover{border-color:#8d9be9;background:#eef1ff;color:#4056c5}
+.writing-dict-modal{position:fixed;inset:0;z-index:2100;display:grid;place-items:center;padding:16px;background:rgba(21,31,54,.42);backdrop-filter:blur(3px)}.writing-dict-modal[hidden]{display:none!important}.writing-dict-box{position:relative;width:min(560px,100%);max-height:min(78vh,720px);overflow:auto;border:1px solid #d9dfec;border-radius:20px;background:#fffdf9;padding:22px;box-shadow:0 20px 60px rgba(21,31,54,.25)}.writing-dict-close{position:absolute;right:12px;top:10px;border:0;background:transparent;font-size:1.5rem;cursor:pointer}.writing-dict-head{display:flex;align-items:center;gap:12px;padding-right:36px}.writing-dict-zh{font-size:2.2rem;font-weight:900}.writing-dict-listen{width:42px;height:42px;border:1px solid #cfd8eb;border-radius:13px;background:#eef2ff;cursor:pointer}.writing-dict-py{margin-top:3px;color:var(--green);font-size:1.1rem;font-weight:800}.writing-dict-main{margin:8px 0 14px;font-size:1.08rem}.writing-dict-section{border-top:1px solid #e7eaf2;padding-top:12px;margin-top:12px}.writing-dict-section h4{margin:0 0 7px}.writing-dict-sense{padding:8px 10px;border-radius:11px;background:#f6f7fb;margin-top:7px}.writing-dict-pos{color:#5360cf;font-weight:850}.writing-dict-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
 .practice{display:none}.practice.show{display:block}.practice-top{text-align:center}.word-big{font-size:clamp(2.2rem,8vw,4.5rem);font-weight:850}.practice-meta{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;margin-top:2px}.practice-meta .pinyin,.practice-meta .meaning{margin-top:0}.practice-meta .meaning:before{content:"·";margin-right:7px;color:var(--line)}.char-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:10px 0}.char-pill{border:1px solid var(--line);background:white;border-radius:12px;padding:8px 13px;font-size:1.35rem}.char-pill.active{background:var(--green);color:white;border-color:var(--green)}
 .writerbox{position:relative;width:min(340px,86vw);height:min(340px,86vw);margin:16px auto;background:#fff;border:2px solid #b9c7ba;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .writerbox:before,.writerbox:after{content:"";position:absolute;z-index:0;pointer-events:none;background:#c9d2ca}
@@ -575,8 +577,8 @@ body{background:radial-gradient(circle at 8% 0%,rgba(32,168,181,.14),transparent
 <div class="wrap">
 <header>
   <div class="brand">TIẾNG TRUNG ALUNI</div>
-  <h1>Luyện viết chữ Hán</h1>
-  <p class="sub">Tra chữ miễn phí · nghe phát âm · xem bộ thủ · luyện viết từng nét.</p>
+  <h1>Tra từ & Viết chữ Hán</h1>
+  <p class="sub">Tìm Trung – Việt · nghe phát âm · tra nghĩa · luyện viết từng nét.</p>
   <p class="sub">Khóa 50+ mở miễn phí 10 bài đầu để học thử.</p>
 </header>
 
@@ -593,7 +595,7 @@ body{background:radial-gradient(circle at 8% 0%,rgba(32,168,181,.14),transparent
 <section class="card">
   <div class="tabs">
     <button class="tab active" data-mode="courseMode">Khóa học → Bài</button>
-    <button class="tab" data-mode="searchMode">Gõ chữ để tìm</button>
+    <button class="tab" data-mode="searchMode">Tra từ & Viết</button>
   </div>
   <div id="courseMode" class="mode active">
     <div class="row">
@@ -654,6 +656,17 @@ body{background:radial-gradient(circle at 8% 0%,rgba(32,168,181,.14),transparent
 </section>
 
 <footer>Tiếng Trung Aluni · Công cụ luyện viết chữ Hán</footer>
+</div>
+
+<div class="writing-dict-modal" id="writingDictModal" hidden>
+  <div class="writing-dict-box" role="dialog" aria-modal="true" aria-labelledby="writingDictZh">
+    <button class="writing-dict-close" id="writingDictClose" type="button" aria-label="Đóng">✕</button>
+    <div class="writing-dict-head"><div class="writing-dict-zh" id="writingDictZh"></div><button class="writing-dict-listen" id="writingDictListen" type="button" title="Nghe phát âm">🔊</button></div>
+    <div class="writing-dict-py" id="writingDictPy"></div>
+    <div class="writing-dict-main" id="writingDictMain"></div>
+    <div id="writingDictDetails"></div>
+    <div class="writing-dict-actions"><button class="btn primary" id="writingDictPractice" type="button">✍️ Luyện viết từ này</button><button class="btn ghost" id="writingDictDismiss" type="button">Đóng</button></div>
+  </div>
 </div>
 
 <div class="access-modal" id="accessModal">
@@ -776,9 +789,38 @@ async function selectLesson(course,lesson,index,fullKnown=null){
 function renderItems(items,title){
   practiceItems=items||[];$('resultsTitle').textContent=title||'Từ vựng';$('resultCount').textContent=`${items.length} mục`;const box=$('words');box.innerHTML='';
   if(!items.length){box.innerHTML='<div class="empty">Không tìm thấy dữ liệu phù hợp.</div>';return}
-  items.forEach(item=>{const d=document.createElement('div'),needsPinyin=!String(item.pinyin||'').trim()&&isHan(item.hanzi);d.className='word';d.innerHTML=`<button class="speak">🔊</button><div class="hanzi">${esc(item.hanzi)}</div><div class="pinyin${needsPinyin?' loading':''}">${esc(item.pinyin||(needsPinyin?'Đang tải pinyin…':''))}</div><div class="meaning">${esc(item.vi||'')}</div>`;d.querySelector('.speak').onclick=e=>{e.stopPropagation();speak(item.hanzi)};d.onclick=()=>openPractice(item);box.appendChild(d);if(needsPinyin)fillWritingPinyin(item,d.querySelector('.pinyin'))})
+  items.forEach(item=>{const d=document.createElement('div'),needsPinyin=!String(item.pinyin||'').trim()&&isHan(item.hanzi);d.className='word';d.innerHTML=`<button class="speak" title="Nghe phát âm">🔊</button><div class="hanzi">${esc(item.hanzi)}</div><div class="pinyin${needsPinyin?' loading':''}">${esc(item.pinyin||(needsPinyin?'Đang tải pinyin…':''))}</div><div class="meaning">${esc(item.vi||'')}</div><div class="word-write-hint">✍️ Chạm vào ô để luyện viết</div><button class="word-dict-btn" type="button">📖 Tra từ điển</button>`;d.querySelector('.speak').onclick=e=>{e.stopPropagation();speak(item.hanzi)};d.querySelector('.word-dict-btn').onclick=e=>{e.stopPropagation();openWritingDictionary(item)};d.onclick=()=>openPractice(item);box.appendChild(d);if(needsPinyin)fillWritingPinyin(item,d.querySelector('.pinyin'))})
 }
 const writingPinyinCache=new Map();
+const writingDictionaryCache=new Map();
+let writingDictionaryItem=null;
+
+function closeWritingDictionary(){$('writingDictModal').hidden=true}
+function renderWritingDictionary(entry){
+  $('writingDictPy').textContent=entry.pinyin||'Chưa có pinyin';
+  $('writingDictMain').textContent=entry.mainMeaning||'Chưa có nghĩa tiếng Việt.';
+  const details=$('writingDictDetails');
+  if(entry.senses?.length){
+    details.innerHTML=`<div class="writing-dict-section"><h4>Các nghĩa và cách dùng</h4>${entry.senses.map(s=>`<div class="writing-dict-sense">${s.pos?`<div class="writing-dict-pos">${esc(s.pos)}</div>`:''}<div>${esc(s.meanings.join('; '))}</div></div>`).join('')}</div>`;
+  }else details.innerHTML='<div class="writing-dict-section"><div class="hint">Chưa có thêm dữ liệu phân loại từ. Anh vẫn có thể nghe và đưa từ vào luyện viết.</div></div>';
+}
+async function openWritingDictionary(item){
+  writingDictionaryItem=item;$('writingDictZh').textContent=item.hanzi||'';$('writingDictPy').textContent=item.pinyin||'Đang tải pinyin…';$('writingDictMain').textContent=item.vi||'Đang tra nghĩa…';$('writingDictDetails').innerHTML='<div class="writing-dict-section"><div class="hint">Đang tải thông tin từ điển…</div></div>';$('writingDictModal').hidden=false;
+  const key=String(item.hanzi||'').trim();
+  if(writingDictionaryCache.has(key)){renderWritingDictionary(writingDictionaryCache.get(key));return}
+  const pinyin=item.pinyin||await getWritingPinyin(key);
+  try{
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9000);
+    const url=`https://translate.googleapis.com/translate_a/single?client=gtx&sl=zh-CN&tl=vi&dt=t&dt=bd&dt=rm&q=${encodeURIComponent(key)}`;
+    const r=await fetch(url,{signal:controller.signal});clearTimeout(timer);if(!r.ok)throw new Error('dictionary');
+    const data=await r.json();
+    const translated=(data?.[0]||[]).map(row=>row?.[0]||'').join('').trim();
+    const senses=Array.isArray(data?.[1])?data[1].map(group=>({pos:String(group?.[0]||''),meanings:Array.isArray(group?.[1])?group[1].filter(x=>typeof x==='string'&&x.trim()).slice(0,8):[]})).filter(x=>x.meanings.length):[];
+    const fallback=String(item.vi||'').trim();
+    const entry={pinyin,mainMeaning:translated||(/Luyện viết chữ này/i.test(fallback)?'':fallback),senses};
+    writingDictionaryCache.set(key,entry);renderWritingDictionary(entry);
+  }catch(e){renderWritingDictionary({pinyin,mainMeaning:item.vi||'',senses:[]})}
+}
 async function getWritingPinyin(hanzi){
   hanzi=String(hanzi||'').trim();if(!hanzi||!isHan(hanzi))return'';
   if(writingPinyinCache.has(hanzi))return writingPinyinCache.get(hanzi);
@@ -846,11 +888,22 @@ async function translateVietnameseForWriting(raw){
     return {hanzi,pinyin:await getWritingPinyin(hanzi),vi:raw,_translated:true};
   }finally{clearTimeout(timer)}
 }
+async function translateChineseForWriting(raw){
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9000);
+  try{
+    const url=`https://translate.googleapis.com/translate_a/single?client=gtx&sl=zh-CN&tl=vi&dt=t&q=${encodeURIComponent(raw)}`;
+    const r=await fetch(url,{signal:controller.signal});if(!r.ok)throw new Error('translate');
+    const j=await r.json(),vi=(j?.[0]||[]).map(x=>x?.[0]||'').join('').trim();
+    return {hanzi:raw,pinyin:await getWritingPinyin(raw),vi:vi||'Tra từ và luyện viết',_translated:true};
+  }finally{clearTimeout(timer)}
+}
 async function doSearch(){
   const raw=$('searchInput').value.trim();if(!raw)return renderItems([],'Kết quả tìm kiếm');const q=norm(raw),exact=[],near=[];
   courses.forEach(c=>(c.lessons||[]).forEach(l=>(l.items||[]).forEach(it=>{const h=String(it.hanzi||'').trim(),p=norm(it.pinyin),v=norm(it.vi);if(h===raw)exact.push(it);else{let score=0;if(isHan(raw)&&h.includes(raw))score=70;if(!isHan(raw)){if(p===q)score=100;else if(p.startsWith(q))score=90;else if(q.length>=2&&p.includes(q))score=80;if(v===q)score=Math.max(score,95);else if(v.startsWith(q))score=Math.max(score,75);else if(q.length>=2&&v.includes(q))score=Math.max(score,60)}if(score)near.push({...it,_score:score})}})));
-  if(singleHan(raw)&&!exact.some(x=>x.hanzi===raw))exact.unshift({hanzi:raw,pinyin:'',vi:'Luyện viết chữ này'});
   near.sort((a,b)=>(b._score-a._score)||String(a.hanzi).length-String(b.hanzi).length);
+  if(isHan(raw)&&!exact.some(x=>x.hanzi===raw)){
+    try{exact.unshift(await translateChineseForWriting(raw))}catch(e){exact.unshift({hanzi:raw,pinyin:'',vi:'Tra từ và luyện viết'})}
+  }
   let results=exact.length?[...exact,...near]:near;
   if(!results.length&&!isHan(raw)){
     const hint=$('writingSearchHint');hint.textContent='Đang tìm bản tiếng Trung phù hợp…';
@@ -885,6 +938,7 @@ $('courseSelect').onchange=async()=>{const c=getCourse($('courseSelect').value);
 $('lessonSelect').onchange=async()=>{const c=selectedCourseObj;if(!c)return;const i=(c.lessons||[]).findIndex(l=>l.id===$('lessonSelect').value);if(i>=0)await selectLesson(c,c.lessons[i],i)};
 $('demoBtn').onclick=async()=>{document.querySelector('.tab[data-mode="courseMode"]').click();const c=getCourse('50plus')||courses[0];if(!c)return;$('courseSelect').value=c.id;await renderLessons(c);if(c.lessons?.[0])await selectLesson(c,c.lessons[0],0,true)};
 $('searchBtn').onclick=doSearch;$('searchInput').onkeydown=e=>{if(e.key==='Enter')doSearch()};
+$('writingDictClose').onclick=closeWritingDictionary;$('writingDictDismiss').onclick=closeWritingDictionary;$('writingDictModal').onclick=e=>{if(e.target===$('writingDictModal'))closeWritingDictionary()};$('writingDictListen').onclick=()=>writingDictionaryItem&&speak(writingDictionaryItem.hanzi);$('writingDictPractice').onclick=()=>{if(!writingDictionaryItem)return;const item=writingDictionaryItem;closeWritingDictionary();openPractice(item)};document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('writingDictModal').hidden)closeWritingDictionary()});
 // Cửa sổ kích hoạt phải thuộc cấp toàn trang, không nằm trong riêng mục Viết chữ.
 document.body.appendChild($('accessModal'));
 $('accessActivateBtn').onclick=activate;$('accessCancelBtn').onclick=closeAccess;$('accessCloseBtn').onclick=closeAccess;$('accessModal').onclick=e=>{if(e.target===$('accessModal'))closeAccess()};
