@@ -553,6 +553,7 @@ let kidsLessons=[];
 function fmt(v){return v?new Date(v).toLocaleString('vi-VN'):'—'}
 async function api(path,opts={}){
   opts.headers={...(opts.headers||{}),'X-Admin-Key':adminSecret};
+  if(!opts.method||String(opts.method).toUpperCase()==='GET')opts.cache='no-store';
   const r=await fetch(base+path,opts);
   let j={};
   try{j=await r.json()}catch(e){}
@@ -579,10 +580,14 @@ async function login(){
     $('loginStatus').className='status ok';
     $('loginCard').style.display='none';
     $('adminApp').classList.add('show');
-    await loadCourses();
-    await loadLearningCourses();
-    await refreshCodes();
-    await refreshAccessAlerts();
+    $('loginStatus').textContent='Đang tải bảng điều khiển...';
+    await Promise.all([
+      loadCourses(false),
+      loadLearningCourses(false),
+      refreshCodes(),
+      refreshAccessAlerts()
+    ]);
+    $('loginStatus').textContent='Đăng nhập thành công.';
   }catch(e){
     const message=String(e&&e.message||'Lỗi không xác định');
     $('loginStatus').textContent=message==='Unauthorized'
@@ -684,7 +689,7 @@ function downloadCodes(){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='aluni-ma-kich-hoat.csv';a.click();
 }
 
-async function loadCourses(){
+async function loadCourses(loadDetails=true){
   try{
     const selectedShadow=$('shadowAdminCourse').value;
     const selectedWriting=$('writingManageCourse')?.value||'';
@@ -710,7 +715,7 @@ async function loadCourses(){
     if(selectedCode&&courses.some(c=>String(c.id)===String(selectedCode)))$('codeCourse').value=selectedCode;
     syncCodeType(false);
     $('contentStatus').textContent=`Có ${courses.filter(c=>String(c.id)!==SHADOWING_PASS_ID).length} khóa được tạo từ tab Khóa học.`;
-    if($('writingManageCourse')&&courses.length)await loadWritingContent();
+    if(loadDetails&&$('writingManageCourse')&&courses.length)await loadWritingContent();
   }catch(e){$('contentStatus').textContent=e.message}
 }
 async function parseFile(file){
@@ -758,7 +763,7 @@ async function loadWritingContent(){
   }catch(e){$('writingContentStatus').textContent=e.message}
 }
 
-async function loadLearningCourses(){
+async function loadLearningCourses(loadDetails=true){
   try{
     const j=await api('/admin/learning/courses');learningCourses=j.courses||[];
     syncGrammarImportCourses();
@@ -783,7 +788,7 @@ async function loadLearningCourses(){
     document.querySelectorAll('.deleteLearningCourse').forEach(b=>b.onclick=()=>deleteLearningCourse(b.dataset.id));
     if(selected&&learningCourses.some(c=>c.id===selected))$('manageLearningCourse').value=selected;
     $('learningStatus').textContent=`Có ${learningCourses.length} khóa học trong hệ thống.`;
-    if(learningCourses.length)await loadLearningContent();else $('learningLessonList').innerHTML='';
+    if(loadDetails&&learningCourses.length)await loadLearningContent();else if(!learningCourses.length)$('learningLessonList').innerHTML='';
   }catch(e){$('learningStatus').textContent=e.message}
 }
 async function toggleLearningCourse(id){
@@ -804,8 +809,13 @@ async function deleteLearningCourse(id){
     if(String(typed||'').trim().toUpperCase()!=='XOA'){$('learningStatus').textContent='Đã hủy xóa khóa.';return}
   }
   try{
+    const deleteButton=document.querySelector(`.deleteLearningCourse[data-id="${CSS.escape(String(c.id))}"]`);
+    if(deleteButton){deleteButton.disabled=true;deleteButton.textContent='⏳ Đang xóa...'}
+    $('learningStatus').textContent=`Đang xóa khóa “${c.title}” và toàn bộ nội dung liên quan...`;
     await api('/admin/learning/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:'course',id:c.id,confirm:count>0?'XOA':''})});
-    await loadLearningCourses();$('learningStatus').textContent=`Đã xóa khóa “${c.title}”.`;
+    learningCourses=learningCourses.filter(x=>String(x.id)!==String(c.id));
+    localStorage.removeItem('aluni_admin_active_course');
+    await loadLearningCourses(false);$('learningStatus').textContent=`Đã xóa khóa “${c.title}”. Danh sách đã được cập nhật.`;
   }catch(e){$('learningStatus').textContent='Không thể xóa khóa: '+e.message}
 }
 async function manageLearningCourseById(id){
