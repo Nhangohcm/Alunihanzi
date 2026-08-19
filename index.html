@@ -739,7 +739,15 @@ async function loadRemoteContent(){
 function getCourse(id){return courses.find(c=>c.id===id)||null}
 function isCurrentFreeCourse(course){
   const text=[course?.id,course?.code,course?.slug,course?.title,course?.name].filter(Boolean).join(' ').toLowerCase();
-  return text.includes('pinyin');
+  const access=String(course?.access||course?.access_mode||'').trim().toLowerCase();
+  return access==='free'||
+    access==='mien-phi'||
+    access==='miễn phí'||
+    course?.is_free===true||
+    Number(course?.is_free)===1||
+    text.includes('pinyin')||
+    text.includes('50-bo-thu-aluni')||
+    text.includes('50 bộ thủ nền tảng');
 }
 function isFiftyPlusCourse(course){
   const text=[course?.id,course?.code,course?.slug,course?.title,course?.name].filter(Boolean).join(' ').toLowerCase();
