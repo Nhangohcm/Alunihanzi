@@ -301,6 +301,18 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
       <div class="tablewrap" id="lessonListImportPreview" hidden></div>
     </div>
 
+    <div class="card" id="interactiveCourseImportCard">
+      <h2>🀄 Nhập khóa học tương tác từ XLSX</h2>
+      <p class="muted">Một file tự tạo trọn khóa học <b>miễn phí và xuất bản</b>, gồm bài Nét cơ bản và bài 50 bộ thủ. Mỗi dòng trở thành một thẻ có ảnh, ý nghĩa, ví dụ, nút trước/sau và danh sách chọn nhanh.</p>
+      <div class="grid2">
+        <div><label>File khóa học tương tác</label><input id="interactiveCourseFile" type="file" accept=".xlsx,.xls"></div>
+        <div class="sample">Sheet bắt buộc: KHOA_HOC, NET_CO_BAN, BO_THU</div>
+      </div>
+      <div class="row" style="margin-top:10px"><button class="ghost" id="previewInteractiveCourse">👁 Kiểm tra file</button><button class="primary" id="runInteractiveCourse" disabled>⬆ Tạo khóa học miễn phí</button></div>
+      <div class="status" id="interactiveCourseStatus">Chọn file rồi kiểm tra trước khi nhập.</div>
+      <div class="tablewrap" id="interactiveCoursePreview" hidden></div>
+    </div>
+
     <div class="card" id="bulkCourseImportCard">
       <h2>🚀 Nhập Video & Shadowing hàng loạt cho khóa đang chọn</h2>
       <p class="muted">Khung này chỉ nhập nội dung, không thay đổi quyền. Video và Shadowing mới sẽ áp dụng cài đặt tại Khung 3–8.</p>
@@ -1754,6 +1766,37 @@ function copyKidsFileToShadow(sourceId,targetId){
   const file=$(sourceId).files[0];if(!file)return;
   try{const transfer=new DataTransfer();transfer.items.add(file);$(targetId).files=transfer.files}catch(error){}
 }
+
+let interactiveCourseDraft=null;
+async function readInteractiveCourseFile(){
+  const file=$('interactiveCourseFile').files[0];
+  if(!file)throw new Error('Anh hãy chọn file XLSX khóa học tương tác.');
+  const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
+  const rows=name=>{const actual=wb.SheetNames.find(x=>x.trim().toUpperCase()===name);if(!actual)throw new Error(`Thiếu sheet ${name}.`);return XLSX.utils.sheet_to_json(wb.Sheets[actual],{defval:''})};
+  const courseRow=rows('KHOA_HOC')[0]||{};
+  const course={id:String(courseRow.course_id||'').trim(),title:String(courseRow.course_title||'').trim(),icon:String(courseRow.icon||'部'),description:String(courseRow.description||''),sort_order:Number(courseRow.sort_order||0)};
+  if(!course.id||!course.title)throw new Error('Sheet KHOA_HOC thiếu course_id hoặc course_title.');
+  const strokes=rows('NET_CO_BAN').filter(x=>Number(x.published??1)!==0).map((x,i)=>({lesson_number:Number(x.lesson_number||1),section:String(x.section||'Nét cơ bản'),item_type:'stroke',item_code:String(x.item_code||''),symbol:String(x.stroke_symbol||''),variant:String(x.stroke_name_zh||''),pinyin:String(x.pinyin||''),vi:String(x.ten_tieng_viet||''),detail:String(x.huong_viet||''),examples:String(x.chu_vi_du||''),image_svg:String(x.image_svg||''),sort_order:Number(x.sort_order||i+1)}));
+  const radicals=rows('BO_THU').filter(x=>Number(x.published??1)!==0).map((x,i)=>({lesson_number:Number(x.lesson_number||2),section:String(x.section||'50 bộ thủ'),item_type:'radical',item_code:String(x.item_code||''),symbol:String(x.radical||''),variant:String(x.variant||''),pinyin:String(x.pinyin||''),vi:String(x.nghia_viet||''),stroke_count:Number(x.stroke_count||0),detail:String(x.lien_tuong_hinh_anh||''),examples:String(x.chu_vi_du||''),image_svg:String(x.image_svg||''),sort_order:Number(x.sort_order||i+1)}));
+  if(!strokes.length||!radicals.length)throw new Error('File phải có dữ liệu ở cả NET_CO_BAN và BO_THU.');
+  return {course,lessons:[{number:1,title:'Nét cơ bản đầy đủ'},{number:2,title:'50 bộ thủ bằng hình ảnh'}],items:[...strokes,...radicals],counts:{strokes:strokes.length,radicals:radicals.length}};
+}
+async function previewInteractiveCourse(){
+  try{
+    interactiveCourseDraft=await readInteractiveCourseFile();
+    const d=interactiveCourseDraft;$('interactiveCoursePreview').hidden=false;$('interactiveCoursePreview').innerHTML=`<table><thead><tr><th>Khóa học</th><th>Quyền</th><th>Nét cơ bản</th><th>Bộ thủ</th></tr></thead><tbody><tr><td><b>${esc(d.course.title)}</b><br><small>${esc(d.course.id)}</small></td><td>Miễn phí toàn bộ · Xuất bản</td><td>${d.counts.strokes} thẻ</td><td>${d.counts.radicals} thẻ</td></tr></tbody></table>`;
+    $('runInteractiveCourse').disabled=false;$('interactiveCourseStatus').textContent='File hợp lệ. Bấm “Tạo khóa học miễn phí” để lưu lên web.';$('interactiveCourseStatus').className='status ok';
+  }catch(e){interactiveCourseDraft=null;$('runInteractiveCourse').disabled=true;$('interactiveCourseStatus').textContent=e.message;$('interactiveCourseStatus').className='status err'}
+}
+async function runInteractiveCourse(){
+  try{
+    if(!interactiveCourseDraft)await previewInteractiveCourse();if(!interactiveCourseDraft)return;
+    $('runInteractiveCourse').disabled=true;$('interactiveCourseStatus').textContent='Đang tạo khóa và các thẻ học…';
+    const result=await api('/admin/learning/interactive-import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(interactiveCourseDraft)});
+    $('interactiveCourseStatus').textContent=`Đã tạo khóa miễn phí: ${interactiveCourseDraft.course.title} · ${result.item_count} thẻ học.`;$('interactiveCourseStatus').className='status ok';
+    await loadLearningCourses();
+  }catch(e){$('interactiveCourseStatus').textContent=e.message;$('interactiveCourseStatus').className='status err';$('runInteractiveCourse').disabled=false}
+}
 async function openKidsInShadow(){
   const seriesId=$('kidsLessonSeries').value;
   const title=$('kidsLessonTitle').value.trim();
@@ -1777,6 +1820,9 @@ $('kidsSaveCollection').onclick=saveKidsCollection;$('kidsNewCollection').onclic
 $('kidsSaveSeries').onclick=saveKidsSeries;$('kidsClearSeries').onclick=resetKidsSeries;
 $('kidsSaveLesson').onclick=saveKidsLesson;$('kidsNewLesson').onclick=resetKidsLesson;
 $('kidsOpenShadow').onclick=openKidsInShadow;
+$('previewInteractiveCourse').onclick=previewInteractiveCourse;
+$('runInteractiveCourse').onclick=runInteractiveCourse;
+$('interactiveCourseFile').onchange=()=>{interactiveCourseDraft=null;$('runInteractiveCourse').disabled=true;$('interactiveCoursePreview').hidden=true;$('interactiveCourseStatus').textContent='Đã chọn file. Bấm “Kiểm tra file”.';$('interactiveCourseStatus').className='status'};
 
 </script>
 </body>
