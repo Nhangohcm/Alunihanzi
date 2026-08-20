@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- ALUNI USER INTERFACE V68 — QUAY ĐÚNG KHUNG VIDEO + LINK BÁN HÀNG CHẮC CHẮN -->
+<!-- ALUNI USER INTERFACE V69 — XEM BẢN THU BÊN DƯỚI + GIỮ VIDEO GỐC -->
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
@@ -530,7 +530,7 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
 .shadow-recorder-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.shadow-recorder-actions select{width:auto;min-width:150px;padding:10px 12px}.shadow-recorder-actions .btn.recording{background:#d9363e;color:#fff;border-color:#d9363e;animation:recordPulse 1.1s infinite}
 .shadow-recorder-status{margin-top:10px;min-height:21px;color:#65718a;font-size:.86rem;font-weight:750}.shadow-recorder-status.error{color:#b4232c}.shadow-recorder-status.ok{color:#17835b}
 .shadow-recorder-preview{display:grid;gap:9px;margin-top:11px;padding-top:11px;border-top:1px dashed #d7deec}.shadow-recorder-preview[hidden]{display:none!important}.shadow-recorder-preview audio,.shadow-recorder-preview video{width:100%;max-height:380px;border-radius:12px;background:#101522}
-.video-frame{position:relative}.video-frame.shadow-reviewing #youtubePlayer{visibility:hidden}.video-frame #shadowVideoPreview{position:absolute;inset:0;width:100%;height:100%;max-height:none;border-radius:inherit;object-fit:contain;background:#101522;z-index:4}
+.video-frame{position:relative}.shadow-recorder-preview video{display:block;position:static;width:100%;height:auto;max-height:520px;object-fit:contain;background:#101522}
 .shadow-dub-stage{position:fixed;left:-100000px;top:0;width:1280px;height:720px;pointer-events:none;opacity:0}.shadow-dub-stage video,.shadow-dub-stage canvas{position:absolute;inset:0;width:1280px;height:720px}
 @keyframes recordPulse{70%{box-shadow:0 0 0 11px rgba(217,54,62,0)}100%{box-shadow:0 0 0 0 rgba(217,54,62,0)}}
 @media(max-width:600px){.shadow-recorder{padding:13px}.shadow-recorder-actions{display:grid;grid-template-columns:1fr 1fr}.shadow-recorder-actions .btn,.shadow-recorder-actions select{width:100%;min-width:0;padding:11px 7px}.shadow-recorder-actions #shadowVideoRecordBtn{grid-column:1/-1}}
@@ -1197,7 +1197,7 @@ if(demoCheck){
           <div class="shadow-recorder-preview" id="shadowRecorderPreview" hidden>
             <audio id="shadowAudioPreview" controls hidden></audio>
             <video id="shadowVideoPreview" controls playsinline hidden></video>
-            <div class="shadow-recorder-actions"><button class="btn primary" id="shadowRecordDownloadBtn" type="button">⬇ Tải bản thu</button><button class="btn ghost" id="shadowRecordAgainBtn" type="button">↻ Ghi lại</button></div>
+            <div class="shadow-recorder-actions"><button class="btn primary" id="shadowRecordDownloadBtn" type="button">⬇ Tải bản thu</button><button class="btn soft" id="shadowContinueVideoBtn" type="button">▶ Xem tiếp video gốc</button><button class="btn ghost" id="shadowRecordAgainBtn" type="button">↻ Ghi lại</button></div>
           </div>
           <div class="shadow-dub-stage" id="shadowDubStage" aria-hidden="true"><video id="shadowDubCapture" playsinline muted></video><video id="shadowDubCamera" playsinline muted></video><canvas id="shadowDubCanvas" width="1280" height="720"></canvas></div>
         </div>
@@ -1565,7 +1565,7 @@ function shadowRecordUi(active){
 function clearShadowRecording(){
   if(shadowRecordUrl)URL.revokeObjectURL(shadowRecordUrl);shadowRecordUrl='';shadowRecordBlob=null;
   const panel=document.getElementById('shadowRecorderPreview'),audio=document.getElementById('shadowAudioPreview'),video=document.getElementById('shadowVideoPreview');
-  const frame=document.querySelector('#shadowPlayerCard .video-frame');if(frame)frame.classList.remove('shadow-reviewing');if(panel&&video&&video.parentElement!==panel)panel.insertBefore(video,panel.querySelector('.shadow-recorder-actions'));if(panel)panel.hidden=true;[audio,video].forEach(x=>{if(!x)return;x.pause();x.removeAttribute('src');x.hidden=true});shadowRecordStatus('Sẵn sàng. Nên dùng tai nghe để giọng thu rõ hơn.');
+  if(panel&&video&&video.parentElement!==panel)panel.insertBefore(video,panel.querySelector('.shadow-recorder-actions'));if(panel)panel.hidden=true;[audio,video].forEach(x=>{if(!x)return;x.pause();x.removeAttribute('src');x.hidden=true});shadowRecordStatus('Sẵn sàng. Nên dùng tai nghe để giọng thu rõ hơn.');
 }
 function stopShadowTracks(){
   if(shadowRecordTicker)clearInterval(shadowRecordTicker);shadowRecordTicker=null;
@@ -1579,8 +1579,14 @@ function stopShadowTracks(){
 function finishShadowRecording(){
   stopShadowTracks();shadowRecordUi(false);if(!shadowRecordChunks.length){shadowRecordStatus('Không thu được dữ liệu. Anh/chị hãy thử lại.','error');return}
   const mime=shadowRecorder?.mimeType||shadowRecorderMime(shadowRecordKind)||(shadowRecordKind==='video'?'video/webm':'audio/webm');shadowRecordBlob=new Blob(shadowRecordChunks,{type:mime});shadowRecordUrl=URL.createObjectURL(shadowRecordBlob);
-  const panel=document.getElementById('shadowRecorderPreview'),audio=document.getElementById('shadowAudioPreview'),video=document.getElementById('shadowVideoPreview'),target=shadowRecordKind==='video'?video:audio,other=shadowRecordKind==='video'?audio:video;
-  if(other){other.hidden=true;other.removeAttribute('src')}if(target){target.src=shadowRecordUrl;target.hidden=false}if(shadowRecordKind==='video'){const frame=document.querySelector('#shadowPlayerCard .video-frame');if(frame&&target){frame.appendChild(target);frame.classList.add('shadow-reviewing');if(shadowPlayer?.pauseVideo)shadowPlayer.pauseVideo()}}if(panel)panel.hidden=false;shadowRecordStatus(shadowRecordKind==='video'?'Đã quay xong. Bản xem lại đang ở ngay khung video phía trên.':'Đã thu xong. Hãy nghe lại trước khi tải bản ghi.','ok');
+  const panel=document.getElementById('shadowRecorderPreview'),audio=document.getElementById('shadowAudioPreview'),video=document.getElementById('shadowVideoPreview'),target=shadowRecordKind==='video'?video:audio,other=shadowRecordKind==='video'?audio:video,continueBtn=document.getElementById('shadowContinueVideoBtn');
+  if(continueBtn)continueBtn.hidden=shadowRecordKind!=='video';if(other){other.hidden=true;other.removeAttribute('src')}if(target){target.src=shadowRecordUrl;target.hidden=false}if(panel){panel.hidden=false;panel.scrollIntoView({behavior:'smooth',block:'center'})}shadowRecordStatus(shadowRecordKind==='video'?'Đã quay xong. Bản thu ở bên dưới; video YouTube phía trên vẫn sẵn sàng để xem tiếp.':'Đã thu xong. Hãy nghe lại trước khi tải bản ghi.','ok');
+}
+
+function continueShadowOriginalVideo(){
+  const preview=document.getElementById('shadowVideoPreview');if(preview)preview.pause();
+  const frame=document.querySelector('#shadowPlayerCard .video-frame');if(frame)frame.scrollIntoView({behavior:'smooth',block:'center'});
+  if(shadowPlayer?.unMute)shadowPlayer.unMute();if(shadowPlayer?.playVideo)setTimeout(()=>shadowPlayer.playVideo(),350);
 }
 function beginShadowRecorder(stream,kind){
   shadowRecordKind=kind;shadowRecordStream=stream;shadowRecordChunks=[];const mime=shadowRecorderMime(kind);shadowRecorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);shadowRecorder.ondataavailable=e=>{if(e.data?.size)shadowRecordChunks.push(e.data)};shadowRecorder.onstop=finishShadowRecording;shadowRecorder.onerror=()=>{stopShadowTracks();shadowRecordUi(false);shadowRecordStatus('Thiết bị không ghi được bản này. Hãy thử lại bằng Chrome hoặc Edge.','error')};shadowRecorder.start(500);shadowRecordStartedAt=Date.now();shadowRecordUi(true);shadowRecordTicker=setInterval(()=>{const sec=Math.max(1,Math.floor((Date.now()-shadowRecordStartedAt)/1000));shadowRecordStatus(`🔴 Đang ${kind==='video'?'lồng tiếng':'ghi âm'} ${sec} giây · bấm Dừng khi hoàn thành.`)},500);
@@ -1590,7 +1596,7 @@ async function startShadowAudioRecording(){
   if(shadowPlayer?.pauseVideo)shadowPlayer.pauseVideo();clearShadowRecording();shadowRecordStatus('Video đã dừng tại câu hiện tại. Hãy nói lại câu này.');try{const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});beginShadowRecorder(stream,'audio')}catch(e){shadowRecordStatus('Chưa mở được micro. Hãy cho phép quyền Micro rồi thử lại.','error')}
 }
 async function startShadowVideoRecording(){
-  if(!window.MediaRecorder||!navigator.mediaDevices?.getDisplayMedia||!HTMLCanvasElement.prototype.captureStream){shadowRecordStatus('Thiết bị này chưa hỗ trợ tạo video lồng tiếng. Hãy dùng Chrome hoặc Edge mới trên máy tính.','error');return}
+  if(!window.MediaRecorder||!navigator.mediaDevices?.getDisplayMedia||!HTMLCanvasElement.prototype.captureStream){shadowRecordStatus('Điện thoại hoặc trình duyệt này chưa cho phép quay tab YouTube. Anh/chị vẫn có thể dùng Ghi âm; để tạo video lồng tiếng hãy dùng Chrome/Edge trên máy tính.','error');return}
   clearShadowRecording();
   let display=null,mic=null,camera=null;
   try{
@@ -2175,6 +2181,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('shadowVideoRecordBtn')?.addEventListener('click',startShadowVideoRecording);
   document.getElementById('shadowRecordStopBtn')?.addEventListener('click',stopShadowRecording);
   document.getElementById('shadowRecordDownloadBtn')?.addEventListener('click',downloadShadowRecording);
+  document.getElementById('shadowContinueVideoBtn')?.addEventListener('click',continueShadowOriginalVideo);
   document.getElementById('shadowRecordAgainBtn')?.addEventListener('click',clearShadowRecording);
   window.addEventListener('beforeunload',stopShadowTracks);
 
