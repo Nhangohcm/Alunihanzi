@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- ALUNI USER INTERFACE V60 -->
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
@@ -144,6 +145,14 @@ input,select{width:100%;border:1px solid var(--line);border-radius:13px;backgrou
 .shadow-suggestion-course{display:block;color:var(--green);font-size:.68rem;font-weight:900;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .shadow-suggestion-title{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:3px;font-size:.82rem;line-height:1.35;font-weight:850;min-height:2.7em}
 .shadow-suggestion-empty{color:var(--muted);font-size:.88rem;padding:8px 2px}
+.course-showcase-panel{margin-bottom:18px;padding:20px;border:1px solid #dbe2f2;border-radius:21px;background:#fff;box-shadow:var(--shadow)}
+.course-showcase-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:13px}
+.course-showcase-head h1{margin:3px 0 4px;font-size:clamp(1.55rem,3vw,2.15rem)}
+.course-showcase-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}
+.course-showcase-card{display:flex;flex-direction:column;gap:8px;min-width:0;padding:15px;border:1px solid #dce3f4;border-radius:17px;background:linear-gradient(145deg,#fff,#f7f9ff)}
+.course-showcase-card h3{margin:0;font-size:1rem;line-height:1.35}
+.course-showcase-card .btn{margin-top:auto;width:100%}
+.course-status-chip{display:inline-flex;width:max-content;max-width:100%;padding:4px 8px;border-radius:999px;background:#edf1ff;color:#4056c5;font-size:.72rem;font-weight:900}
 .module-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .shadow-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:14px;max-width:100%;overflow:hidden}
 .shadow-grid>div{min-width:0;max-width:100%}
@@ -301,7 +310,7 @@ input,select{width:100%;border:1px solid var(--line);border-radius:13px;backgrou
 
 footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
 @media(max-width:760px){.words{grid-template-columns:repeat(2,minmax(0,1fr))}.row,.hero-demo{grid-template-columns:1fr}.hero-demo{text-align:center}}
-@media(max-width:480px){.wrap{width:min(100% - 12px,1080px);padding-top:12px}.card{padding:14px;border-radius:18px}.module-card{padding:12px;border-radius:18px}.searchrow{grid-template-columns:1fr}.words{gap:8px}.word{min-height:108px;padding:10px 40px 10px 8px}.word-long .hanzi{font-size:1.38rem}.word-sentence .hanzi{font-size:1.08rem}.ri{grid-template-columns:86px 1fr}#shadowSection .wrap{width:calc(100% - 12px)}#shadowPlayerCard{padding:10px 6px}#shadowPlayerCard .video-frame{width:78vw;max-width:320px;border-radius:12px}.shadow-controls{width:calc(100% - 16px)}.shadow-controls .btn{flex:1 1 calc(50% - 8px);font-size:1rem;padding:12px 8px}.shadow-controls .btn#repeatLineBtn{flex-basis:100%}.transcript-list{padding:0 2px}.transcript-zh{font-size:1.52rem}.transcript-py{font-size:1.16rem}.transcript-vi{font-size:1.14rem}}
+@media(max-width:480px){.wrap{width:min(100% - 12px,1080px);padding-top:12px}.card{padding:14px;border-radius:18px}.module-card{padding:12px;border-radius:18px}.searchrow{grid-template-columns:1fr}.words{gap:8px}.word{min-height:108px;padding:10px 40px 10px 8px}.word-long .hanzi{font-size:1.38rem}.word-sentence .hanzi{font-size:1.08rem}.ri{grid-template-columns:86px 1fr}#shadowSection .wrap{width:calc(100% - 12px)}#shadowPlayerCard{padding:10px 6px}#shadowPlayerCard .video-frame{width:78vw;max-width:320px;border-radius:12px}.transcript-list{padding:0 2px}.transcript-zh{font-size:1.52rem}.transcript-py{font-size:1.16rem}.transcript-vi{font-size:1.14rem}}
 @media(max-width:480px){.shadow-suggestion{flex-basis:148px}.shadow-suggestions{margin-top:13px}.shadow-suggestion-copy{padding:8px 9px 9px}}
 
 /* v29: mobile Shadowing is sized from the card, never from YouTube's iframe. */
@@ -331,20 +340,22 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
   }
   #shadowPlayerCard .shadow-controls{
     display:grid!important;
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    gap:9px!important;
-    width:min(100%,340px)!important;
-    margin:14px auto 0!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:6px!important;
+    width:min(100%,390px)!important;
+    margin:9px auto 0!important;
   }
   #shadowPlayerCard .shadow-controls .btn{
     width:100%!important;
     min-width:0!important;
     max-width:100%!important;
-    padding:12px 7px!important;
-    font-size:1.05rem!important;
+    min-height:38px!important;
+    padding:7px 4px!important;
+    font-size:.82rem!important;
+    line-height:1.15!important;
     white-space:normal!important;
   }
-  #shadowPlayerCard #repeatLineBtn{grid-column:1/-1!important}
+  #shadowPlayerCard #repeatLineBtn{grid-column:auto!important}
   #shadowTranscript{width:100%!important;overflow-x:hidden!important}
   #shadowTranscript .transcript-line{width:100%;min-width:0;overflow-wrap:anywhere}
   #shadowTranscript .transcript-zh{font-size:1.58rem;line-height:1.4}
@@ -518,7 +529,7 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
 .interactive-writing-toggle{margin-top:16px;border:0;border-radius:13px;padding:12px 16px;background:linear-gradient(135deg,#4f67e8,#8465e8);color:#fff;font-weight:900;cursor:pointer}.interactive-writing-panel{margin-top:14px;padding:16px;border:1px solid #dce3f2;border-radius:18px;background:#f8faff}.interactive-writing-panel[hidden]{display:none}.interactive-writing-chars{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;margin-bottom:12px}.interactive-writing-char{min-width:44px;border:1px solid #ced8ec;border-radius:11px;padding:8px 11px;background:#fff;color:#23314e;font-size:1.25rem;font-weight:900;cursor:pointer}.interactive-writing-char.active{border-color:#5269e7;background:#eef2ff;color:#4056c5}.interactive-writing-box{position:relative;width:min(300px,78vw);height:min(300px,78vw);margin:0 auto 12px;border:2px solid #c5cede;border-radius:14px;background:#fff;overflow:hidden;display:grid;place-items:center}.interactive-writing-box:before,.interactive-writing-box:after{content:"";position:absolute;background:#d9deea;pointer-events:none}.interactive-writing-box:before{left:50%;top:0;bottom:0;width:1px}.interactive-writing-box:after{top:50%;left:0;right:0;height:1px}.interactive-writer-target{position:relative;z-index:1;line-height:0}.interactive-writing-actions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}.interactive-writing-actions button{border:1px solid #d5ddec;border-radius:11px;padding:10px 12px;background:#fff;color:#2a3855;font-weight:850;cursor:pointer}.interactive-writing-actions .primary{border-color:#4f67e8;background:#4f67e8;color:#fff}.interactive-writing-status{min-height:22px;margin-top:9px;text-align:center;color:#69758b;font-size:.88rem;font-weight:750}
 @media(min-width:781px){.course-drawer.lesson-open .detail-column{width:min(100%,1000px);margin-inline:auto}.course-drawer.lesson-open .learning-detail{padding:20px 26px}.course-drawer.lesson-open .interactive-image{aspect-ratio:16/6}.course-drawer.lesson-open .interactive-symbol{font-size:5rem}}
 @media(max-width:640px){.interactive-copy{padding:16px}.interactive-image{aspect-ratio:16/9}.interactive-card{border-radius:18px}.interactive-symbol{font-size:4.5rem}.interactive-nav{position:sticky;bottom:0;background:#fff;padding-top:8px}.interactive-grid{grid-template-columns:repeat(5,1fr)}}
-.kids-public-filters{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 18px}.kids-filter{border:1px solid #dce4f4;background:#fff;border-radius:999px;padding:9px 14px;font-weight:850;color:#4c5a76}.kids-filter.active{background:#4f67e8;color:#fff;border-color:#4f67e8}.kids-public-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.kids-series-card{overflow:hidden;border:1px solid #e0e6f2;border-radius:19px;background:#fff;box-shadow:0 10px 26px rgba(58,73,126,.08)}.kids-series-thumb{aspect-ratio:16/9;background:linear-gradient(135deg,#bcecf1,#d8d9ff);display:grid;place-items:center;font-size:3rem;background-size:cover;background-position:center}.kids-series-copy{padding:15px}.kids-series-copy h3{margin:7px 0}.kids-series-meta{font-size:.78rem;color:#4f67e8;font-weight:900}.kids-episode-list{display:grid;gap:7px;margin-top:12px}.kids-episode{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px;border-radius:11px;background:#f5f7fc;font-size:.84rem}.kids-episode a{font-weight:850;color:#4056c5;text-decoration:none}@media(max-width:1100px){.kids-public-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.kids-public-grid{grid-template-columns:1fr}}
+.kids-public-filters{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 18px}.kids-filter{border:1px solid #dce4f4;background:#fff;border-radius:999px;padding:9px 14px;font-weight:850;color:#4c5a76}.kids-filter.active{background:#4f67e8;color:#fff;border-color:#4f67e8}.kids-public-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.kids-series-card{overflow:hidden;border:1px solid #e0e6f2;border-radius:19px;background:#fff;box-shadow:0 10px 26px rgba(58,73,126,.08)}.kids-series-thumb{aspect-ratio:16/9;background:linear-gradient(135deg,#bcecf1,#d8d9ff);display:grid;place-items:center;font-size:3rem;background-size:cover;background-position:center}.kids-series-copy{padding:15px}.kids-series-copy h3{margin:7px 0}.kids-series-meta{font-size:.78rem;color:#4f67e8;font-weight:900}.kids-episode-list{display:grid;gap:7px;margin-top:12px}.kids-episode{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px;border-radius:11px;background:#f5f7fc;font-size:.84rem}.kids-episode a{font-weight:850;color:#4056c5;text-decoration:none}@media(max-width:1100px){.kids-public-grid{grid-template-columns:repeat(2,1fr)}.course-showcase-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:620px){.kids-public-grid{display:flex;gap:11px;overflow-x:auto;scroll-snap-type:x proximity;padding:2px 2px 12px}.kids-series-card{flex:0 0 min(82vw,330px);scroll-snap-align:start}.course-showcase-panel{padding:15px 12px}.course-showcase-head{align-items:flex-start;flex-direction:column}.course-showcase-grid{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x proximity;padding:2px 2px 10px}.course-showcase-card{flex:0 0 min(76vw,285px);scroll-snap-align:start}}
 .course-video-player:not(:empty){margin:14px 0 18px}.course-video-embed{position:relative;overflow:hidden;width:100%;aspect-ratio:16/9;border-radius:16px;background:#101522;box-shadow:0 12px 28px rgba(28,39,77,.16)}.course-video-embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 /* V44 — giao diện học viên hiện đại và sẵn sàng nối bán hàng */
 :root{--bg:#f3f6ff;--paper:#fff;--ink:#17233e;--muted:#66728c;--green:#4f67e8;--green2:#eef2ff;--line:#e1e6f2;--warm:#fff0e4;--lock:#a05f20;--shadow:0 14px 36px rgba(58,73,126,.09)}
@@ -1152,12 +1163,12 @@ if(demoCheck){
 
 <section class="aluni-section" id="learningSection">
   <div class="wrap">
-    <div class="student-hero">
-      <div class="student-hero-main"><div class="student-eyebrow">NỀN TẢNG HỌC TIẾNG TRUNG ALUNI</div><h1>Học nhẹ, nhớ dai,<br>phản xạ tự nhiên.</h1><p>Mỗi bài học đi theo một lộ trình rõ ràng: xem bài giảng, luyện Shadowing, làm bài tập, viết chữ và tải tài liệu.</p><div class="hero-actions"><button class="hero-primary" id="startLearningBtn">Bắt đầu học ngay →</button><a class="hero-secondary" href="https://zalo.me/0931444083" target="_blank" rel="noopener">Tư vấn khóa học</a></div></div>
-      <div class="student-side"><div class="student-side-card"><div class="brand">LỘ TRÌNH CỦA BẠN</div><h3>Học theo từng bài, không bị rối</h3><p class="hint">Nội dung của một bài được gom đủ tại một nơi và có thể học theo bất kỳ thứ tự phù hợp.</p><div class="quick-stats"><div class="quick-stat"><b>5</b><span>phần học / bài</span></div><div class="quick-stat"><b>1</b><span>lộ trình thống nhất</span></div></div></div><div class="student-side-card"><div class="brand">PHƯƠNG PHÁP ALUNI</div><h3>Nghe · Nói · Đọc · Viết</h3><p class="hint">Ưu tiên phản xạ thực tế, nội dung ngắn gọn và luyện tập lặp lại mỗi ngày.</p></div></div>
+    <div class="course-showcase-panel">
+      <div class="course-showcase-head"><div><div class="brand">THƯ VIỆN KHÓA HỌC ALUNI</div><h1>Tất cả khóa học</h1><p class="hint">Xem toàn bộ chương trình đang có. Khóa miễn phí mở ngay; khóa có phí sẽ mở sau khi kích hoạt.</p></div><button class="btn ghost" id="exploreCoursesBtn">Xem chi tiết tất cả →</button></div>
+      <div class="course-showcase-grid" id="allCoursesGrid"><div class="learning-empty">Đang tải danh sách khóa học…</div></div>
     </div>
     <div class="my-courses-panel">
-      <div class="my-courses-head"><div><div class="brand">KHU VỰC HỌC TẬP</div><h2>Khóa học của tôi</h2><p class="hint">Chỉ gồm khóa miễn phí và khóa đã kích hoạt. Chọn học đầy đủ hoặc ôn nhanh Shadowing.</p></div><div class="compact-actions"><button class="btn ghost" id="exploreCoursesBtn">🎓 Khám phá tất cả khóa học</button></div></div>
+      <div class="my-courses-head"><div><div class="brand">KHU VỰC HỌC TẬP</div><h2>Khóa học đã mở của tôi</h2><p class="hint">Các khóa miễn phí và khóa anh đã kích hoạt được đặt riêng tại đây để vào học nhanh.</p></div></div>
       <div class="my-courses-grid" id="myCoursesGrid"><div class="learning-empty">Bạn chưa kích hoạt khóa học nào.</div></div>
     </div>
   </div>
@@ -1291,15 +1302,22 @@ function paintPublicLearningCourses(){
   if(!publicLearningCourses.length){box.innerHTML='<div class="learning-empty">Đang tải khóa học…</div>';return}
   publicLearningCourses.forEach(c=>{const b=document.createElement('button');b.className='learning-course-btn';b.dataset.course=c.id;b.innerHTML=`<b>${shadowEsc(c.icon||'课')} ${shadowEsc(c.title)}</b><div class="hint">${(c.lessons||[]).length} bài · ${isCurrentFreeCourse(c)?'Miễn phí':'Khóa học có phí'}</div>${c.description?`<div class="hint" style="margin-top:5px">${shadowEsc(c.description)}</div>`:''}`;b.onclick=()=>openExploredCourse(c,b);box.appendChild(b)});
 }
+function renderAllCoursesShowcase(){
+  const box=document.getElementById('allCoursesGrid');if(!box)return;
+  if(!publicLearningCourses.length){box.innerHTML='<div class="learning-empty">Chưa có khóa học nào được xuất bản.</div>';return}
+  const entitlements=savedEntitlements(),all=entitlements[ALL_ACCESS_ID];
+  box.innerHTML=publicLearningCourses.map(c=>{const opened=isCurrentFreeCourse(c)||Boolean(entitlements[c.id])||Boolean(all),shadows=(c.lessons||[]).reduce((sum,l)=>sum+(l.shadowing_videos||[]).length,0);return `<article class="course-showcase-card"><span class="course-status-chip">${opened?(isCurrentFreeCourse(c)?'MIỄN PHÍ':'ĐÃ MỞ'):'🔒 CẦN KÍCH HOẠT'}</span><h3>${shadowEsc(c.icon||'课')} ${shadowEsc(c.title)}</h3><div class="hint">${(c.lessons||[]).length} bài${shadows?` · ${shadows} video Shadowing`:''}</div><button class="btn ${opened?'primary':'ghost'} showcaseCourseBtn" data-course="${shadowEsc(c.id)}">${opened?'Vào học':'Xem khóa học'}</button></article>`}).join('');
+  document.querySelectorAll('.showcaseCourseBtn').forEach(b=>b.onclick=()=>{const c=publicLearningCourses.find(x=>String(x.id)===String(b.dataset.course)),target=document.querySelector(`.learning-course-btn[data-course="${CSS.escape(String(b.dataset.course))}"]`);if(c&&target)openExploredCourse(c,target)});
+}
 async function loadPublicLearningCourses(){
   const box=document.getElementById('learningPublicCourses');if(!box)return;
   const cached=readLearningCache();
-  if(cached.length){publicLearningCourses=cached;paintPublicLearningCourses();renderMyCourses()}
+  if(cached.length){publicLearningCourses=cached;paintPublicLearningCourses();renderAllCoursesShowcase();renderMyCourses()}
   else{box.innerHTML='<div class="learning-empty">Đang tải khóa học…</div>';const mine=document.getElementById('myCoursesGrid');if(mine)mine.innerHTML='<div class="learning-empty">⏳ Đang tải khóa học của bạn…</div>'}
   try{
     const r=await fetch(api('/learning-courses'),{cache:'no-store'}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được khóa học.');
     const fresh=dedupePublicCourses(Array.isArray(j.courses)?j.courses:[]);
-    publicLearningCourses=fresh;writeLearningCache(fresh);paintPublicLearningCourses();renderMyCourses();
+    publicLearningCourses=fresh;writeLearningCache(fresh);paintPublicLearningCourses();renderAllCoursesShowcase();renderMyCourses();
     if(!fresh.length)box.innerHTML='<div class="learning-empty">Chưa có khóa học nào được xuất bản.</div>';
   }catch(e){if(!cached.length){box.innerHTML=`<div class="learning-empty">${shadowEsc(e.message)}</div>`;const mine=document.getElementById('myCoursesGrid');if(mine)mine.innerHTML='<div class="learning-empty">Chưa tải được khóa học. Vui lòng thử lại.</div>'}}
 }
@@ -1414,7 +1432,7 @@ function renderAdultKids(){
   document.getElementById('adultKidsCollections').innerHTML=`<button class="kids-filter ${!adultKidsCollection?'active':''}" data-collection="">Tất cả</button>`+(data.collections||[]).map(x=>`<button class="kids-filter ${x.code===adultKidsCollection?'active':''}" data-collection="${shadowEsc(x.code)}">${shadowEsc(x.icon||'🎬')} ${shadowEsc(x.title)}</button>`).join('');
   document.querySelectorAll('#adultKidsCollections [data-collection]').forEach(b=>b.onclick=()=>{adultKidsCollection=b.dataset.collection;renderAdultKids()});
   const series=(data.series||[]).filter(x=>(!adultKidsLanguage||x.language_code===adultKidsLanguage)&&(!adultKidsCollection||x.content_type===adultKidsCollection));
-  document.getElementById('adultKidsSeries').innerHTML=series.map(s=>`<article class="kids-series-card"><div class="kids-series-thumb" ${s.thumbnail_url?`style="background-image:url('${shadowEsc(s.thumbnail_url)}')"`:''}>${s.thumbnail_url?'':shadowEsc(s.collection_icon||'🎬')}</div><div class="kids-series-copy"><div class="kids-series-meta">${shadowEsc(s.collection_title||'Nội dung')} · ${shadowEsc(s.level_title||'')}</div><h3>${shadowEsc(s.title)}</h3><div class="hint">${shadowEsc(s.description||'')||`${(s.lessons||[]).length} tập luyện nghe`}</div><div class="kids-episode-list">${(s.lessons||[]).slice(0,6).map(ep=>`<div class="kids-episode"><span>Tập ${String(ep.lesson_number).padStart(2,'0')} · ${shadowEsc(ep.title)}</span>${ep.youtube_url?`<a href="${shadowEsc(ep.youtube_url)}" target="_blank" rel="noopener">Xem</a>`:''}</div>`).join('')}</div></div></article>`).join('')||'<div class="learning-empty">Chưa có Series được xuất bản trong mục này.</div>';
+  document.getElementById('adultKidsSeries').innerHTML=series.map(s=>`<article class="kids-series-card"><div class="kids-series-thumb" ${s.thumbnail_url?`style="background-image:url('${shadowEsc(s.thumbnail_url)}')"`:''}>${s.thumbnail_url?'':shadowEsc(s.collection_icon||'🎬')}</div><div class="kids-series-copy"><div class="kids-series-meta">${shadowEsc(s.collection_title||'Nội dung')} · ${shadowEsc(s.level_title||'')}</div><h3>${shadowEsc(s.title)}</h3><div class="hint">${shadowEsc(s.description||'')||`${(s.lessons||[]).length} tập luyện nghe`}</div><div class="kids-episode-list">${(s.lessons||[]).slice(0,10).map(ep=>`<div class="kids-episode"><span>Tập ${String(ep.lesson_number).padStart(2,'0')} · ${shadowEsc(ep.title)}</span>${ep.youtube_url?`<a href="${shadowEsc(ep.youtube_url)}" target="_blank" rel="noopener">Xem</a>`:''}</div>`).join('')}</div></div></article>`).join('')||'<div class="learning-empty">Chưa có Series được xuất bản trong mục này.</div>';
 }
 document.querySelector('.app-nav-btn[data-section="kidsPublicSection"]')?.addEventListener('click',loadAdultKids);
 $('shadowModeCourse').onclick=()=>selectShadowMode('course');
@@ -1544,7 +1562,7 @@ function renderShadowSuggestions(videos){
     area.hidden = false;
     return;
   }
-  videos.slice(0,6).forEach(v=>{
+  videos.forEach(v=>{
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'shadow-suggestion';
@@ -1577,16 +1595,16 @@ async function loadShadowSuggestions(){
   if(shadowSuggestionsLoaded || !shadowCourses.length) return;
   shadowSuggestionsLoaded = true;
   try{
-    const results = await Promise.all(shadowCourses.slice(0,4).map(async course=>{
+    const results = await Promise.all(shadowCourses.map(async course=>{
       const r = await fetch(shadowApi('/shadowing/videos?course_id=' + encodeURIComponent(course.id)), {cache:'no-store'});
       if(!r.ok) return [];
       const j = await r.json();
-      return (Array.isArray(j.videos) ? j.videos : []).slice(0,3).map(v=>({...v,course_name:course.name}));
+      return (Array.isArray(j.videos) ? j.videos : []).map(v=>({...v,course_name:course.name}));
     }));
     const mixed = [];
-    for(let i=0; mixed.length<6; i++){
+    for(let i=0; ; i++){
       let added = false;
-      results.forEach(list=>{ if(list[i] && mixed.length<6){ mixed.push(list[i]); added=true; } });
+      results.forEach(list=>{ if(list[i]){ mixed.push(list[i]); added=true; } });
       if(!added) break;
     }
     renderShadowSuggestions(mixed);
