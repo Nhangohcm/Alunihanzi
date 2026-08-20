@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aluni Admin V47 — Miễn phí Ngữ pháp theo khóa</title>
+<title>Aluni Admin V56 — Nhập hàng loạt Video & Shadowing</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="access-config.js?v=20260813-2"></script>
 <style>
@@ -100,7 +100,7 @@ table th{background:#f7f9fd;color:#52607b;font-size:.78rem;text-transform:upperc
 .shadow-locked{background:#f1f4fa!important;color:#6e7890;cursor:not-allowed}.shadow-guide{padding:12px 14px;border-radius:13px;background:linear-gradient(120deg,#eef4ff,#f7f3ff);border:1px solid #dce5ff;margin-bottom:14px}
 input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11px;margin-right:10px;background:#eef2ff;color:#4054bd;font-weight:800;cursor:pointer}
 @media(max-width:760px){.admin-app>.card:first-child>.row>div{display:none}.admin-app>.card:first-child{padding:7px 10px}.admin-app>.card:first-child .tabs{margin:0}.admin-app>.card:first-child #logoutBtn{padding:9px 10px}.course-form-actions{width:100%}.course-form-actions button{flex:1}}
-/* V47 — quyền Ngữ pháp theo khóa và tìm kiếm toàn kho */
+/* V56 — nhập hàng loạt video bài giảng và Shadowing theo đúng đích */
 .lesson-content-hub{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.lesson-tool{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-height:94px;padding:13px;border:1px solid #dfe5f2;border-radius:14px;background:#fbfcff;color:#263552;text-align:left}.lesson-tool.ready{border-color:#b8dfcd;background:#f1fbf6}.lesson-tool b{font-size:.92rem}.lesson-tool small{color:var(--muted);line-height:1.35}.lesson-tool.pending{opacity:.68;cursor:not-allowed}.inline-editor{border:1px solid #dfe5f2;border-radius:14px;margin-top:10px;background:#fbfcff}.inline-editor summary{padding:12px 14px;background:transparent!important}.inline-editor>div{padding:0 14px 14px}.shadow-workspace{display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}.shadow-workspace.open{display:block}.shadow-video-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.shadow-video-actions button{padding:7px 9px}.shadow-course-rule{padding:12px;border:1px dashed #c8d1e8;border-radius:13px;background:#f8faff}.shadow-editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.shadow-editor-grid .full{grid-column:1/-1}
 @media(max-width:900px){.lesson-content-hub{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.lesson-content-hub,.shadow-editor-grid{grid-template-columns:1fr}.shadow-editor-grid .full{grid-column:auto}}
@@ -263,7 +263,23 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
       <div class="row" style="margin-top:10px"><button class="primary" id="saveAccessSettings">Lưu toàn bộ cài đặt quyền</button></div><div class="status" id="accessSettingsStatus">Hãy chọn một khóa cũ hoặc lưu khóa mới trước.</div>
     </div>
 
-    <div class="card module-access-card" data-module="video"><h2>4. Video bài giảng</h2><div class="grid2"><select class="moduleAccessMode" data-module="video"><option value="inherit">Áp dụng theo quyền toàn khóa</option><option value="custom">Miễn phí các bài riêng</option></select><input class="moduleFreeLessons" data-module="video" placeholder="Số bài, ví dụ: 1, 4"></div><button class="ghost moduleOpen" data-target="learningLessonManager">Quản lý video theo bài</button></div>
+    <div class="card module-access-card" data-module="video" id="bulkLectureVideoCard">
+      <h2>4. Video bài giảng</h2>
+      <div class="grid2"><select class="moduleAccessMode" data-module="video"><option value="inherit">Áp dụng theo quyền toàn khóa</option><option value="custom">Miễn phí các bài riêng</option></select><input class="moduleFreeLessons" data-module="video" placeholder="Số bài, ví dụ: 1, 4"></div>
+      <div class="row" style="margin-top:10px"><button class="ghost moduleOpen" data-target="learningLessonManager">Quản lý video theo từng bài</button></div>
+      <hr style="border:0;border-top:1px solid #e4e8f2;margin:18px 0">
+      <h3>▶ Nhập hàng loạt link YouTube</h3>
+      <p class="muted">Chọn khóa đã có bài, tải file link theo số bài và kiểm tra trước. Video được gắn vào phần <b>Video bài giảng</b>, không đưa sang Shadowing.</p>
+      <div class="grid">
+        <div><label>Khóa học đích</label><select id="bulkLectureCourse"></select></div>
+        <div><label>File CSV/XLSX: Bài · Tên bài · Link YouTube</label><input id="bulkLectureFile" type="file" accept=".csv,.xlsx,.xls"></div>
+        <div><label>Khi bài đã có video</label><select id="bulkLectureExisting"><option value="skip">Bỏ qua, giữ video cũ</option><option value="replace">Cập nhật video đầu tiên</option><option value="append">Thêm video mới</option></select></div>
+      </div>
+      <label style="margin-top:10px">Hoặc dán: <b>số bài | tiêu đề | link YouTube</b></label><textarea id="bulkLectureText" placeholder="1 | Bài giảng 01 | https://youtube.com/watch?v=...&#10;2 | Bài giảng 02 | https://youtube.com/watch?v=..."></textarea>
+      <div class="row" style="margin-top:10px"><button class="ghost" id="previewBulkLecture">👁 Kiểm tra trước</button><button class="primary" id="runBulkLecture" disabled>▶ Gắn video vào các bài</button></div>
+      <div class="status" id="bulkLectureStatus">Chọn khóa và file link, sau đó kiểm tra trước.</div>
+      <div class="tablewrap" id="bulkLecturePreview" hidden></div>
+    </div>
     <div class="card module-access-card" data-module="shadowing"><h2>5. Shadowing</h2><div class="grid2"><select class="moduleAccessMode" data-module="shadowing"><option value="inherit">Áp dụng theo quyền toàn khóa</option><option value="custom">Miễn phí các bài riêng</option></select><input class="moduleFreeLessons" data-module="shadowing" placeholder="Số bài, ví dụ: 1, 4"></div><button class="ghost modulePane" data-pane-target="shadowPane">Mở tab Shadowing của khóa này</button></div>
     <div class="card module-access-card" data-module="writing"><h2>6. Viết chữ</h2><div class="grid2"><select class="moduleAccessMode" data-module="writing"><option value="inherit">Áp dụng theo quyền toàn khóa</option><option value="custom">Miễn phí các bài riêng</option></select><input class="moduleFreeLessons" data-module="writing" placeholder="Số bài, ví dụ: 1, 4"></div><button class="ghost modulePane" data-pane-target="writingPane">Mở tab Viết chữ Hán của khóa này</button></div>
     <div class="card module-access-card" data-module="grammar"><h2>7. Ngữ pháp & Bài tập</h2><div class="grid2"><select class="moduleAccessMode" data-module="grammar"><option value="inherit">Áp dụng theo quyền toàn khóa</option><option value="custom">Miễn phí các bài riêng</option></select><input class="moduleFreeLessons" data-module="grammar" placeholder="Số bài, ví dụ: 1, 4"></div><button class="ghost modulePane" data-pane-target="grammarPane">Mở tab Ngữ pháp của khóa này</button></div>
@@ -374,6 +390,26 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
   </section>
 
   <section class="pane" id="shadowPane">
+    <div class="card" id="unifiedShadowImport">
+      <h2>⬆ Nhập Shadowing hàng loạt dùng chung</h2>
+      <p class="muted">Chọn đúng đích lưu: <b>Khóa học → Bài học</b> để Shadowing đi cùng quyền của khóa, hoặc <b>Kênh → Playlist</b> cho kho video độc lập. Hệ thống ghép theo số B01–B50 trong tên file, xem trước trước khi lưu và không trộn hai kho.</p>
+      <div class="grid">
+        <div><label>Loại đích</label><select id="unifiedShadowTargetType"><option value="course">Khóa học → Bài học</option><option value="playlist">Kênh → Playlist độc lập</option></select></div>
+        <div><label>Đích cần nhập</label><select id="unifiedShadowTarget"></select></div>
+        <div><label>Khi đích đã có Shadowing</label><select id="unifiedShadowExisting"><option value="skip">Bỏ qua, giữ dữ liệu cũ</option><option value="replace">Cập nhật video đầu tiên</option></select></div>
+      </div>
+      <div class="grid2" style="margin-top:12px">
+        <div><label>File CSV/XLSX danh sách link YouTube</label><input id="unifiedShadowLinksFile" type="file" accept=".csv,.xlsx,.xls"></div>
+        <div><label>Hoặc dán: số bài | tiêu đề | link YouTube</label><textarea id="unifiedShadowLinksText" placeholder="1 | 你好 | https://youtube.com/watch?v=...&#10;2 | 你忙吗 | https://youtube.com/watch?v=..."></textarea></div>
+      </div>
+      <div class="grid2" style="margin-top:12px">
+        <div><label>Nhiều file SRT (B01–B50)</label><input id="unifiedShadowSrts" type="file" accept=".srt" multiple></div>
+        <div><label>Nhiều file XLSX/CSV Hán tự · Pinyin · Tiếng Việt</label><input id="unifiedShadowBooks" type="file" accept=".xlsx,.xls,.csv" multiple></div>
+      </div>
+      <div class="row" style="margin-top:12px"><button class="ghost" id="previewUnifiedShadow">👁 Kiểm tra và ghép trước</button><button class="primary" id="runUnifiedShadow" disabled>⬆ Lưu hàng loạt vào đúng đích</button></div>
+      <div class="status" id="unifiedShadowStatus">Chọn đích và các file, sau đó bấm “Kiểm tra và ghép trước”.</div>
+      <div class="tablewrap" id="unifiedShadowPreview" hidden></div>
+    </div>
     <div class="card" id="mediaCatalogAdmin">
       <h2>📺 Shadowing theo Kênh → Playlist → Bài</h2>
       <p class="muted">Kho độc lập với Khóa học, dùng chung cho Shadowing và Aluni Kids. Tạo kênh, playlist rồi nhập hàng loạt link YouTube; sau đó mở từng bài để ghép SRT/XLSX và chỉnh sửa.</p>
@@ -787,6 +823,7 @@ async function loadLearningCourses(loadDetails=true){
     document.querySelectorAll('.toggleLearningCourse').forEach(b=>b.onclick=()=>toggleLearningCourse(b.dataset.id));
     document.querySelectorAll('.deleteLearningCourse').forEach(b=>b.onclick=()=>deleteLearningCourse(b.dataset.id));
     if(selected&&learningCourses.some(c=>c.id===selected))$('manageLearningCourse').value=selected;
+    refreshBulkLectureCourses();refreshUnifiedShadowTargets();
     $('learningStatus').textContent=`Có ${learningCourses.length} khóa học trong hệ thống.`;
     if(loadDetails&&learningCourses.length)await loadLearningContent();else if(!learningCourses.length)$('learningLessonList').innerHTML='';
   }catch(e){$('learningStatus').textContent=e.message}
@@ -1228,6 +1265,10 @@ document.querySelectorAll('.modulePane').forEach(b=>b.onclick=async()=>{const id
 $('previewBulkCourse').onclick=previewBulkCourseImport;
 $('runBulkCourse').onclick=runBulkCourseImport;
 $('learningTemplateBtn').onclick=learningTemplate;
+$('previewBulkLecture').onclick=previewBulkLecture;
+$('runBulkLecture').onclick=runBulkLecture;
+$('bulkLectureCourse').onchange=()=>{bulkLecturePlan=[];$('runBulkLecture').disabled=true;$('bulkLecturePreview').hidden=true};
+$('bulkLectureFile').onchange=()=>{bulkLecturePlan=[];$('runBulkLecture').disabled=true;$('bulkLecturePreview').hidden=true};
 $('previewLessonListImport').onclick=previewLessonListImport;
 $('runLessonListImport').onclick=runLessonListImport;
 $('lessonListTemplateBtn').onclick=lessonListTemplate;
@@ -1271,6 +1312,10 @@ $('mediaPreviewTranscript').onclick=previewMediaTranscript;
 $('mediaSaveTranscript').onclick=saveMediaTranscript;
 $('mediaMatchFiles').onclick=matchMediaFiles;
 $('mediaCloseEditor').onclick=()=>{$('mediaItemEditor').classList.remove('open')};
+$('previewUnifiedShadow').onclick=previewUnifiedShadow;
+$('runUnifiedShadow').onclick=runUnifiedShadow;
+$('unifiedShadowTargetType').onchange=refreshUnifiedShadowTargets;
+$('unifiedShadowTarget').onchange=()=>{unifiedShadowPlan=[];$('runUnifiedShadow').disabled=true;$('unifiedShadowPreview').hidden=true};
 
 async function parseSrtFile(file){
   const text = await file.text();
@@ -1291,14 +1336,22 @@ async function parseSrtFile(file){
 
 async function parseTranscriptFile(file){
   const n=file.name.toLowerCase();
+  let wb;
   if(n.endsWith('.csv')){
     const t=await file.text();
-    const wb=XLSX.read(t,{type:'string'});
-    return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+    wb=XLSX.read(t,{type:'string'});
+  }else{
+    const buf=await file.arrayBuffer();
+    wb=XLSX.read(buf,{type:'array'});
   }
-  const buf=await file.arrayBuffer();
-  const wb=XLSX.read(buf,{type:'array'});
-  return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+  const matrix=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:''});
+  const key=v=>String(v||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const headerIndex=matrix.findIndex(row=>row.some(v=>['hanzi','han tu','chu han','中文'].includes(key(v))));
+  if(headerIndex<0)throw new Error(`Không tìm thấy cột Hán tự trong ${file.name}.`);
+  const header=matrix[headerIndex].map(key);
+  const col=names=>header.findIndex(x=>names.includes(x));
+  const h=col(['hanzi','han tu','chu han','中文']),p=col(['pinyin','phien am']),v=col(['vi','tieng viet','nghia viet','nghia tieng viet','vietnamese']);
+  return matrix.slice(headerIndex+1).map(row=>({hanzi:String(row[h]||''),pinyin:p>=0?String(row[p]||''):'',vi:v>=0?String(row[v]||''):''})).filter(row=>row.hanzi||row.pinyin||row.vi);
 }
 
 function formatShadowTime(seconds){
@@ -1311,7 +1364,7 @@ function formatShadowTime(seconds){
 
 let mediaAdmin={channels:[],playlists:[],items:[]},mediaDraftSegments=[];
 async function loadMediaAdmin(){
-  try{mediaAdmin=await api('/admin/media/bootstrap');const cs=$('mediaPlaylistChannel'),ps=$('mediaImportPlaylist'),product=$('mediaPlaylistProduct');cs.innerHTML='';ps.innerHTML='';product.innerHTML='<option value="">Không gắn gói</option>';mediaAdmin.channels.forEach(c=>cs.add(new Option(c.name,c.id)));mediaAdmin.playlists.forEach(p=>ps.add(new Option(`${p.channel_name} → ${p.title}`,p.id)));(learningCourses||[]).forEach(c=>product.add(new Option(c.title,c.id)));renderMediaItems()}catch(e){$('mediaImportStatus').textContent=e.message}
+  try{mediaAdmin=await api('/admin/media/bootstrap');const cs=$('mediaPlaylistChannel'),ps=$('mediaImportPlaylist'),product=$('mediaPlaylistProduct');cs.innerHTML='';ps.innerHTML='';product.innerHTML='<option value="">Không gắn gói</option>';mediaAdmin.channels.forEach(c=>cs.add(new Option(c.name,c.id)));mediaAdmin.playlists.forEach(p=>ps.add(new Option(`${p.channel_name} → ${p.title}`,p.id)));(learningCourses||[]).forEach(c=>product.add(new Option(c.title,c.id)));renderMediaItems();refreshUnifiedShadowTargets()}catch(e){$('mediaImportStatus').textContent=e.message}
 }
 function renderMediaItems(){const playlist=$('mediaImportPlaylist').value,rows=mediaAdmin.items.filter(x=>!playlist||x.playlist_id===playlist);$('mediaItemBody').innerHTML=rows.map(x=>`<tr><td>${x.item_number}</td><td>${esc(x.channel_name)}<br><span class="muted">${esc(x.playlist_title)}</span></td><td>${esc(x.title)}<br><a href="${esc(x.youtube_url)}" target="_blank">Mở YouTube</a></td><td>${x.access_override==='free'?'Miễn phí':x.access_override==='paid'?'Có phí':'Theo playlist'}</td><td>${x.shadow_video_id?'Đã có':'Chưa có'}</td><td>${Number(x.published)?'Đã xuất bản':'Bản nháp'}</td><td><button class="ghost mediaEdit" data-id="${x.id}">Sửa</button></td></tr>`).join('')||'<tr><td colspan="7">Playlist chưa có video.</td></tr>';document.querySelectorAll('.mediaEdit').forEach(b=>b.onclick=()=>openMediaItem(Number(b.dataset.id)))}
 async function saveMediaChannel(){try{const j=await api('/admin/media/channel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:$('mediaChannelName').value,youtube_url:$('mediaChannelUrl').value,sort_order:Number($('mediaChannelOrder').value||0)})});$('mediaChannelStatus').textContent='Đã lưu kênh.';await loadMediaAdmin();$('mediaPlaylistChannel').value=j.id}catch(e){$('mediaChannelStatus').textContent=e.message}}
@@ -1326,6 +1379,98 @@ function mediaFileKey(value){return String(value||'').toLowerCase().replace(/\.[
 function mediaYoutubeId(value){const m=String(value||'').match(/(?:youtu\.be\/|[?&]v=|shorts\/|embed\/)([A-Za-z0-9_-]{6,})/);return m?m[1].toLowerCase():''}
 function bestMediaFile(files,item){const yid=mediaYoutubeId(item.youtube_url),title=mediaFileKey(item.title);return files.find(f=>yid&&mediaFileKey(f.name).includes(yid))||files.find(f=>{const key=mediaFileKey(f.name);return title.length>=5&&(key.includes(title)||title.includes(key))})||null}
 async function matchMediaFiles(){const playlist=$('mediaImportPlaylist').value,items=mediaAdmin.items.filter(x=>x.playlist_id===playlist),srts=[...$('mediaBulkSrt').files],books=[...$('mediaBulkXlsx').files];if(!items.length){$('mediaImportStatus').textContent='Playlist chưa có video.';return}let saved=0;const missing=[];for(const item of items){const srt=bestMediaFile(srts,item);if(!srt){missing.push(item.title);continue}try{const timings=await parseSrtFile(srt),book=bestMediaFile(books,item),transcript=book?await parseTranscriptFile(book):timings.map(x=>({hanzi:x.srt_text,pinyin:'',vi:''}));if(!timings.length||timings.length!==transcript.length){missing.push(`${item.title} (lệch số câu)`);continue}const segments=timings.map((t,i)=>({start_sec:t.start_sec,end_sec:t.end_sec,hanzi:String(transcript[i]?.hanzi||t.srt_text),pinyin:String(transcript[i]?.pinyin||''),vi:String(transcript[i]?.vi||'')}));await api('/admin/media/item-transcript',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:Number(item.id),segments})});saved++}catch(e){missing.push(`${item.title} (${e.message})`)}}$('mediaImportStatus').textContent=`Đã lưu phụ đề cho ${saved}/${items.length} bài.${missing.length?' Chưa ghép: '+missing.join('; '):''}`;await loadMediaAdmin()}
+
+let unifiedShadowPlan=[];
+function unifiedLessonNumber(value){
+  const s=String(value||'');
+  const m=s.match(/(?:^|[^a-z0-9])(?:bai|bài|b)\s*0*(\d{1,3})(?:[^0-9]|$)/i)||s.match(/^0*(\d{1,3})\b/);
+  return m?Number(m[1]):0;
+}
+function unifiedFileByNumber(files,number){return files.find(file=>unifiedLessonNumber(file.name)===Number(number))||null}
+async function readUnifiedLinkRows(){
+  const file=$('unifiedShadowLinksFile').files[0];
+  if(file){
+    const n=file.name.toLowerCase(),buf=n.endsWith('.csv')?await file.text():await file.arrayBuffer(),wb=XLSX.read(buf,{type:n.endsWith('.csv')?'string':'array'}),matrix=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:''});
+    const key=v=>String(v||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    const hi=matrix.findIndex(row=>row.some(v=>['bai','lesson_number','so bai'].includes(key(v)))&&row.some(v=>['link youtube','youtube_url','url','link'].includes(key(v))));
+    if(hi<0)throw new Error('File link chưa có hàng tiêu đề gồm Bài và Link YouTube.');
+    const heads=matrix[hi].map(key),find=names=>heads.findIndex(x=>names.includes(x)),ni=find(['bai','lesson_number','so bai','stt']),ti=find(['ten bai','lesson_title','title','ten video']),ui=find(['link youtube','youtube_url','url','link']);
+    return matrix.slice(hi+1).map((row,i)=>({lesson_number:Number(row[ni]||i+1),title:ti>=0?String(row[ti]||''):'',youtube_url:String(row[ui]||'').trim()})).filter(x=>x.lesson_number&&x.youtube_url);
+  }
+  return $('unifiedShadowLinksText').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map((line,i)=>{const parts=line.split('|').map(x=>x.trim());return parts.length>=3?{lesson_number:Number(parts[0]),title:parts[1],youtube_url:parts.slice(2).join('|')}:{lesson_number:i+1,title:parts.length===2?parts[0]:'',youtube_url:parts.at(-1)}}).filter(x=>x.lesson_number&&x.youtube_url);
+}
+function refreshUnifiedShadowTargets(){
+  const type=$('unifiedShadowTargetType').value,target=$('unifiedShadowTarget'),old=target.value;target.innerHTML='';
+  if(type==='course')(learningCourses||[]).forEach(c=>target.add(new Option(`${c.title} (${c.lesson_count||0} bài)`,c.id)));
+  else (mediaAdmin.playlists||[]).forEach(p=>target.add(new Option(`${p.channel_name} → ${p.title}`,p.id)));
+  if([...target.options].some(o=>o.value===old))target.value=old;
+  unifiedShadowPlan=[];$('runUnifiedShadow').disabled=true;$('unifiedShadowPreview').hidden=true;
+}
+async function previewUnifiedShadow(){
+  const button=$('previewUnifiedShadow');button.classList.add('loading');$('runUnifiedShadow').disabled=true;unifiedShadowPlan=[];
+  try{
+    const type=$('unifiedShadowTargetType').value,target=$('unifiedShadowTarget').value;if(!target)throw new Error('Hãy chọn đích cần nhập.');
+    const links=await readUnifiedLinkRows(),linkMap=new Map(links.map(x=>[Number(x.lesson_number),x])),srts=[...$('unifiedShadowSrts').files],books=[...$('unifiedShadowBooks').files];
+    if(!srts.length)throw new Error('Hãy chọn các file SRT.');
+    let destinations;
+    if(type==='course'){const j=await api('/admin/shadowing/course-lessons?course_id='+encodeURIComponent(target));destinations=(j.lessons||[]).map(x=>({number:Number(x.lesson_number),title:cleanLessonTitle(x.title,x.lesson_number),existing:(x.shadow_videos||[])[0]||null}));}
+    else{const nums=[...new Set([...links.map(x=>Number(x.lesson_number)),...srts.map(x=>unifiedLessonNumber(x.name)).filter(Boolean)])].sort((a,b)=>a-b);destinations=nums.map(number=>({number,title:linkMap.get(number)?.title||`Bài ${number}`,existing:null}));}
+    for(const d of destinations){
+      const srt=unifiedFileByNumber(srts,d.number),book=unifiedFileByNumber(books,d.number),link=linkMap.get(d.number),problems=[];let segments=[];
+      if(!srt)problems.push('thiếu SRT');if(!book)problems.push('thiếu XLSX');if(!link?.youtube_url)problems.push('thiếu link');
+      if(srt&&book){try{const timings=await parseSrtFile(srt),transcript=await parseTranscriptFile(book);if(!timings.length)problems.push('SRT rỗng');else if(timings.length!==transcript.length)problems.push(`lệch ${timings.length}/${transcript.length} câu`);else segments=timings.map((t,i)=>({start_sec:t.start_sec,end_sec:t.end_sec,hanzi:String(transcript[i]?.hanzi||t.srt_text),pinyin:String(transcript[i]?.pinyin||''),vi:String(transcript[i]?.vi||'')}))}catch(e){problems.push(e.message)}}
+      if(type==='course'&&d.existing&&$('unifiedShadowExisting').value==='skip')problems.push('đã có — sẽ bỏ qua');
+      unifiedShadowPlan.push({...d,srt,book,link,segments,ready:problems.length===0,problems});
+    }
+    const ready=unifiedShadowPlan.filter(x=>x.ready).length;
+    $('unifiedShadowPreview').innerHTML=`<table><thead><tr><th>Bài</th><th>Tiêu đề</th><th>Link</th><th>SRT</th><th>XLSX</th><th>Số câu</th><th>Kết quả</th></tr></thead><tbody>${unifiedShadowPlan.map(x=>`<tr><td>${x.number}</td><td>${esc(x.link?.title||x.title)}</td><td>${x.link?'Có':'Thiếu'}</td><td>${x.srt?esc(x.srt.name):'Thiếu'}</td><td>${x.book?esc(x.book.name):'Thiếu'}</td><td>${x.segments.length||'—'}</td><td>${x.ready?'<span class="publish-badge">Sẵn sàng</span>':`<span class="status err">${esc(x.problems.join('; '))}</span>`}</td></tr>`).join('')}</tbody></table>`;
+    $('unifiedShadowPreview').hidden=false;$('unifiedShadowStatus').textContent=`Ghép được ${ready}/${unifiedShadowPlan.length} bài. Chỉ khi tất cả sẵn sàng mới cho phép lưu.`;$('unifiedShadowStatus').className=ready===unifiedShadowPlan.length?'status ok':'status err';$('runUnifiedShadow').disabled=ready!==unifiedShadowPlan.length||!ready;
+  }catch(e){$('unifiedShadowStatus').textContent=e.message;$('unifiedShadowStatus').className='status err'}finally{button.classList.remove('loading')}
+}
+async function runUnifiedShadow(){
+  if(!unifiedShadowPlan.length||unifiedShadowPlan.some(x=>!x.ready))return;
+  const button=$('runUnifiedShadow'),type=$('unifiedShadowTargetType').value,target=$('unifiedShadowTarget').value;button.classList.add('loading');button.disabled=true;let saved=0;
+  try{
+    if(type==='playlist'){
+      const items=unifiedShadowPlan.map(x=>({item_number:x.number,title:x.link?.title||x.title,youtube_url:x.link.youtube_url,access_override:'inherit',published:true}));
+      await api('/admin/media/items-import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({playlist_id:target,items})});await loadMediaAdmin();
+      for(const x of unifiedShadowPlan){const item=mediaAdmin.items.find(i=>String(i.playlist_id)===String(target)&&Number(i.item_number)===x.number);if(!item)throw new Error(`Không tìm thấy Bài ${x.number} sau khi tạo playlist.`);await api('/admin/media/item-transcript',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:Number(item.id),segments:x.segments})});saved++;$('unifiedShadowStatus').textContent=`Đang lưu ${saved}/${unifiedShadowPlan.length} bài vào Playlist...`;}
+    }else{
+      for(const x of unifiedShadowPlan){await api('/admin/shadowing/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:$('unifiedShadowExisting').value==='replace'?Number(x.existing?.id||0):0,course_id:target,lesson_number:x.number,title:x.link?.title||x.title,youtube_url:x.link.youtube_url,free_override:0,active:1,segments:x.segments})});saved++;$('unifiedShadowStatus').textContent=`Đang lưu ${saved}/${unifiedShadowPlan.length} bài vào Khóa học...`;}
+      $('shadowAdminCourse').value=target;await Promise.all([loadShadowAdminVideos(),loadShadowCourseLessons()]);
+    }
+    $('unifiedShadowStatus').textContent=`Hoàn tất: đã lưu ${saved}/${unifiedShadowPlan.length} bài vào ${type==='course'?'Khóa học':'Playlist'}.`;$('unifiedShadowStatus').className='status ok';unifiedShadowPlan=[];
+  }catch(e){$('unifiedShadowStatus').textContent=`Đã lưu ${saved} bài rồi dừng: ${e.message}`;$('unifiedShadowStatus').className='status err'}finally{button.classList.remove('loading')}
+}
+
+let bulkLecturePlan=[];
+function refreshBulkLectureCourses(){
+  const select=$('bulkLectureCourse'),old=select.value;select.innerHTML='';(learningCourses||[]).forEach(c=>select.add(new Option(`${c.title} (${c.lesson_count||0} bài)`,c.id)));if([...select.options].some(o=>o.value===old))select.value=old;
+  bulkLecturePlan=[];$('runBulkLecture').disabled=true;$('bulkLecturePreview').hidden=true;
+}
+async function readBulkLectureRows(){
+  const file=$('bulkLectureFile').files[0];
+  if(file){
+    const n=file.name.toLowerCase(),raw=n.endsWith('.csv')?await file.text():await file.arrayBuffer(),wb=XLSX.read(raw,{type:n.endsWith('.csv')?'string':'array'}),matrix=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:''});
+    const key=v=>String(v||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    const hi=matrix.findIndex(row=>row.some(v=>['bai','lesson_number','so bai','stt'].includes(key(v)))&&row.some(v=>['link youtube','youtube_url','url','link'].includes(key(v))));if(hi<0)throw new Error('Không tìm thấy hàng tiêu đề Bài và Link YouTube.');
+    const heads=matrix[hi].map(key),find=names=>heads.findIndex(x=>names.includes(x)),ni=find(['bai','lesson_number','so bai','stt']),ti=find(['ten bai','lesson_title','title','ten video']),ui=find(['link youtube','youtube_url','url','link']);
+    return matrix.slice(hi+1).map((row,i)=>({lesson_number:Number(row[ni]||i+1),title:ti>=0?String(row[ti]||''):'',youtube_url:String(row[ui]||'').trim()})).filter(x=>x.lesson_number&&x.youtube_url);
+  }
+  return $('bulkLectureText').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map((line,i)=>{const p=line.split('|').map(x=>x.trim());return p.length>=3?{lesson_number:Number(p[0]),title:p[1],youtube_url:p.slice(2).join('|')}:{lesson_number:i+1,title:p.length===2?p[0]:'',youtube_url:p.at(-1)}}).filter(x=>x.lesson_number&&x.youtube_url);
+}
+async function previewBulkLecture(){
+  try{
+    const course=$('bulkLectureCourse').value;if(!course)throw new Error('Hãy chọn khóa học đích.');const rows=await readBulkLectureRows();if(!rows.length)throw new Error('Chưa có link YouTube hợp lệ.');
+    const j=await api('/admin/learning/course-content?course_id='+encodeURIComponent(course)),lessons=j.lessons||[],map=new Map(lessons.map(x=>[Number(x.lesson_number),x]));bulkLecturePlan=[];
+    for(const row of rows){const lesson=map.get(Number(row.lesson_number)),problems=[];if(!lesson)problems.push('khóa chưa có bài này');if(lesson?.videos?.length&&$('bulkLectureExisting').value==='skip')problems.push('đã có video — sẽ bỏ qua');bulkLecturePlan.push({...row,lesson,ready:problems.length===0,problems});}
+    const ready=bulkLecturePlan.filter(x=>x.ready).length;$('bulkLecturePreview').innerHTML=`<table><thead><tr><th>Bài</th><th>Bài trong khóa</th><th>Tiêu đề video</th><th>Link YouTube</th><th>Kết quả</th></tr></thead><tbody>${bulkLecturePlan.map(x=>`<tr><td>${x.lesson_number}</td><td>${x.lesson?esc(cleanLessonTitle(x.lesson.title,x.lesson.lesson_number)):'Không có'}</td><td>${esc(x.title||`Bài giảng ${x.lesson_number}`)}</td><td><a href="${esc(x.youtube_url)}" target="_blank">Mở link</a></td><td>${x.ready?'<span class="publish-badge">Sẵn sàng</span>':esc(x.problems.join('; '))}</td></tr>`).join('')}</tbody></table>`;$('bulkLecturePreview').hidden=false;$('bulkLectureStatus').textContent=`Sẵn sàng ${ready}/${bulkLecturePlan.length} video. Các dòng đã có video sẽ được xử lý theo lựa chọn phía trên.`;$('bulkLectureStatus').className=ready?'status ok':'status err';$('runBulkLecture').disabled=!ready;
+  }catch(e){bulkLecturePlan=[];$('runBulkLecture').disabled=true;$('bulkLectureStatus').textContent=e.message;$('bulkLectureStatus').className='status err'}
+}
+async function runBulkLecture(){
+  const ready=bulkLecturePlan.filter(x=>x.ready);if(!ready.length)return;const button=$('runBulkLecture');button.disabled=true;button.classList.add('loading');let saved=0;
+  try{for(const x of ready){const first=x.lesson.videos?.[0],replace=$('bulkLectureExisting').value==='replace'&&first;await api('/admin/learning/video',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(replace?{id:Number(first.id),title:x.title||`Bài giảng ${x.lesson_number}`,youtube_url:x.youtube_url}:{lesson_id:x.lesson.id,title:x.title||`Bài giảng ${x.lesson_number}`,youtube_url:x.youtube_url})});saved++;$('bulkLectureStatus').textContent=`Đang gắn video ${saved}/${ready.length}...`;}$('manageLearningCourse').value=$('bulkLectureCourse').value;await loadLearningContent();$('bulkLectureStatus').textContent=`Hoàn tất: đã gắn ${saved} video bài giảng vào đúng bài.`;$('bulkLectureStatus').className='status ok';bulkLecturePlan=[];}catch(e){$('bulkLectureStatus').textContent=`Đã lưu ${saved} video rồi dừng: ${e.message}`;$('bulkLectureStatus').className='status err'}finally{button.classList.remove('loading')}
+}
 
 function renderShadowPreview(){
   const body=$('shadowPreviewBody');
