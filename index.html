@@ -412,7 +412,8 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
   }
   #shadowPlayerCard.transcript-mode .shadow-controls,
   #shadowPlayerCard.transcript-mode .shadow-live,
-  #shadowPlayerCard.transcript-mode .shadow-live-nav{display:none!important}
+  #shadowPlayerCard.transcript-mode .shadow-live-nav,
+  #shadowPlayerCard.transcript-mode .shadow-recorder{display:none!important}
   #shadowPlayerCard.transcript-mode .transcript-toggle{
     margin:7px 0 0!important;
     padding:9px 10px!important;
@@ -505,6 +506,13 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
 .shadow-text-hidden #shadowTranscript .transcript-vi{display:none!important}
 .shadow-text-hidden #shadowLive{display:grid;place-items:center;min-height:92px}
 .shadow-text-hidden #shadowLive .shadow-live-hint{margin:0;font-size:1rem;font-weight:800;color:var(--muted)}
+.shadow-recorder{width:min(100%,720px);margin:16px auto 0;padding:15px;border:1px solid #dfe5f2;border-radius:17px;background:linear-gradient(135deg,#f8fbff,#fffaf5)}
+.shadow-recorder-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.shadow-recorder-head h3{margin:0 0 4px;font-size:1rem}.shadow-recorder-head p{margin:0;color:var(--muted);font-size:.84rem;line-height:1.45}
+.shadow-recorder-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.shadow-recorder-actions .btn.recording{background:#d9363e;color:#fff;border-color:#d9363e;animation:recordPulse 1.1s infinite}
+.shadow-recorder-status{margin-top:10px;min-height:21px;color:#65718a;font-size:.86rem;font-weight:750}.shadow-recorder-status.error{color:#b4232c}.shadow-recorder-status.ok{color:#17835b}
+.shadow-recorder-preview{display:grid;gap:9px;margin-top:11px;padding-top:11px;border-top:1px dashed #d7deec}.shadow-recorder-preview[hidden]{display:none!important}.shadow-recorder-preview audio,.shadow-recorder-preview video{width:100%;max-height:380px;border-radius:12px;background:#101522}
+@keyframes recordPulse{70%{box-shadow:0 0 0 11px rgba(217,54,62,0)}100%{box-shadow:0 0 0 0 rgba(217,54,62,0)}}
+@media(max-width:600px){.shadow-recorder{padding:13px}.shadow-recorder-actions{display:grid;grid-template-columns:1fr 1fr}.shadow-recorder-actions .btn{width:100%;padding:11px 7px}.shadow-recorder-actions #shadowVideoRecordBtn{grid-column:1/-1}}
 .learning-grid{display:grid;grid-template-columns:minmax(240px,300px) minmax(270px,360px) minmax(0,1fr);gap:16px;align-items:start}.learning-column{min-width:0}.learning-column-title{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 0 10px;font-size:.83rem;color:#5d6881;text-transform:uppercase;letter-spacing:.06em}.learning-list{display:grid;gap:9px;max-height:680px;overflow:auto;padding-right:3px}.learning-course-btn,.learning-lesson-btn{width:100%;text-align:left;border:1px solid #e0e6f2;background:#fff;border-radius:15px;padding:14px;cursor:pointer;color:#1d2943;transition:.18s ease}.learning-course-btn:hover,.learning-lesson-btn:hover{transform:translateY(-1px);border-color:#b9c5ef;box-shadow:0 8px 20px rgba(65,80,135,.08)}.learning-course-btn.active,.learning-lesson-btn.active{border-color:#7185ec;background:linear-gradient(120deg,#eef2ff,#f7f4ff);box-shadow:inset 4px 0 #4f67e8}.learning-detail{border:1px solid #e0e6f2;border-radius:18px;background:#fff;padding:20px;min-height:280px}.lesson-parts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:16px 0}.lesson-part{padding:12px 8px;border-radius:13px;background:#f2f4f9;color:#8490a8;text-align:center;font-size:.8rem;font-weight:800}.lesson-part.ready{background:#e9f8f1;color:#17835b}.learning-empty{padding:24px;border:1px dashed #cad3e7;border-radius:14px;color:#7a8499;text-align:center;background:#fafbfe}.learning-video,.learning-resource{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #edf0f6}
 .interactive-shell{margin-top:16px}.interactive-progress{display:flex;justify-content:space-between;gap:12px;align-items:center;color:#66728b;font-weight:750;margin-bottom:10px}.interactive-card{overflow:hidden;border:1px solid #dce8e7;border-radius:24px;background:linear-gradient(145deg,#fff,#f4fbfa);box-shadow:0 18px 45px rgba(21,95,92,.10)}.interactive-image{background:#edf9f7;aspect-ratio:16/7;display:grid;place-items:center;overflow:hidden}.interactive-image img{width:100%;height:100%;object-fit:cover;display:block}.interactive-copy{padding:22px;text-align:center}.interactive-symbol{font-size:clamp(3.5rem,10vw,7rem);line-height:1;font-weight:900;color:#13243c}.interactive-variant{color:#16877f;font-size:1.2rem;font-weight:850;margin-left:8px}.interactive-pinyin{font-size:1.22rem;font-weight:850;color:#5268df;margin-top:10px}.interactive-meaning{font-size:1.25rem;font-weight:800;color:#213047;margin-top:5px}.interactive-meta{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:14px 0}.interactive-chip{background:#e9f6f4;color:#176d67;border-radius:999px;padding:7px 11px;font-size:.82rem;font-weight:800}.interactive-detail{max-width:680px;margin:0 auto;color:#5d687c;line-height:1.6}.interactive-examples{margin-top:10px;color:#26354d;font-weight:750}.interactive-nav{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.interactive-nav button{border:0;border-radius:14px;padding:13px;font-weight:850;cursor:pointer}.interactive-prev{background:#eef1f7;color:#26344c}.interactive-next{background:linear-gradient(135deg,#14a88e,#3477e7);color:#fff}.interactive-quick{margin-top:14px;border:1px solid #e0e7ef;border-radius:16px;padding:12px}.interactive-quick summary{cursor:pointer;font-weight:850;color:#34435b}.interactive-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:8px;margin-top:12px;max-height:220px;overflow:auto}.interactive-pick{border:1px solid #d9e2ec;background:#fff;border-radius:11px;padding:9px 5px;cursor:pointer;font-size:1.25rem;font-weight:850}.interactive-pick.active{border-color:#18a38b;background:#e5f8f4;color:#087267}.interactive-loading{padding:34px;text-align:center;color:#69758b}
 .interactive-writing-toggle{margin-top:16px;border:0;border-radius:13px;padding:12px 16px;background:linear-gradient(135deg,#4f67e8,#8465e8);color:#fff;font-weight:900;cursor:pointer}.interactive-writing-panel{margin-top:14px;padding:16px;border:1px solid #dce3f2;border-radius:18px;background:#f8faff}.interactive-writing-panel[hidden]{display:none}.interactive-writing-chars{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;margin-bottom:12px}.interactive-writing-char{min-width:44px;border:1px solid #ced8ec;border-radius:11px;padding:8px 11px;background:#fff;color:#23314e;font-size:1.25rem;font-weight:900;cursor:pointer}.interactive-writing-char.active{border-color:#5269e7;background:#eef2ff;color:#4056c5}.interactive-writing-box{position:relative;width:min(300px,78vw);height:min(300px,78vw);margin:0 auto 12px;border:2px solid #c5cede;border-radius:14px;background:#fff;overflow:hidden;display:grid;place-items:center}.interactive-writing-box:before,.interactive-writing-box:after{content:"";position:absolute;background:#d9deea;pointer-events:none}.interactive-writing-box:before{left:50%;top:0;bottom:0;width:1px}.interactive-writing-box:after{top:50%;left:0;right:0;height:1px}.interactive-writer-target{position:relative;z-index:1;line-height:0}.interactive-writing-actions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}.interactive-writing-actions button{border:1px solid #d5ddec;border-radius:11px;padding:10px 12px;background:#fff;color:#2a3855;font-weight:850;cursor:pointer}.interactive-writing-actions .primary{border-color:#4f67e8;background:#4f67e8;color:#fff}.interactive-writing-status{min-height:22px;margin-top:9px;text-align:center;color:#69758b;font-size:.88rem;font-weight:750}
@@ -1112,6 +1120,20 @@ if(demoCheck){
           <span class="shadow-counter" id="shadowCounter">0 / 0</span>
           <button class="btn ghost" id="shadowNextBtn">Câu sau →</button>
         </div>
+        <div class="shadow-recorder" id="shadowRecorder">
+          <div class="shadow-recorder-head"><div><h3>🎙 Thu bài luyện của em</h3><p>Nghe câu mẫu, thu giọng, nghe lại hoặc tải về máy. Bản thu chỉ xử lý trên thiết bị này.</p></div></div>
+          <div class="shadow-recorder-actions">
+            <button class="btn primary" id="shadowAudioRecordBtn" type="button">🎙 Ghi âm</button>
+            <button class="btn ghost" id="shadowRecordStopBtn" type="button" disabled>⏹ Dừng</button>
+            <button class="btn soft" id="shadowVideoRecordBtn" type="button">🎬 Quay video bài luyện</button>
+          </div>
+          <div class="shadow-recorder-status" id="shadowRecorderStatus">Sẵn sàng. Nên dùng tai nghe để giọng thu rõ hơn.</div>
+          <div class="shadow-recorder-preview" id="shadowRecorderPreview" hidden>
+            <audio id="shadowAudioPreview" controls hidden></audio>
+            <video id="shadowVideoPreview" controls playsinline hidden></video>
+            <div class="shadow-recorder-actions"><button class="btn primary" id="shadowRecordDownloadBtn" type="button">⬇ Tải bản thu</button><button class="btn ghost" id="shadowRecordAgainBtn" type="button">↻ Ghi lại</button></div>
+          </div>
+        </div>
         <button class="btn ghost transcript-toggle" id="toggleTranscriptBtn">☰ Xem danh sách toàn bài</button>
       </div>
       <div class="transcript-list" id="shadowTranscript" hidden></div>
@@ -1422,7 +1444,7 @@ async function openLessonShadowing(courseId,videoId){
   if(document.getElementById('shadowPlayerCard').style.display==='none')return;
   shadowCourseContext={courseId:String(courseId),videoId:String(videoId)};const selected=shadowVideos.find(x=>String(x.id)===String(videoId));document.getElementById('shadowStudyTitle').textContent=selected?.title||'Luyện Shadowing';document.body.classList.add('shadow-study-mode');document.getElementById('shadowSection').scrollTo({top:0,behavior:'auto'});
 }
-function backFromShadowStudy(){document.body.classList.remove('shadow-study-mode');setActiveAppSection('learningSection');const drawer=document.getElementById('courseDrawer');if(shadowCourseContext&&drawer){drawer.classList.add('show','course-view','lesson-open');document.getElementById('courseDrawerBackdrop').classList.add('show');document.body.style.overflow='hidden';drawer.scrollTo({top:0,behavior:'auto'})}}
+function backFromShadowStudy(){if(shadowRecorder?.state==='recording')shadowRecorder.stop();else stopShadowTracks();document.body.classList.remove('shadow-study-mode');setActiveAppSection('learningSection');const drawer=document.getElementById('courseDrawer');if(shadowCourseContext&&drawer){drawer.classList.add('show','course-view','lesson-open');document.getElementById('courseDrawerBackdrop').classList.add('show');document.body.style.overflow='hidden';drawer.scrollTo({top:0,behavior:'auto'})}}
 document.getElementById('shadowStudyBack')?.addEventListener('click',backFromShadowStudy);
 
 // ===== SHADOWING V22 =====
@@ -1437,6 +1459,59 @@ let showShadowPinyin = true;
 let showShadowVi = true;
 let shadowSuggestionsLoaded = false;
 let mediaPlaylists=[];
+let shadowRecorder=null,shadowRecordStream=null,shadowRecordSourceStreams=[],shadowRecordChunks=[],shadowRecordKind='',shadowRecordUrl='',shadowRecordBlob=null,shadowRecordStartedAt=0,shadowRecordTicker=null,shadowRecordAudioContext=null;
+
+function shadowRecorderMime(kind){
+  const choices=kind==='video'?['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm']:['audio/webm;codecs=opus','audio/webm','audio/mp4'];
+  return choices.find(x=>window.MediaRecorder?.isTypeSupported?.(x))||'';
+}
+function shadowRecordStatus(message,type=''){
+  const box=document.getElementById('shadowRecorderStatus');if(!box)return;box.textContent=message;box.className='shadow-recorder-status'+(type?' '+type:'');
+}
+function shadowRecordUi(active){
+  const audio=document.getElementById('shadowAudioRecordBtn'),video=document.getElementById('shadowVideoRecordBtn'),stop=document.getElementById('shadowRecordStopBtn');
+  if(audio){audio.disabled=active;audio.classList.toggle('recording',active&&shadowRecordKind==='audio');audio.textContent=active&&shadowRecordKind==='audio'?'🔴 Đang ghi âm…':'🎙 Ghi âm'}
+  if(video){video.disabled=active;video.classList.toggle('recording',active&&shadowRecordKind==='video');video.textContent=active&&shadowRecordKind==='video'?'🔴 Đang quay…':'🎬 Quay video bài luyện'}
+  if(stop)stop.disabled=!active;
+}
+function clearShadowRecording(){
+  if(shadowRecordUrl)URL.revokeObjectURL(shadowRecordUrl);shadowRecordUrl='';shadowRecordBlob=null;
+  const panel=document.getElementById('shadowRecorderPreview'),audio=document.getElementById('shadowAudioPreview'),video=document.getElementById('shadowVideoPreview');
+  if(panel)panel.hidden=true;[audio,video].forEach(x=>{if(!x)return;x.pause();x.removeAttribute('src');x.hidden=true});shadowRecordStatus('Sẵn sàng. Nên dùng tai nghe để giọng thu rõ hơn.');
+}
+function stopShadowTracks(){
+  if(shadowRecordTicker)clearInterval(shadowRecordTicker);shadowRecordTicker=null;
+  if(shadowRecordStream)shadowRecordStream.getTracks().forEach(t=>t.stop());shadowRecordStream=null;
+  shadowRecordSourceStreams.forEach(s=>s?.getTracks().forEach(t=>t.stop()));shadowRecordSourceStreams=[];
+  if(shadowRecordAudioContext){shadowRecordAudioContext.close().catch(()=>{});shadowRecordAudioContext=null}
+}
+function finishShadowRecording(){
+  stopShadowTracks();shadowRecordUi(false);if(!shadowRecordChunks.length){shadowRecordStatus('Không thu được dữ liệu. Anh/chị hãy thử lại.','error');return}
+  const mime=shadowRecorder?.mimeType||shadowRecorderMime(shadowRecordKind)||(shadowRecordKind==='video'?'video/webm':'audio/webm');shadowRecordBlob=new Blob(shadowRecordChunks,{type:mime});shadowRecordUrl=URL.createObjectURL(shadowRecordBlob);
+  const panel=document.getElementById('shadowRecorderPreview'),audio=document.getElementById('shadowAudioPreview'),video=document.getElementById('shadowVideoPreview'),target=shadowRecordKind==='video'?video:audio,other=shadowRecordKind==='video'?audio:video;
+  if(other){other.hidden=true;other.removeAttribute('src')}if(target){target.src=shadowRecordUrl;target.hidden=false}if(panel)panel.hidden=false;shadowRecordStatus(shadowRecordKind==='video'?'Đã quay xong. Hãy xem lại trước khi tải video.':'Đã thu xong. Hãy nghe lại trước khi tải bản ghi.','ok');
+}
+function beginShadowRecorder(stream,kind){
+  clearShadowRecording();shadowRecordKind=kind;shadowRecordStream=stream;shadowRecordChunks=[];const mime=shadowRecorderMime(kind);shadowRecorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);shadowRecorder.ondataavailable=e=>{if(e.data?.size)shadowRecordChunks.push(e.data)};shadowRecorder.onstop=finishShadowRecording;shadowRecorder.onerror=()=>{stopShadowTracks();shadowRecordUi(false);shadowRecordStatus('Thiết bị không ghi được bản này. Hãy thử lại bằng Chrome hoặc Edge.','error')};shadowRecorder.start(500);shadowRecordStartedAt=Date.now();shadowRecordUi(true);shadowRecordTicker=setInterval(()=>{const sec=Math.max(1,Math.floor((Date.now()-shadowRecordStartedAt)/1000));shadowRecordStatus(`🔴 Đang ${kind==='video'?'quay video':'ghi âm'} ${sec} giây · bấm Dừng khi hoàn thành.`)},500);
+}
+async function startShadowAudioRecording(){
+  if(!window.MediaRecorder||!navigator.mediaDevices?.getUserMedia){shadowRecordStatus('Trình duyệt chưa hỗ trợ ghi âm. Hãy mở bằng Chrome, Edge hoặc Safari mới.','error');return}
+  try{const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});beginShadowRecorder(stream,'audio')}catch(e){shadowRecordStatus('Chưa mở được micro. Hãy cho phép quyền Micro rồi thử lại.','error')}
+}
+async function startShadowVideoRecording(){
+  if(!window.MediaRecorder||!navigator.mediaDevices?.getDisplayMedia){shadowRecordStatus('Điện thoại/trình duyệt này chưa hỗ trợ quay bài trực tiếp. Anh/chị vẫn có thể dùng Ghi âm hoặc tính năng quay màn hình của điện thoại.','error');return}
+  let display=null,mic=null;
+  try{
+    display=await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});mic=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+    const tracks=[...display.getVideoTracks()],audioTracks=[...display.getAudioTracks(),...mic.getAudioTracks()];
+    if(audioTracks.length>1){const Ctx=window.AudioContext||window.webkitAudioContext,ctx=new Ctx(),dest=ctx.createMediaStreamDestination();audioTracks.forEach(track=>ctx.createMediaStreamSource(new MediaStream([track])).connect(dest));tracks.push(...dest.stream.getAudioTracks());shadowRecordAudioContext=ctx}else tracks.push(...audioTracks);
+    const combined=new MediaStream(tracks);display.getVideoTracks()[0].addEventListener('ended',()=>{if(shadowRecorder?.state==='recording')shadowRecorder.stop()},{once:true});beginShadowRecorder(combined,'video');shadowRecordSourceStreams=[display,mic];shadowRecordStatus('🔴 Đang quay. Hãy phát video và lồng tiếng; bấm Dừng khi hoàn thành.')
+  }catch(e){display?.getTracks().forEach(t=>t.stop());mic?.getTracks().forEach(t=>t.stop());shadowRecordStatus('Đã hủy hoặc chưa cấp quyền quay màn hình/micro. Hãy thử lại và chọn đúng tab đang học.','error')}
+}
+function stopShadowRecording(){if(shadowRecorder?.state==='recording')shadowRecorder.stop()}
+function downloadShadowRecording(){
+  if(!shadowRecordBlob||!shadowRecordUrl)return;const ext=shadowRecordBlob.type.includes('mp4')?'mp4':shadowRecordKind==='video'?'webm':'webm',title=String(document.getElementById('shadowStudyTitle')?.textContent||'shadowing').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'').toLowerCase()||'shadowing',a=document.createElement('a');a.href=shadowRecordUrl;a.download=`aluni-${title}-${new Date().toISOString().slice(0,10)}.${ext}`;document.body.appendChild(a);a.click();a.remove();shadowRecordStatus('Đã gửi bản thu xuống thư mục Tải xuống của thiết bị.','ok')
+}
 
 async function loadMediaPlaylists(){try{const headers={};const ents=savedEntitlements();const token=ents[ALL_ACCESS_ID]?.token||ents[SHADOWING_PASS_ID]?.token||Object.values(ents).find(x=>x?.token)?.token;if(token)headers.Authorization=`Bearer ${token}`;const r=await fetch(shadowApi('/media/catalog?audience=shadowing'),{cache:'no-store',headers}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được playlist.');mediaPlaylists=j.playlists||[];const s=$('shadowChannelPlaylist');s.innerHTML='<option value="">Chọn kênh → playlist</option>';mediaPlaylists.forEach(p=>s.add(new Option(`${p.channel_name} → ${p.title}`,p.id)));$('shadowNote').textContent=mediaPlaylists.length?'Chọn kênh, playlist và video để bắt đầu.':'Chưa có playlist theo kênh được xuất bản.'}catch(e){$('shadowNote').textContent=e.message}}
 function selectShadowMode(mode){const channel=mode==='channel';$('shadowModeCourse').classList.toggle('active',!channel);$('shadowModeChannel').classList.toggle('active',channel);$('shadowCoursePicker').hidden=channel;$('shadowVideoPicker').hidden=channel;$('shadowChannelPicker').hidden=!channel;$('shadowChannelVideoPicker').hidden=!channel;$('shadowPlayerCard').style.display='none';if(channel)loadMediaPlaylists();else loadShadowCourses()}
@@ -1981,6 +2056,13 @@ document.addEventListener('DOMContentLoaded', ()=>{
       if(shadowCurrentIndex>=0) highlightShadowLine(shadowCurrentIndex);
     });
   }
+
+  document.getElementById('shadowAudioRecordBtn')?.addEventListener('click',startShadowAudioRecording);
+  document.getElementById('shadowVideoRecordBtn')?.addEventListener('click',startShadowVideoRecording);
+  document.getElementById('shadowRecordStopBtn')?.addEventListener('click',stopShadowRecording);
+  document.getElementById('shadowRecordDownloadBtn')?.addEventListener('click',downloadShadowRecording);
+  document.getElementById('shadowRecordAgainBtn')?.addEventListener('click',clearShadowRecording);
+  window.addEventListener('beforeunload',stopShadowTracks);
 
   // Chỉ tải dữ liệu khi người dùng thực sự bấm tab Shadowing.
   document.querySelectorAll('.app-nav-btn').forEach(btn=>{
