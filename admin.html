@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aluni Admin V56 — Nhập hàng loạt Video & Shadowing</title>
+<title>Aluni Admin V57 — Đồng bộ quyền Shadowing</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="access-config.js?v=20260813-2"></script>
 <style>
@@ -100,7 +100,7 @@ table th{background:#f7f9fd;color:#52607b;font-size:.78rem;text-transform:upperc
 .shadow-locked{background:#f1f4fa!important;color:#6e7890;cursor:not-allowed}.shadow-guide{padding:12px 14px;border-radius:13px;background:linear-gradient(120deg,#eef4ff,#f7f3ff);border:1px solid #dce5ff;margin-bottom:14px}
 input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11px;margin-right:10px;background:#eef2ff;color:#4054bd;font-weight:800;cursor:pointer}
 @media(max-width:760px){.admin-app>.card:first-child>.row>div{display:none}.admin-app>.card:first-child{padding:7px 10px}.admin-app>.card:first-child .tabs{margin:0}.admin-app>.card:first-child #logoutBtn{padding:9px 10px}.course-form-actions{width:100%}.course-form-actions button{flex:1}}
-/* V56 — nhập hàng loạt video bài giảng và Shadowing theo đúng đích */
+/* V57 — nhập hàng loạt và đồng bộ quyền miễn phí Shadowing theo khóa */
 .lesson-content-hub{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.lesson-tool{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-height:94px;padding:13px;border:1px solid #dfe5f2;border-radius:14px;background:#fbfcff;color:#263552;text-align:left}.lesson-tool.ready{border-color:#b8dfcd;background:#f1fbf6}.lesson-tool b{font-size:.92rem}.lesson-tool small{color:var(--muted);line-height:1.35}.lesson-tool.pending{opacity:.68;cursor:not-allowed}.inline-editor{border:1px solid #dfe5f2;border-radius:14px;margin-top:10px;background:#fbfcff}.inline-editor summary{padding:12px 14px;background:transparent!important}.inline-editor>div{padding:0 14px 14px}.shadow-workspace{display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}.shadow-workspace.open{display:block}.shadow-video-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.shadow-video-actions button{padding:7px 9px}.shadow-course-rule{padding:12px;border:1px dashed #c8d1e8;border-radius:13px;background:#f8faff}.shadow-editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.shadow-editor-grid .full{grid-column:1/-1}
 @media(max-width:900px){.lesson-content-hub{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.lesson-content-hub,.shadow-editor-grid{grid-template-columns:1fr}.shadow-editor-grid .full{grid-column:auto}}
@@ -888,7 +888,15 @@ async function loadAccessSettings(id){
 async function saveAccessSettings(){
   const id=$('manageLearningCourse').value;if(!id){$('accessSettingsStatus').textContent='Hãy chọn khóa học trước.';return}
   const modules={};for(const module of ['video','shadowing','writing','grammar','resource'])modules[module]={mode:document.querySelector(`.moduleAccessMode[data-module="${module}"]`).value,free_lessons:lessonListValue(document.querySelector(`.moduleFreeLessons[data-module="${module}"]`).value)};
-  try{await api('/admin/learning/access-settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:id,course_access:$('globalCourseAccess').value,global_free_lessons:lessonListValue($('globalFreeLessons').value),modules})});$('accessSettingsStatus').textContent='Đã lưu quyền toàn khóa và 5 phần nội dung.';await loadLearningCourses();await selectLearningCourseEverywhere(id)}catch(e){$('accessSettingsStatus').textContent=e.message}
+  try{
+    const globalFree=lessonListValue($('globalFreeLessons').value),courseFree=$('globalCourseAccess').value==='free';
+    await api('/admin/learning/access-settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:id,course_access:$('globalCourseAccess').value,global_free_lessons:globalFree,modules})});
+    const shadowList=courseFree?[...Array(9999)].map((_,i)=>i+1):(modules.shadowing.mode==='custom'?modules.shadowing.free_lessons:globalFree);
+    let freeFirst=0;while(shadowList.includes(freeFirst+1))freeFirst++;
+    await api('/admin/shadowing/rule',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:id,access_mode:(courseFree||freeFirst>0)?'free_first':'paid_all',free_lessons:courseFree?9999:freeFirst})});
+    $('accessSettingsStatus').textContent=`Đã lưu quyền toàn khóa và đồng bộ Shadowing: ${courseFree?'miễn phí toàn bộ':freeFirst?`miễn phí Bài 1–${freeFirst}`:'cần kích hoạt toàn bộ'}.`;
+    await loadLearningCourses();await selectLearningCourseEverywhere(id)
+  }catch(e){$('accessSettingsStatus').textContent=e.message}
 }
 async function saveLearningCourse(){
   try{
