@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- ALUNI USER INTERFACE V69 — XEM BẢN THU BÊN DƯỚI + GIỮ VIDEO GỐC -->
+<!-- ALUNI USER INTERFACE V71 — NÚT BACK ĐIỆN THOẠI CHO TOÀN WEBSITE -->
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
@@ -1069,6 +1069,10 @@ loadRemoteContent();
 
 const appTopbar=document.querySelector('.app-topbar');
 const appNavToggle=document.getElementById('appNavToggle');
+let aluniHandlingPop=false;
+function aluniCurrentSection(){return document.querySelector('.aluni-section.active')?.id||'writingSection'}
+function aluniPushView(level,extra={}){if(aluniHandlingPop)return;history.pushState({...history.state,aluniNav:true,aluniLevel:level,...extra},'')}
+if(!history.state?.aluniRoot)history.replaceState({...history.state,aluniRoot:true,sectionId:aluniCurrentSection()},'');
 function updateAppNavToggle(){
   if(!appNavToggle||!appTopbar)return;
   const open=appTopbar.classList.contains('menu-open');
@@ -1079,6 +1083,7 @@ function updateAppNavToggle(){
 appNavToggle?.addEventListener('click',()=>{appTopbar?.classList.toggle('menu-open');updateAppNavToggle()});
 document.querySelectorAll('.app-nav-btn').forEach(btn=>{
   btn.addEventListener('click',()=>{
+    if(aluniCurrentSection()!==btn.dataset.section)aluniPushView('section',{sectionId:btn.dataset.section});
     if(btn.dataset.section!=='shadowSection')pauseShadowExperience();
     document.querySelectorAll('.app-nav-btn').forEach(x=>x.classList.remove('active'));
     document.querySelectorAll('.aluni-section').forEach(x=>x.classList.remove('active'));
@@ -1401,16 +1406,19 @@ async function openOwnedCourse(courseId){
 async function openMiniCourse(courseId){const course=publicLearningCourses.find(c=>String(c.id)===String(courseId)),button=document.querySelector(`.learning-course-btn[data-course="${CSS.escape(String(courseId))}"]`);if(!course||!button)return;openCourseDrawer('mini',`Mini Shadowing · ${course.title}`);await selectPublicCourse(course,button);const review=document.querySelector('.learning-lesson-btn[data-review="1"]');if(review)review.click()}
 let courseDrawerOrigin='explore';
 async function openExploredCourse(course,button){
+  aluniPushView('course',{sectionId:'learningSection'});
   const drawer=document.getElementById('courseDrawer');courseDrawerOrigin='explore';drawer.classList.remove('catalog-view','lesson-open');drawer.classList.add('course-view');
   document.getElementById('courseDrawerMode').textContent='KHÓA HỌC';document.getElementById('courseDrawerTitle').textContent=`${course.title} · ${(course.lessons||[]).length} bài`;
   await selectPublicCourse(course,button);
 }
 function openCourseDrawer(mode='explore',title='Tất cả khóa học Aluni'){
+  if(!document.getElementById('courseDrawer').classList.contains('show'))aluniPushView(mode==='explore'?'catalog':'course',{sectionId:'learningSection'});
   const drawer=document.getElementById('courseDrawer');courseDrawerOrigin=mode==='explore'?'explore':'owned';drawer.classList.remove('lesson-open');drawer.classList.toggle('catalog-view',mode==='explore');drawer.classList.toggle('course-view',mode!=='explore');
   document.getElementById('courseDrawerMode').textContent=mode==='mini'?'ÔN NHANH SHADOWING':mode==='course'?'KHÓA HỌC CỦA TÔI':'KHÁM PHÁ TẤT CẢ KHÓA HỌC';document.getElementById('courseDrawerTitle').textContent=title;drawer.classList.add('show');document.getElementById('courseDrawerBackdrop').classList.add('show');document.body.style.overflow='hidden'
 }
-function closeCourseDrawer(){document.getElementById('courseDrawer').classList.remove('show');document.getElementById('courseDrawerBackdrop').classList.remove('show');document.body.style.overflow=''}
+function closeCourseDrawer(fromHistory=false){if(!fromHistory&&!aluniHandlingPop&&history.state?.aluniNav&&['catalog','course'].includes(history.state.aluniLevel)){history.back();return}document.getElementById('courseDrawer').classList.remove('show');document.getElementById('courseDrawerBackdrop').classList.remove('show');document.body.style.overflow=''}
 function backCourseDrawer(){
+  if(!aluniHandlingPop&&history.state?.aluniNav){history.back();return}
   const drawer=document.getElementById('courseDrawer');
   if(drawer.classList.contains('lesson-open')){showCourseLessonList();return}
   if(courseDrawerOrigin==='explore'&&drawer.classList.contains('course-view')){drawer.classList.remove('course-view');drawer.classList.add('catalog-view');document.getElementById('courseDrawerMode').textContent='KHÁM PHÁ TẤT CẢ KHÓA HỌC';document.getElementById('courseDrawerTitle').textContent='Tất cả khóa học Aluni';document.getElementById('learningPublicLessons').innerHTML='<div class="learning-empty">Chọn một khóa học để xem bài.</div>';document.getElementById('learningPublicDetail').innerHTML='<div class="learning-empty">Chọn một bài học để xem đầy đủ nội dung.</div>';return}
@@ -1435,6 +1443,7 @@ function openCourseLessonVideo(video){
   host.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 async function renderPublicLesson(lesson,button){
+  aluniPushView('lesson',{sectionId:'learningSection',lessonNumber:Number(lesson.number)});
   document.querySelectorAll('.learning-lesson-btn').forEach(x=>x.classList.remove('active'));button.classList.add('active');const videos=lesson.videos||[],resources=lesson.resources||[],shadows=lesson.shadowing_videos||[],hasShadow=shadows.length>0;
   const hasWriting=Number(lesson.writing_count||0)>0;
   document.getElementById('learningPublicDetail').innerHTML=`<button class="lesson-detail-back" type="button" onclick="showCourseLessonList()">← Danh sách bài học</button><div class="learning-detail"><div class="brand">BÀI ${String(lesson.number).padStart(2,'0')}</div><h2>${shadowEsc(cleanPublicLessonTitle(lesson.title,lesson.number))}</h2>${Number(lesson.interactive_count||0)?'<div id="interactiveLessonHost" class="interactive-shell"><div class="interactive-loading">Đang tải thẻ học tương tác…</div></div>':''}<div id="learningCourseVideoPlayer" class="course-video-player"></div>${videos.map((v,i)=>`<div class="learning-video"><span>▶ Bài giảng · ${shadowEsc(v.title)}</span><button class="btn soft courseLessonVideoBtn" data-video-index="${i}">Xem tại đây</button></div>`).join('')}${shadows.map((s,i)=>`<div class="learning-video"><span>🎥 Shadowing · ${shadowEsc(s.title||`Video ${i+1}`)}</span><button class="btn primary" onclick="openLessonShadowing('${shadowEsc(selectedPublicCourse.id)}','${s.id}')">Luyện ngay</button></div>`).join('')}${lesson.grammar_set_id?`<div class="learning-video"><span>✓ Bài tập · ${shadowEsc(lesson.grammar_title||'Ngữ pháp & bài tập')}</span><button class="btn primary" onclick="openGrammarSet(${Number(lesson.grammar_set_id)})">Mở</button></div>`:''}${hasWriting?`<div class="learning-video"><span>✍ Viết chữ · ${Number(lesson.writing_count)} từ</span><button class="btn primary" onclick="openWritingLesson('${shadowEsc(selectedPublicCourse.id)}',${Number(lesson.number)})">Luyện viết</button></div>`:''}${resources.map(r=>`<div class="learning-resource"><span>📄 Tài liệu · ${shadowEsc(r.title)}</span><a class="btn soft" href="${shadowEsc(r.url)}" target="_blank" rel="noopener">${r.access_mode==='view'?'Xem':'Tải / mở'}</a></div>`).join('')}</div>`;
@@ -1484,7 +1493,7 @@ async function buildInteractiveWriter(ch,quiz=false){
 }
 function moveInteractiveLesson(delta){interactiveLessonIndex=(interactiveLessonIndex+delta+interactiveLessonItems.length)%interactiveLessonItems.length;paintInteractiveLesson();document.getElementById('interactiveLessonHost')?.scrollIntoView({behavior:'smooth',block:'start'})}
 function pickInteractiveLesson(index){interactiveLessonIndex=Math.max(0,Math.min(interactiveLessonItems.length-1,Number(index)||0));paintInteractiveLesson()}
-function showCourseLessonList(){const drawer=document.getElementById('courseDrawer');drawer.classList.remove('lesson-open');document.getElementById('learningPublicDetail').innerHTML='<div class="learning-empty">Chọn một bài học để xem đầy đủ nội dung.</div>';drawer.scrollTo({top:0,behavior:'smooth'})}
+function showCourseLessonList(fromHistory=false){if(!fromHistory&&!aluniHandlingPop&&history.state?.aluniLevel==='lesson'){history.back();return}const drawer=document.getElementById('courseDrawer');drawer.classList.remove('lesson-open');document.getElementById('learningPublicDetail').innerHTML='<div class="learning-empty">Chọn một bài học để xem đầy đủ nội dung.</div>';drawer.scrollTo({top:0,behavior:'smooth'})}
 
 let adultKidsData=null,adultKidsLanguage='',adultKidsCollection='';
 async function loadAdultKids(){
@@ -1520,20 +1529,24 @@ async function openWritingLesson(courseId,lessonNumber){
   if(index<0)return;
   writingCourseContext={courseId:String(courseId),lessonNumber:Number(lessonNumber)};
   await selectLesson(course,course.lessons[index],index,true);
+  aluniPushView('writing-study',{sectionId:'learningSection',courseId:String(courseId),lessonNumber:Number(lessonNumber)});
   document.getElementById('writingStudyTitle').textContent=`${course.name||course.title||'Khóa học'} · Bài ${String(lessonNumber).padStart(2,'0')}`;
   document.body.classList.add('writing-study-mode');
   document.getElementById('writingSection').scrollTo({top:0,behavior:'auto'});
 }
-function backFromWritingStudy(){document.body.classList.remove('writing-study-mode');setActiveAppSection('learningSection');const drawer=document.getElementById('courseDrawer');if(writingCourseContext&&drawer){drawer.classList.add('show','course-view','lesson-open');document.getElementById('courseDrawerBackdrop').classList.add('show');document.body.style.overflow='hidden';drawer.scrollTo({top:0,behavior:'auto'})}}
+function leaveWritingStudyUi(){document.body.classList.remove('writing-study-mode');setActiveAppSection('learningSection');const drawer=document.getElementById('courseDrawer');if(writingCourseContext&&drawer){drawer.classList.add('show','course-view','lesson-open');document.getElementById('courseDrawerBackdrop').classList.add('show');document.body.style.overflow='hidden';drawer.scrollTo({top:0,behavior:'auto'})}}
+function backFromWritingStudy(){if(!aluniHandlingPop&&history.state?.aluniNav){history.back();return}leaveWritingStudyUi()}
 document.getElementById('writingStudyBack')?.addEventListener('click',backFromWritingStudy);
 let shadowCourseContext=null;
 async function openLessonShadowing(courseId,videoId){
   setActiveAppSection('shadowSection');const c=document.getElementById('shadowCourse'),v=document.getElementById('shadowVideo');if(!shadowCourses.length)await loadShadowCourses();c.value=String(courseId);await loadShadowVideos(courseId);v.value=String(videoId);await loadShadowVideo(videoId);
   if(document.getElementById('shadowPlayerCard').style.display==='none')return;
-  shadowCourseContext={courseId:String(courseId),videoId:String(videoId)};const selected=shadowVideos.find(x=>String(x.id)===String(videoId));document.getElementById('shadowStudyTitle').textContent=selected?.title||'Luyện Shadowing';document.body.classList.add('shadow-study-mode');document.getElementById('shadowSection').scrollTo({top:0,behavior:'auto'});
+  shadowCourseContext={courseId:String(courseId),videoId:String(videoId)};const selected=shadowVideos.find(x=>String(x.id)===String(videoId));document.getElementById('shadowStudyTitle').textContent=selected?.title||'Luyện Shadowing';document.body.classList.add('shadow-study-mode');aluniPushView('shadow-study',{sectionId:'learningSection',courseId:String(courseId),videoId:String(videoId)});document.getElementById('shadowSection').scrollTo({top:0,behavior:'auto'});
 }
-function backFromShadowStudy(){if(shadowRecorder?.state==='recording')shadowRecorder.stop();else stopShadowTracks();document.body.classList.remove('shadow-study-mode');setActiveAppSection('learningSection');const drawer=document.getElementById('courseDrawer');if(shadowCourseContext&&drawer){drawer.classList.add('show','course-view','lesson-open');document.getElementById('courseDrawerBackdrop').classList.add('show');document.body.style.overflow='hidden';drawer.scrollTo({top:0,behavior:'auto'})}}
+function leaveShadowStudyUi(){if(shadowRecorder?.state==='recording')shadowRecorder.stop();else stopShadowTracks();if(shadowPlayer?.pauseVideo)shadowPlayer.pauseVideo();document.body.classList.remove('shadow-study-mode');setActiveAppSection('learningSection');const drawer=document.getElementById('courseDrawer');if(shadowCourseContext&&drawer){drawer.classList.add('show','course-view','lesson-open');document.getElementById('courseDrawerBackdrop').classList.add('show');document.body.style.overflow='hidden';drawer.scrollTo({top:0,behavior:'auto'})}}
+function backFromShadowStudy(){if(!aluniHandlingPop&&history.state?.aluniNav){history.back();return}leaveShadowStudyUi()}
 document.getElementById('shadowStudyBack')?.addEventListener('click',backFromShadowStudy);
+window.addEventListener('popstate',e=>{aluniHandlingPop=true;try{const drawer=document.getElementById('courseDrawer');if(document.body.classList.contains('shadow-study-mode'))leaveShadowStudyUi();else if(document.body.classList.contains('writing-study-mode'))leaveWritingStudyUi();else if(drawer?.classList.contains('show')){if(drawer.classList.contains('lesson-open'))showCourseLessonList(true);else if(courseDrawerOrigin==='explore'&&drawer.classList.contains('course-view')){drawer.classList.remove('course-view');drawer.classList.add('catalog-view');document.getElementById('courseDrawerMode').textContent='KHÁM PHÁ TẤT CẢ KHÓA HỌC';document.getElementById('courseDrawerTitle').textContent='Tất cả khóa học Aluni'}else closeCourseDrawer(true)}else if(e.state?.sectionId)setActiveAppSection(e.state.sectionId)}finally{aluniHandlingPop=false}});
 
 // ===== SHADOWING V22 =====
 let shadowCourses = [];
