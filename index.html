@@ -550,6 +550,9 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
 @keyframes kidsDinoHello{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-7px) rotate(1deg)}}
 @media(max-width:620px){.kids-hero-mascot{width:112px;margin-right:-7px}.kids-hero{gap:4px}.kids-hero h1{max-width:190px}}
 @media(prefers-reduced-motion:reduce){.kids-hero-mascot{animation:none}}
+.kids-bubble-layer{position:absolute;inset:0;z-index:8;overflow:hidden;pointer-events:none;border-radius:inherit}.kids-water-bubble{position:absolute;bottom:-90px;width:var(--bubble-size);height:var(--bubble-size);border:2px solid rgba(255,255,255,.92);border-radius:50%;background:radial-gradient(circle at 30% 24%,rgba(255,255,255,.96) 0 8%,rgba(190,241,255,.48) 20%,rgba(169,210,255,.18) 52%,rgba(201,174,255,.23) 78%,rgba(255,255,255,.5));box-shadow:inset -7px -9px 16px rgba(105,171,224,.17),0 0 15px rgba(255,255,255,.78);animation:kidsBubbleRise var(--bubble-duration) cubic-bezier(.18,.54,.32,1) var(--bubble-delay) forwards}.kids-water-bubble:after{content:'';position:absolute;left:20%;top:16%;width:24%;height:18%;border-radius:50%;background:rgba(255,255,255,.9);filter:blur(1px)}
+@keyframes kidsBubbleRise{0%{transform:translate3d(0,45px,0) scale(.45);opacity:0}12%{opacity:.9}55%{transform:translate3d(var(--bubble-drift),-48vh,0) scale(1)}100%{transform:translate3d(var(--bubble-drift-back),-105vh,0) scale(1.12);opacity:0}}
+@media(prefers-reduced-motion:reduce){.kids-water-bubble{display:none}}
 /* V44 — giao diện học viên hiện đại và sẵn sàng nối bán hàng */
 :root{--bg:#f3f6ff;--paper:#fff;--ink:#17233e;--muted:#66728c;--green:#4f67e8;--green2:#eef2ff;--line:#e1e6f2;--warm:#fff0e4;--lock:#a05f20;--shadow:0 14px 36px rgba(58,73,126,.09)}
 body{background:radial-gradient(circle at 8% 0%,rgba(32,168,181,.14),transparent 28rem),radial-gradient(circle at 95% 0%,rgba(132,101,232,.15),transparent 30rem),linear-gradient(180deg,#f9fbff,#f2f5fc);min-height:100vh}.wrap{width:min(1480px,calc(100% - 40px));padding:28px 0 56px}
@@ -1584,17 +1587,21 @@ function renderAdultKids(){
   document.getElementById('adultKidsSeries').innerHTML=content||'<div class="kids-empty">🌟 Chưa có chương trình được xuất bản trong mục này.</div>';
   document.querySelectorAll('#adultKidsSeries [data-kids-open]').forEach(b=>b.onclick=()=>{const [si,ei,mode]=b.dataset.kidsOpen.split(':');openKidsLesson(Number(si),Number(ei),mode||'watch')});
 }
+let kidsAudioContext=null;
+function getKidsAudioContext(){const AudioCtx=window.AudioContext||window.webkitAudioContext;if(!AudioCtx)return null;kidsAudioContext=kidsAudioContext||new AudioCtx();if(kidsAudioContext.state==='suspended')kidsAudioContext.resume?.();return kidsAudioContext}
 function playKidsWelcomeChime(){
-  if(sessionStorage.getItem('aluniKidsChimePlayed'))return;
-  sessionStorage.setItem('aluniKidsChimePlayed','1');
+  if(sessionStorage.getItem('aluniKidsChimeV79Played'))return;
+  sessionStorage.setItem('aluniKidsChimeV79Played','1');
   try{
-    const AudioCtx=window.AudioContext||window.webkitAudioContext,ctx=new AudioCtx(),master=ctx.createGain(),now=ctx.currentTime;
-    master.gain.setValueAtTime(.0001,now);master.gain.exponentialRampToValueAtTime(.045,now+.16);master.gain.exponentialRampToValueAtTime(.0001,now+3.75);master.connect(ctx.destination);
+    const ctx=getKidsAudioContext(),master=ctx.createGain(),now=ctx.currentTime;
+    master.gain.setValueAtTime(.0001,now);master.gain.exponentialRampToValueAtTime(.12,now+.16);master.gain.exponentialRampToValueAtTime(.0001,now+3.75);master.connect(ctx.destination);
     [[523.25,0,.55],[659.25,.48,.6],[783.99,.98,.7],[659.25,1.62,.55],[880,2.08,.72],[783.99,2.72,.82]].forEach(([hz,delay,duration])=>{const osc=ctx.createOscillator(),gain=ctx.createGain(),start=now+delay;osc.type='sine';osc.frequency.setValueAtTime(hz,start);gain.gain.setValueAtTime(.0001,start);gain.gain.exponentialRampToValueAtTime(.42,start+.06);gain.gain.exponentialRampToValueAtTime(.0001,start+duration);osc.connect(gain);gain.connect(master);osc.start(start);osc.stop(start+duration+.05)});
-    setTimeout(()=>ctx.close?.(),4300);
   }catch(e){}
 }
-document.querySelector('.app-nav-btn[data-section="kidsPublicSection"]')?.addEventListener('click',()=>{playKidsWelcomeChime();loadAdultKids()});
+function playKidsBubblePop(){try{const ctx=getKidsAudioContext(),now=ctx.currentTime,osc=ctx.createOscillator(),gain=ctx.createGain();osc.type='sine';osc.frequency.setValueAtTime(430,now);osc.frequency.exponentialRampToValueAtTime(920,now+.12);gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.13,now+.018);gain.gain.exponentialRampToValueAtTime(.0001,now+.18);osc.connect(gain);gain.connect(ctx.destination);osc.start(now);osc.stop(now+.19)}catch(e){}}
+function launchKidsBubbles(){const shell=document.querySelector('#kidsPublicSection .kids-shell');if(!shell||matchMedia('(prefers-reduced-motion: reduce)').matches)return;document.querySelectorAll('.kids-bubble-layer').forEach(x=>x.remove());const layer=document.createElement('div');layer.className='kids-bubble-layer';for(let i=0;i<26;i++){const bubble=document.createElement('i'),size=14+Math.random()*45,drift=-55+Math.random()*110;bubble.className='kids-water-bubble';bubble.style.cssText=`left:${2+Math.random()*94}%;--bubble-size:${size}px;--bubble-duration:${3.8+Math.random()*3.8}s;--bubble-delay:${Math.random()*1.5}s;--bubble-drift:${drift}px;--bubble-drift-back:${drift*-.35}px`;layer.appendChild(bubble)}shell.appendChild(layer);setTimeout(()=>layer.remove(),9200)}
+document.querySelector('.app-nav-btn[data-section="kidsPublicSection"]')?.addEventListener('click',()=>{playKidsWelcomeChime();launchKidsBubbles();loadAdultKids()});
+document.getElementById('kidsPublicSection')?.addEventListener('click',e=>{if(e.target.closest('button,.kids-guide-chip,summary'))playKidsBubblePop()});
 document.getElementById('kidsStudyClose')?.addEventListener('click',closeKidsLesson);
 document.querySelectorAll('[data-kids-module]').forEach(b=>b.addEventListener('click',()=>kidsShowModule(b.dataset.kidsModule)));
 document.getElementById('kidsSpeedBtn')?.addEventListener('click',()=>{const rates=[.75,1,1.25],i=rates.indexOf(kidsPlaybackRate);kidsPlaybackRate=rates[(i+1)%rates.length];kidsPlayer?.setPlaybackRate?.(kidsPlaybackRate);document.getElementById('kidsSpeedBtn').textContent=`${kidsPlaybackRate}×`});
