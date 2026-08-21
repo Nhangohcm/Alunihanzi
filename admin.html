@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aluni Admin V57 — Đồng bộ quyền Shadowing</title>
+<title>Aluni Admin V59 — Level và lộ trình Kids</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="access-config.js?v=20260813-2"></script>
 <style>
@@ -392,12 +392,34 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
   <section class="pane" id="shadowPane">
     <div class="card" id="unifiedShadowImport">
       <h2>⬆ Nhập Shadowing hàng loạt dùng chung</h2>
-      <p class="muted">Chọn đúng đích lưu: <b>Khóa học → Bài học</b> để Shadowing đi cùng quyền của khóa, hoặc <b>Kênh → Playlist</b> cho kho video độc lập. Hệ thống ghép theo số B01–B50 trong tên file, xem trước trước khi lưu và không trộn hai kho.</p>
+      <p class="muted">Một quy trình duy nhất: <b>chọn đích và thiết lập → nhập link/SRT/XLSX → xem trước → lưu</b>. Nội dung Kids vẫn dùng chung kho Media; chỉ cần chọn đúng ngôn ngữ và nơi hiển thị.</p>
       <div class="grid">
         <div><label>Loại đích</label><select id="unifiedShadowTargetType"><option value="course">Khóa học → Bài học</option><option value="playlist">Kênh → Playlist độc lập</option></select></div>
         <div><label>Đích cần nhập</label><select id="unifiedShadowTarget"></select></div>
         <div><label>Khi đích đã có Shadowing</label><select id="unifiedShadowExisting"><option value="skip">Bỏ qua, giữ dữ liệu cũ</option><option value="replace">Cập nhật video đầu tiên</option></select></div>
       </div>
+      <div id="unifiedMediaSetup" style="margin-top:18px">
+        <h3>📺 Thiết lập Kênh → Playlist → Bài</h3>
+        <p class="muted">Nếu chưa có đích, tạo kênh và playlist tại đây rồi chọn playlist ở ô “Đích cần nhập” phía trên.</p>
+        <div class="grid"><div><label>Tên kênh</label><input id="mediaChannelName" placeholder="Ví dụ: Little Fox"></div><div><label>Link kênh YouTube</label><input id="mediaChannelUrl" placeholder="https://youtube.com/@..."></div><div><label>Thứ tự</label><input id="mediaChannelOrder" type="number" value="0"></div></div>
+        <div class="row" style="margin-top:10px"><button class="ghost" id="mediaSaveChannel">Lưu kênh</button><span class="status" id="mediaChannelStatus"></span></div>
+        <input id="mediaPlaylistId" type="hidden"><div class="grid" style="margin-top:12px"><div><label>Chọn kênh</label><select id="mediaPlaylistChannel"></select></div><div><label>Tên Playlist / Series</label><input id="mediaPlaylistTitle"></div><div><label>Link playlist</label><input id="mediaPlaylistUrl"></div></div>
+        <div class="grid" style="margin-top:10px"><div><label>Quyền mặc định</label><select id="mediaPlaylistAccess"><option value="free">Miễn phí toàn bộ playlist</option><option value="paid">Có phí toàn bộ playlist</option><option value="custom">Tùy chỉnh từng bài</option></select></div><div><label>Gói/mã kích hoạt</label><select id="mediaPlaylistProduct"><option value="">Không gắn gói</option></select></div><div><label>Ngôn ngữ</label><select id="mediaPlaylistLanguage"><option value="zh">🇨🇳 Tiếng Trung</option><option value="en">🇬🇧 Tiếng Anh</option></select></div></div>
+        <div class="grid" style="margin-top:10px"><div><label>Loại nội dung</label><select id="mediaPlaylistContent"><option value="animation">🎬 Hoạt hình</option><option value="song">🎵 Songs</option></select></div><div><label>Level</label><select id="mediaPlaylistLevel"></select></div><div><label>Thứ tự playlist</label><input id="mediaPlaylistOrder" type="number" value="0"></div></div>
+        <div style="margin-top:12px"><label>Lộ trình Kids — có thể chọn nhiều mục</label><div class="row"><label><input class="mediaProgram" type="checkbox" value="warmup" style="width:auto"> 🚀 Khởi động</label><label><input class="mediaProgram" type="checkbox" value="shadow100" style="width:auto"> 💯 100 ngày Shadowing</label><label><input class="mediaProgram" type="checkbox" value="mindmap" style="width:auto"> 🧠 Mindmap & thuyết trình</label><label><input class="mediaProgram" type="checkbox" value="yct" style="width:auto"> 🎓 YCT cho bé</label></div></div>
+        <div class="row" style="margin-top:10px"><label><input type="checkbox" id="mediaShowShadow" checked style="width:auto"> Hiện ở Shadowing</label><label><input type="checkbox" id="mediaShowKids" style="width:auto"> Hiện ở Kids</label><label><input type="checkbox" id="mediaPlaylistPublished" style="width:auto"> Xuất bản playlist</label><button class="ghost" id="mediaSavePlaylist">Lưu thiết lập playlist</button></div>
+        <div class="status" id="mediaPlaylistStatus"></div>
+      </div>
+      <div id="mediaPathSetup" style="margin-top:22px;padding-top:18px;border-top:1px solid #e4e8f2">
+        <h3>🗓 Thiết lập lộ trình theo ngày/bài</h3>
+        <p class="muted">Mỗi ngày có thể chọn nhiều video đã tồn tại trong kho. Không nhập lại link, SRT hoặc XLSX.</p>
+        <div class="grid"><div><label>Ngôn ngữ</label><select id="mediaPathLanguage"><option value="zh">🇨🇳 Tiếng Trung</option><option value="en">🇬🇧 Tiếng Anh</option></select></div><div><label>Lộ trình</label><select id="mediaPathSelect"></select></div><div><label>Ngày / Bài số</label><input id="mediaPathDayNumber" type="number" min="1" max="365" value="1"></div></div>
+        <div class="grid2" style="margin-top:10px"><div><label>Tên ngày/bài</label><input id="mediaPathDayTitle" placeholder="Ví dụ: Ngày 01 · Chào hỏi"></div><div><label>Mô tả ngắn</label><input id="mediaPathDayDescription" placeholder="Trẻ chọn một video để luyện hôm nay"></div></div>
+        <div class="row" style="margin-top:10px"><label><input id="mediaPathDayPublished" type="checkbox" checked style="width:auto"> Xuất bản ngày học</label><span class="muted">Chọn ⭐ cho video gợi ý chính.</span></div>
+        <div id="mediaPathVideoPicker" class="tablewrap" style="margin-top:12px;max-height:360px"></div>
+        <div class="row" style="margin-top:10px"><button class="primary" id="mediaSavePathDay">Lưu ngày và các video đã chọn</button><button class="ghost" id="mediaNewPathDay">Tạo ngày mới</button></div><div class="status" id="mediaPathStatus"></div>
+      </div>
+      <h3 style="margin-top:20px">📥 Dữ liệu nhập hàng loạt</h3>
       <div class="grid2" style="margin-top:12px">
         <div><label>File CSV/XLSX danh sách link YouTube</label><input id="unifiedShadowLinksFile" type="file" accept=".csv,.xlsx,.xls"></div>
         <div><label>Hoặc dán: số bài | tiêu đề | link YouTube</label><textarea id="unifiedShadowLinksText" placeholder="1 | 你好 | https://youtube.com/watch?v=...&#10;2 | 你忙吗 | https://youtube.com/watch?v=..."></textarea></div>
@@ -406,25 +428,15 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
         <div><label>Nhiều file SRT (B01–B50)</label><input id="unifiedShadowSrts" type="file" accept=".srt" multiple></div>
         <div><label>Nhiều file XLSX/CSV Hán tự · Pinyin · Tiếng Việt</label><input id="unifiedShadowBooks" type="file" accept=".xlsx,.xls,.csv" multiple></div>
       </div>
-      <div class="row" style="margin-top:12px"><button class="ghost" id="previewUnifiedShadow">👁 Kiểm tra và ghép trước</button><button class="primary" id="runUnifiedShadow" disabled>⬆ Lưu hàng loạt vào đúng đích</button></div>
+      <div class="row" style="margin-top:12px"><button class="ghost" id="previewUnifiedShadow">👁 Xem trước và kiểm tra</button><button class="primary" id="runUnifiedShadow" disabled>⬆ Lưu và xuất bản vào đúng đích</button></div>
       <div class="status" id="unifiedShadowStatus">Chọn đích và các file, sau đó bấm “Kiểm tra và ghép trước”.</div>
       <div class="tablewrap" id="unifiedShadowPreview" hidden></div>
     </div>
     <div class="card" id="mediaCatalogAdmin">
-      <h2>📺 Shadowing theo Kênh → Playlist → Bài</h2>
-      <p class="muted">Kho độc lập với Khóa học, dùng chung cho Shadowing và Aluni Kids. Tạo kênh, playlist rồi nhập hàng loạt link YouTube; sau đó mở từng bài để ghép SRT/XLSX và chỉnh sửa.</p>
-      <div class="grid"><div><label>Tên kênh</label><input id="mediaChannelName" placeholder="Ví dụ: Little Fox"></div><div><label>Link kênh YouTube</label><input id="mediaChannelUrl" placeholder="https://youtube.com/@..."></div><div><label>Thứ tự</label><input id="mediaChannelOrder" type="number" value="0"></div></div>
-      <div class="row" style="margin-top:10px"><button class="primary" id="mediaSaveChannel">Lưu kênh</button><span class="status" id="mediaChannelStatus"></span></div>
-      <hr style="border:0;border-top:1px solid #e4e8f2;margin:22px 0">
-      <div class="grid"><div><label>Chọn kênh</label><select id="mediaPlaylistChannel"></select></div><div><label>Tên Playlist / Series</label><input id="mediaPlaylistTitle"></div><div><label>Link playlist</label><input id="mediaPlaylistUrl"></div></div>
-      <div class="grid" style="margin-top:10px"><div><label>Quyền mặc định</label><select id="mediaPlaylistAccess"><option value="free">Miễn phí toàn bộ playlist</option><option value="paid">Có phí toàn bộ playlist</option><option value="custom">Tùy chỉnh từng bài</option></select></div><div><label>Gói/mã kích hoạt</label><select id="mediaPlaylistProduct"><option value="">Không gắn gói</option></select></div><div><label>Ngôn ngữ</label><select id="mediaPlaylistLanguage"><option value="zh">中文 · Tiếng Trung</option><option value="en">English · Tiếng Anh</option></select></div></div>
-      <div class="row" style="margin-top:10px"><label><input type="checkbox" id="mediaShowShadow" checked style="width:auto"> Hiện ở Shadowing</label><label><input type="checkbox" id="mediaShowKids" style="width:auto"> Hiện ở Kids</label><label><input type="checkbox" id="mediaPlaylistPublished" style="width:auto"> Xuất bản playlist</label><button class="primary" id="mediaSavePlaylist">Lưu playlist</button></div>
-      <div class="status" id="mediaPlaylistStatus"></div>
-      <hr style="border:0;border-top:1px solid #e4e8f2;margin:22px 0">
-      <div class="grid2"><div><label>Playlist cần nhập</label><select id="mediaImportPlaylist"></select></div><div><label>File CSV/XLSX danh sách link (tùy chọn)</label><input id="mediaLinkFile" type="file" accept=".csv,.xlsx,.xls"></div></div>
-      <label style="margin-top:10px">Hoặc dán nhiều dòng: <b>tiêu đề | link YouTube</b> (cũng chấp nhận mỗi dòng chỉ có link)</label><textarea id="mediaBulkLinks" placeholder="Alice 01 | https://youtu.be/...&#10;Alice 02 | https://youtu.be/..."></textarea>
-      <div class="row" style="margin-top:10px"><button class="primary" id="mediaImportLinks">Nhập danh sách video</button><button class="ghost" id="mediaRefresh">Làm mới</button></div><div class="status" id="mediaImportStatus"></div>
-      <div class="grid2" style="margin-top:14px"><div><label>Nhiều file SRT</label><input id="mediaBulkSrt" type="file" accept=".srt" multiple></div><div><label>Nhiều file XLSX/CSV</label><input id="mediaBulkXlsx" type="file" accept=".xlsx,.xls,.csv" multiple></div></div><div class="row" style="margin-top:10px"><button class="primary" id="mediaMatchFiles">Tự ghép và lưu phụ đề hàng loạt</button></div><p class="muted">Hệ thống ưu tiên ghép theo YouTube ID trong tên file, sau đó theo tên video gần giống. Các file chưa ghép được sẽ được báo lại, không tự lưu nhầm.</p>
+      <h2>🗂 Danh sách và sửa từng bài</h2>
+      <p class="muted">Phần nhập hàng loạt đã được gom lên trên. Khu vực này chỉ dùng để xem, lọc và sửa riêng một bài đã lưu.</p>
+      <div class="row"><div style="min-width:280px;flex:1"><label>Playlist cần xem</label><select id="mediaImportPlaylist"></select></div><button class="ghost" id="mediaRefresh">Làm mới danh sách</button></div><div class="status" id="mediaImportStatus"></div>
+      <div hidden aria-hidden="true"><input id="mediaLinkFile" type="file"><textarea id="mediaBulkLinks"></textarea><button id="mediaImportLinks" type="button"></button><input id="mediaBulkSrt" type="file" multiple><input id="mediaBulkXlsx" type="file" multiple><button id="mediaMatchFiles" type="button"></button></div>
       <div class="tablewrap" style="margin-top:14px"><table><thead><tr><th>STT</th><th>Kênh / Playlist</th><th>Tên bài</th><th>Quyền</th><th>Phụ đề</th><th>Trạng thái</th><th></th></tr></thead><tbody id="mediaItemBody"></tbody></table></div>
       <div id="mediaItemEditor" class="shadow-workspace"><h3>Sửa bài trong playlist</h3><input id="mediaItemId" type="hidden"><div class="grid"><div><label>STT</label><input id="mediaItemNumber" type="number"></div><div><label>Tên bài</label><input id="mediaItemTitle"></div><div><label>Link YouTube</label><input id="mediaItemUrl"></div></div><div class="grid" style="margin-top:10px"><div><label>Quyền</label><select id="mediaItemAccess"><option value="inherit">Theo playlist</option><option value="free">Miễn phí</option><option value="paid">Có phí</option></select></div><div><label>SRT</label><input id="mediaItemSrt" type="file" accept=".srt"></div><div><label>XLSX/CSV</label><input id="mediaItemXlsx" type="file" accept=".xlsx,.xls,.csv"></div></div><div class="row" style="margin-top:10px"><label><input id="mediaItemPublished" type="checkbox" style="width:auto"> Xuất bản bài</label><button class="primary" id="mediaSaveItem">Lưu thông tin</button><button class="ghost" id="mediaPreviewTranscript">Đọc SRT/XLSX</button><button class="primary" id="mediaSaveTranscript">Lưu phụ đề</button><button class="ghost" id="mediaCloseEditor">Đóng</button></div><div class="status" id="mediaItemStatus"></div><div id="mediaTranscriptPreview" class="tablewrap"></div></div>
     </div>
@@ -1312,6 +1324,12 @@ $('shadowAccessMode').onchange=()=>{$('shadowFreeLessons').disabled=$('shadowAcc
 $('learningShadowAccess').onchange=()=>{$('learningShadowFreeLessons').disabled=$('learningShadowAccess').value==='paid_all';};
 $('mediaSaveChannel').onclick=saveMediaChannel;
 $('mediaSavePlaylist').onclick=saveMediaPlaylist;
+$('mediaPlaylistLanguage').onchange=()=>syncMediaLevels();
+$('mediaPathLanguage').onchange=renderMediaPathManager;
+$('mediaPathSelect').onchange=renderMediaPathManager;
+$('mediaPathDayNumber').onchange=renderMediaPathManager;
+$('mediaSavePathDay').onclick=saveMediaPathDay;
+$('mediaNewPathDay').onclick=()=>{editingMediaPathDay=0;$('mediaPathDayNumber').value=Number($('mediaPathDayNumber').value||0)+1;renderMediaPathManager();};
 $('mediaImportLinks').onclick=importMediaLinks;
 $('mediaRefresh').onclick=loadMediaAdmin;
 $('mediaImportPlaylist').onchange=renderMediaItems;
@@ -1322,8 +1340,8 @@ $('mediaMatchFiles').onclick=matchMediaFiles;
 $('mediaCloseEditor').onclick=()=>{$('mediaItemEditor').classList.remove('open')};
 $('previewUnifiedShadow').onclick=previewUnifiedShadow;
 $('runUnifiedShadow').onclick=runUnifiedShadow;
-$('unifiedShadowTargetType').onchange=refreshUnifiedShadowTargets;
-$('unifiedShadowTarget').onchange=()=>{unifiedShadowPlan=[];$('runUnifiedShadow').disabled=true;$('unifiedShadowPreview').hidden=true};
+$('unifiedShadowTargetType').onchange=()=>{refreshUnifiedShadowTargets();syncUnifiedShadowSetup()};
+$('unifiedShadowTarget').onchange=()=>{unifiedShadowPlan=[];$('runUnifiedShadow').disabled=true;$('unifiedShadowPreview').hidden=true;if($('unifiedShadowTargetType').value==='playlist')loadMediaPlaylistEditor($('unifiedShadowTarget').value)};
 
 async function parseSrtFile(file){
   const text = await file.text();
@@ -1370,13 +1388,31 @@ function formatShadowTime(seconds){
   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${s}`;
 }
 
-let mediaAdmin={channels:[],playlists:[],items:[]},mediaDraftSegments=[];
+let mediaAdmin={channels:[],playlists:[],items:[],paths:[],path_days:[],path_day_items:[]},mediaDraftSegments=[],editingMediaPathDay=0;
 async function loadMediaAdmin(){
-  try{mediaAdmin=await api('/admin/media/bootstrap');const cs=$('mediaPlaylistChannel'),ps=$('mediaImportPlaylist'),product=$('mediaPlaylistProduct');cs.innerHTML='';ps.innerHTML='';product.innerHTML='<option value="">Không gắn gói</option>';mediaAdmin.channels.forEach(c=>cs.add(new Option(c.name,c.id)));mediaAdmin.playlists.forEach(p=>ps.add(new Option(`${p.channel_name} → ${p.title}`,p.id)));(learningCourses||[]).forEach(c=>product.add(new Option(c.title,c.id)));renderMediaItems();refreshUnifiedShadowTargets()}catch(e){$('mediaImportStatus').textContent=e.message}
+  try{mediaAdmin=await api('/admin/media/bootstrap');const cs=$('mediaPlaylistChannel'),ps=$('mediaImportPlaylist'),product=$('mediaPlaylistProduct');cs.innerHTML='';ps.innerHTML='';product.innerHTML='<option value="">Không gắn gói</option>';mediaAdmin.channels.forEach(c=>cs.add(new Option(c.name,c.id)));mediaAdmin.playlists.forEach(p=>ps.add(new Option(`${p.channel_name} → ${p.title}`,p.id)));(learningCourses||[]).forEach(c=>product.add(new Option(c.title,c.id)));syncMediaLevels();renderMediaItems();refreshUnifiedShadowTargets();renderMediaPathManager()}catch(e){$('mediaImportStatus').textContent=e.message}
 }
+function renderMediaPathManager(){
+  const language=$('mediaPathLanguage').value||'zh',select=$('mediaPathSelect'),old=select.value;select.innerHTML='';(mediaAdmin.paths||[]).filter(x=>x.language_code===language).forEach(x=>select.add(new Option(`${x.icon||'🌟'} ${x.title}`,x.id)));if([...select.options].some(o=>o.value===old))select.value=old;
+  const pathId=select.value,number=Number($('mediaPathDayNumber').value||1),day=(mediaAdmin.path_days||[]).find(x=>x.path_id===pathId&&Number(x.day_number)===number);editingMediaPathDay=Number(day?.id||0);$('mediaPathDayTitle').value=day?.title||`${pathId.endsWith('shadow100')?'Ngày ': 'Bài '}${String(number).padStart(2,'0')}`;$('mediaPathDayDescription').value=day?.description||'';$('mediaPathDayPublished').checked=day?Number(day.published)===1:true;
+  const selected=new Map((mediaAdmin.path_day_items||[]).filter(x=>Number(x.day_id)===editingMediaPathDay).map(x=>[Number(x.item_id),x]));const rows=(mediaAdmin.items||[]).filter(x=>Number(x.show_kids)===1&&x.language_code===language);
+  $('mediaPathVideoPicker').innerHTML=`<table><thead><tr><th>Chọn</th><th>Gợi ý</th><th>Kênh / Playlist</th><th>Video</th><th>Level</th></tr></thead><tbody>${rows.map(x=>`<tr><td><input class="mediaPathItem" data-id="${x.id}" type="checkbox" ${selected.has(Number(x.id))?'checked':''} style="width:auto"></td><td><input class="mediaPathFeatured" name="mediaPathFeatured" value="${x.id}" type="radio" ${selected.get(Number(x.id))?.featured?'checked':''} style="width:auto"></td><td>${esc(x.channel_name)}<br><small>${esc(x.playlist_title)}</small></td><td>${esc(x.title)}</td><td>${x.level_id?`Level ${esc(String(x.level_id).split(':').pop())}`:'—'}</td></tr>`).join('')||'<tr><td colspan="5">Chưa có video Kids đã lưu trong ngôn ngữ này.</td></tr>'}</tbody></table>`;
+  document.querySelectorAll('.mediaPathFeatured').forEach(r=>r.onchange=()=>{const box=document.querySelector(`.mediaPathItem[data-id="${r.value}"]`);if(box)box.checked=true});
+}
+async function saveMediaPathDay(){try{const pathId=$('mediaPathSelect').value,number=Number($('mediaPathDayNumber').value||0);const day=await api('/admin/media/path-day',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path_id:pathId,day_number:number,title:$('mediaPathDayTitle').value,description:$('mediaPathDayDescription').value,published:$('mediaPathDayPublished').checked,sort_order:number})});const featured=Number(document.querySelector('.mediaPathFeatured:checked')?.value||0),items=[...document.querySelectorAll('.mediaPathItem:checked')].map((x,i)=>({item_id:Number(x.dataset.id),sort_order:i+1,featured:Number(x.dataset.id)===featured}));await api('/admin/media/path-day-items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({day_id:day.id,items})});$('mediaPathStatus').textContent=`Đã lưu ${items.length} video cho ${$('mediaPathDayTitle').value}.`;await loadMediaAdmin()}catch(e){$('mediaPathStatus').textContent=e.message}}
 function renderMediaItems(){const playlist=$('mediaImportPlaylist').value,rows=mediaAdmin.items.filter(x=>!playlist||x.playlist_id===playlist);$('mediaItemBody').innerHTML=rows.map(x=>`<tr><td>${x.item_number}</td><td>${esc(x.channel_name)}<br><span class="muted">${esc(x.playlist_title)}</span></td><td>${esc(x.title)}<br><a href="${esc(x.youtube_url)}" target="_blank">Mở YouTube</a></td><td>${x.access_override==='free'?'Miễn phí':x.access_override==='paid'?'Có phí':'Theo playlist'}</td><td>${x.shadow_video_id?'Đã có':'Chưa có'}</td><td>${Number(x.published)?'Đã xuất bản':'Bản nháp'}</td><td><button class="ghost mediaEdit" data-id="${x.id}">Sửa</button></td></tr>`).join('')||'<tr><td colspan="7">Playlist chưa có video.</td></tr>';document.querySelectorAll('.mediaEdit').forEach(b=>b.onclick=()=>openMediaItem(Number(b.dataset.id)))}
 async function saveMediaChannel(){try{const j=await api('/admin/media/channel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:$('mediaChannelName').value,youtube_url:$('mediaChannelUrl').value,sort_order:Number($('mediaChannelOrder').value||0)})});$('mediaChannelStatus').textContent='Đã lưu kênh.';await loadMediaAdmin();$('mediaPlaylistChannel').value=j.id}catch(e){$('mediaChannelStatus').textContent=e.message}}
-async function saveMediaPlaylist(){try{const j=await api('/admin/media/playlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({channel_id:$('mediaPlaylistChannel').value,title:$('mediaPlaylistTitle').value,youtube_url:$('mediaPlaylistUrl').value,access_mode:$('mediaPlaylistAccess').value,product_course_id:$('mediaPlaylistProduct').value,language_code:$('mediaPlaylistLanguage').value,show_shadowing:$('mediaShowShadow').checked,show_kids:$('mediaShowKids').checked,published:$('mediaPlaylistPublished').checked})});$('mediaPlaylistStatus').textContent='Đã lưu playlist.';await loadMediaAdmin();$('mediaImportPlaylist').value=j.id;renderMediaItems()}catch(e){$('mediaPlaylistStatus').textContent=e.message}}
+function syncMediaLevels(selected=''){
+  const language=$('mediaPlaylistLanguage').value||'zh',level=$('mediaPlaylistLevel');level.innerHTML='<option value="">Chưa phân Level</option>';
+  for(let n=0;n<=6;n++)level.add(new Option(`Level ${n}`,`${language}:${n}`));
+  if([...level.options].some(o=>o.value===selected))level.value=selected;
+}
+function selectedMediaPrograms(){return [...document.querySelectorAll('.mediaProgram:checked')].map(x=>x.value)}
+function loadMediaPlaylistEditor(id){
+  const p=(mediaAdmin.playlists||[]).find(x=>String(x.id)===String(id));if(!p)return;
+  $('mediaPlaylistId').value=p.id;$('mediaPlaylistChannel').value=p.channel_id;$('mediaPlaylistTitle').value=p.title||'';$('mediaPlaylistUrl').value=p.youtube_url||'';$('mediaPlaylistAccess').value=p.access_mode||'custom';$('mediaPlaylistProduct').value=p.product_course_id||'';$('mediaPlaylistLanguage').value=p.language_code||'zh';syncMediaLevels(p.level_id||'');$('mediaPlaylistContent').value=/song/.test(String(p.content_type||''))?'song':'animation';$('mediaPlaylistOrder').value=Number(p.sort_order||0);$('mediaShowShadow').checked=Number(p.show_shadowing)!==0;$('mediaShowKids').checked=Number(p.show_kids)===1;$('mediaPlaylistPublished').checked=Number(p.published)===1;const programs=new Set(String(p.program_codes||'').split(',').filter(Boolean));document.querySelectorAll('.mediaProgram').forEach(x=>x.checked=programs.has(x.value));$('mediaPlaylistStatus').textContent='Đang sửa playlist đã chọn; đổi Level/lộ trình rồi bấm Lưu thiết lập playlist.';
+}
+async function saveMediaPlaylist(){try{const j=await api('/admin/media/playlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:$('mediaPlaylistId').value||undefined,channel_id:$('mediaPlaylistChannel').value,title:$('mediaPlaylistTitle').value,youtube_url:$('mediaPlaylistUrl').value,access_mode:$('mediaPlaylistAccess').value,product_course_id:$('mediaPlaylistProduct').value,language_code:$('mediaPlaylistLanguage').value,level_id:$('mediaPlaylistLevel').value,content_type:$('mediaPlaylistContent').value,program_codes:selectedMediaPrograms(),sort_order:Number($('mediaPlaylistOrder').value||0),show_shadowing:$('mediaShowShadow').checked,show_kids:$('mediaShowKids').checked,published:$('mediaPlaylistPublished').checked})});$('mediaPlaylistStatus').textContent='Đã lưu playlist, Level và lộ trình.';$('mediaPlaylistId').value=j.id;await loadMediaAdmin();$('mediaImportPlaylist').value=j.id;$('unifiedShadowTarget').value=j.id;renderMediaItems()}catch(e){$('mediaPlaylistStatus').textContent=e.message}}
 async function readMediaLinkRows(){const file=$('mediaLinkFile').files[0];if(file){const rows=await parseFile(file);return rows.map((r,i)=>({item_number:Number(r.item_number||r.number||r.stt||i+1),title:r.title||r.name||r['Tên video']||`Bài ${i+1}`,youtube_url:r.youtube_url||r.url||r.link||r['Link YouTube'],access_override:r.access_override||'inherit',published:String(r.published??'1')!=='0'})).filter(x=>x.youtube_url)}return $('mediaBulkLinks').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map((line,i)=>{const cut=line.indexOf('|'),url=cut>=0?line.slice(cut+1).trim():line,title=cut>=0?line.slice(0,cut).trim():`Bài ${i+1}`;return{item_number:i+1,title,youtube_url:url,access_override:'inherit',published:true}})}
 async function importMediaLinks(){try{const items=await readMediaLinkRows();if(!items.length)throw new Error('Chưa có link hợp lệ.');const j=await api('/admin/media/items-import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({playlist_id:$('mediaImportPlaylist').value,items})});$('mediaImportStatus').textContent=`Đã tạo ${j.created}, cập nhật ${j.updated} video.`;await loadMediaAdmin()}catch(e){$('mediaImportStatus').textContent=e.message}}
 function openMediaItem(id){const x=mediaAdmin.items.find(v=>Number(v.id)===id);if(!x)return;$('mediaItemId').value=x.id;$('mediaItemNumber').value=x.item_number;$('mediaItemTitle').value=x.title;$('mediaItemUrl').value=x.youtube_url;$('mediaItemAccess').value=x.access_override||'inherit';$('mediaItemPublished').checked=!!Number(x.published);mediaDraftSegments=[];$('mediaTranscriptPreview').innerHTML='';$('mediaItemEditor').classList.add('open');$('mediaItemEditor').scrollIntoView({behavior:'smooth'})}
@@ -1413,6 +1449,12 @@ function refreshUnifiedShadowTargets(){
   else (mediaAdmin.playlists||[]).forEach(p=>target.add(new Option(`${p.channel_name} → ${p.title}`,p.id)));
   if([...target.options].some(o=>o.value===old))target.value=old;
   unifiedShadowPlan=[];$('runUnifiedShadow').disabled=true;$('unifiedShadowPreview').hidden=true;
+  syncUnifiedShadowSetup();
+}
+function syncUnifiedShadowSetup(){
+  const playlistMode=$('unifiedShadowTargetType').value==='playlist';
+  $('unifiedMediaSetup').hidden=!playlistMode;
+  $('unifiedShadowExisting').disabled=playlistMode;
 }
 async function previewUnifiedShadow(){
   const button=$('previewUnifiedShadow');button.classList.add('loading');$('runUnifiedShadow').disabled=true;unifiedShadowPlan=[];
