@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aluni Admin V59 — Level và lộ trình Kids</title>
+<title>Aluni Admin V60 — Game theo bài học</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="access-config.js?v=20260813-2"></script>
 <style>
@@ -1123,7 +1123,7 @@ async function loadLearningContent(){
     const j=await api('/admin/learning/course-content?course_id='+encodeURIComponent(courseId));
     const lessons=j.lessons||[];
     $('learningLessonList').innerHTML=lessons.map(l=>`<details class="lesson-admin" data-kind="lesson" data-id="${esc(l.id)}">
-      <summary><span class="lesson-summary-main"><span class="drag-handle" draggable="true" title="Giữ và kéo để đổi vị trí">⋮⋮</span><span>Bài ${String(l.lesson_number).padStart(2,'0')} — ${esc(cleanLessonTitle(l.title,l.lesson_number))}</span></span><span class="row"><span class="content-state video ${l.videos.length?'ready':''}">▶ ${l.videos.length} video</span><span class="content-state ${l.shadowing?'ready':''}">🎥 ${l.shadowing?'Có':'Chưa'}</span><span class="content-state grammar ${l.grammar?'ready':''}">📚 ${l.grammar?'Có':'Chưa'}</span><span class="content-state writing ${(l.writing||[]).length?'ready':''}">✍ ${(l.writing||[]).length} từ</span></span></summary>
+      <summary><span class="lesson-summary-main"><span class="drag-handle" draggable="true" title="Giữ và kéo để đổi vị trí">⋮⋮</span><span>Bài ${String(l.lesson_number).padStart(2,'0')} — ${esc(cleanLessonTitle(l.title,l.lesson_number))}</span></span><span class="row"><span class="content-state video ${l.videos.length?'ready':''}">▶ ${l.videos.length} video</span><span class="content-state ${l.shadowing?'ready':''}">🎥 ${l.shadowing?'Có':'Chưa'}</span><span class="content-state grammar ${l.grammar?'ready':''}">📚 ${l.grammar?'Có':'Chưa'}</span><span class="content-state writing ${(l.writing||[]).length?'ready':''}">✍ ${(l.writing||[]).length} từ</span><span class="content-state ${(l.games||[]).length?'ready':''}">🎮 ${(l.games||[]).length} game</span></span></summary>
       <div class="lesson-admin-body">
         <div class="grid2"><div><label>Số bài</label><input class="editLessonNumber" data-id="${esc(l.id)}" type="number" min="0" value="${Number(l.lesson_number)}"></div><div><label>Tên bài</label><input class="editLessonTitle" data-id="${esc(l.id)}" value="${esc(l.title)}"></div></div>
         <div class="row" style="margin-top:8px"><button class="ghost saveLesson" data-id="${esc(l.id)}">Lưu tên/số bài</button><button class="danger deleteLesson" data-id="${esc(l.id)}">Xóa bài</button></div>
@@ -1134,6 +1134,7 @@ async function loadLearningContent(){
           <button class="lesson-tool ${(l.writing||[]).length?'ready':''} openLinkedWriting" data-course="${esc(courseId)}" data-lesson="${esc(l.id)}"><b>✍ Từ vựng – Viết chữ</b><small>${(l.writing||[]).length} từ · nhập từng bài hoặc hàng loạt</small></button>
           <button class="lesson-tool ${l.grammar?'ready':''} openLinkedGrammar" data-course="${esc(courseId)}" data-lesson="${esc(l.id)}"><b>📚 Ngữ pháp & Bài tập</b><small>${l.grammar?`${(l.grammar.questions||[]).length} câu hỏi`:'Chưa có nội dung'}</small></button>
           <button class="lesson-tool ${l.resources.length?'ready':''}" type="button" onclick="this.closest('.lesson-admin-body').querySelector('.resource-editor').open=true"><b>📄 Tài liệu</b><small>${l.resources.length} file/link · xem hoặc cho tải</small></button>
+          <button class="lesson-tool ${(l.games||[]).length?'ready':''}" type="button" onclick="this.closest('.lesson-admin-body').querySelector('.game-editor').open=true"><b>🎮 Game luyện tập</b><small>${(l.games||[]).length} game · dùng từ vựng hiện có của bài</small></button>
           <button class="lesson-tool pending" type="button" disabled><b>🤖 AI giao tiếp</b><small>Sẽ bổ sung sau, không cần đổi cấu trúc bài</small></button>
         </div>
         <details class="inline-editor video-editor"><summary><b>▶ Nhập video bài giảng</b></summary><div>
@@ -1145,11 +1146,17 @@ async function loadLearningContent(){
           <div class="upload-box"><b>Tải file trực tiếp từ máy</b><div class="upload-grid" style="margin-top:8px"><input class="uploadResourceTitle" data-lesson="${esc(l.id)}" placeholder="Tên hiển thị"><input class="uploadResourceFile" data-lesson="${esc(l.id)}" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.mp3"><select class="uploadResourceMode" data-lesson="${esc(l.id)}"><option value="view">Chỉ xem</option><option value="download">Cho tải</option></select><button class="primary uploadResource" data-lesson="${esc(l.id)}">Tải lên</button></div></div>
           <div class="grid2" style="margin-top:10px"><input class="newResourceTitle" data-lesson="${esc(l.id)}" placeholder="Tên tài liệu từ đường link"><input class="newResourceUrl" data-lesson="${esc(l.id)}" placeholder="Link PDF/Word/Drive..."></div><div class="row" style="margin-top:8px"><select class="newResourceMode" data-lesson="${esc(l.id)}" style="max-width:150px"><option value="view">Chỉ xem</option><option value="download">Cho tải</option></select><button class="ghost addResource" data-lesson="${esc(l.id)}">＋ Thêm bằng link</button></div>
         </div></details>
+        <details class="inline-editor game-editor"><summary><b>🎮 Chọn game xuất hiện trong bài</b></summary><div>
+          <p class="muted">Game tự lấy Hán tự và Pinyin từ phần Từ vựng – Viết chữ; nếu chưa có sẽ dùng câu Shadowing. Không cần nhập lại nghĩa Việt.</p>
+          <div class="row game-options" data-lesson="${esc(l.id)}">${[['bubble','🫧 Bong bóng'],['orchard','🍎 Hái quả'],['mushroom','🍄 Rừng nấm'],['fishing','🎣 Câu cá'],['writing','✍️ Viết chữ']].map(([code,label])=>`<label style="display:flex;align-items:center;gap:7px"><input type="checkbox" value="${code}" style="width:auto" ${(l.games||[]).includes(code)?'checked':''}> ${label}</label>`).join('')}</div>
+          <button class="primary saveLessonGames" data-lesson="${esc(l.id)}" style="margin-top:10px">Lưu game của bài</button>
+        </div></details>
       </div></details>`).join('')||`<div class="empty-manager"><b>Khóa này chưa có bài học</b><span class="muted">Nhập số bài và tên bài ở ngay phía trên rồi bấm “Thêm bài mới”. Sau khi tạo, khung sửa video và tải tài liệu sẽ hiện tại đây.</span><div class="row"><button class="ghost focusNewLesson">＋ Tạo bài đầu tiên</button></div></div>`;
     bindLearningContentActions();
     document.querySelectorAll('#learningLessonList .openLinkedGrammar').forEach(b=>b.onclick=()=>openLinkedEditor('grammar',b.dataset.course,b.dataset.lesson));
     document.querySelectorAll('#learningLessonList .openLinkedWriting').forEach(b=>b.onclick=()=>openLinkedEditor('writing',b.dataset.course,b.dataset.lesson));
     document.querySelectorAll('#learningLessonList .openLinkedShadow').forEach(b=>b.onclick=()=>openLinkedEditor('shadow',b.dataset.course,'',Number(b.dataset.number),b.dataset.title));
+    document.querySelectorAll('#learningLessonList .saveLessonGames').forEach(b=>b.onclick=async()=>{const lesson=b.dataset.lesson,box=document.querySelector(`.game-options[data-lesson="${CSS.escape(lesson)}"]`),games=[...box.querySelectorAll('input:checked')].map(x=>x.value);try{await learningPost('/admin/learning/games',{lesson_id:lesson,games});$('learningContentStatus').textContent=`Đã lưu ${games.length} game cho bài học.`}catch(e){}});
     document.querySelector('.focusNewLesson')?.addEventListener('click',()=>{$('newLessonNumber').focus();$('newLessonNumber').scrollIntoView({behavior:'smooth',block:'center'})});
     $('learningContentStatus').textContent=`Có ${lessons.length} bài. Bấm vào một bài để quản lý.`;
   }catch(e){$('learningContentStatus').textContent=e.message}
