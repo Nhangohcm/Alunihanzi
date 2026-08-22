@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aluni Admin V60.1 — Game theo toàn khóa</title>
+<title>Aluni Admin V60.2 — Chọn tất cả game</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="access-config.js?v=20260813-2"></script>
 <style>
@@ -1127,6 +1127,7 @@ async function loadLearningContent(){
     const bulkGameBox=lessons.length?`<details class="inline-editor" open>
       <summary><b>🎮 Áp dụng game cho toàn bộ bài của khóa này</b></summary><div>
         <p class="muted">Chỉ tác động khóa <b>${esc(activeCourse?.title||'đang chọn')}</b>. Bộ game đã chọn sẽ thay thế thiết lập game hiện tại của toàn bộ ${lessons.length} bài; sau đó vẫn có thể mở từng bài để bỏ hoặc thêm riêng.</p>
+        <div class="row" style="margin-bottom:10px"><label style="display:flex;align-items:center;gap:7px;font-weight:800"><input class="selectAllCourseGames" type="checkbox" style="width:auto" ${commonGames.length===gameChoices.length?'checked':''}> ✅ Chọn tất cả game</label></div>
         <div class="row course-game-options">${gameChoices.map(([code,label])=>`<label style="display:flex;align-items:center;gap:7px"><input type="checkbox" value="${code}" style="width:auto" ${commonGames.includes(code)?'checked':''}> ${label}</label>`).join('')}</div>
         <button class="primary applyCourseGames" data-course="${esc(courseId)}" style="margin-top:10px">Áp dụng cho toàn bộ ${lessons.length} bài</button>
       </div></details>`:'';
@@ -1165,6 +1166,10 @@ async function loadLearningContent(){
     document.querySelectorAll('#learningLessonList .openLinkedWriting').forEach(b=>b.onclick=()=>openLinkedEditor('writing',b.dataset.course,b.dataset.lesson));
     document.querySelectorAll('#learningLessonList .openLinkedShadow').forEach(b=>b.onclick=()=>openLinkedEditor('shadow',b.dataset.course,'',Number(b.dataset.number),b.dataset.title));
     document.querySelectorAll('#learningLessonList .saveLessonGames').forEach(b=>b.onclick=async()=>{const lesson=b.dataset.lesson,box=document.querySelector(`.game-options[data-lesson="${CSS.escape(lesson)}"]`),games=[...box.querySelectorAll('input:checked')].map(x=>x.value);try{await learningPost('/admin/learning/games',{lesson_id:lesson,games});$('learningContentStatus').textContent=`Đã lưu ${games.length} game cho bài học.`}catch(e){}});
+    const selectAllCourseGames=document.querySelector('#learningLessonList .selectAllCourseGames');
+    const courseGameChecks=[...document.querySelectorAll('#learningLessonList .course-game-options input[type="checkbox"]')];
+    selectAllCourseGames?.addEventListener('change',()=>courseGameChecks.forEach(input=>input.checked=selectAllCourseGames.checked));
+    courseGameChecks.forEach(input=>input.addEventListener('change',()=>{if(selectAllCourseGames)selectAllCourseGames.checked=courseGameChecks.length>0&&courseGameChecks.every(item=>item.checked)}));
     document.querySelector('#learningLessonList .applyCourseGames')?.addEventListener('click',async e=>{
       const button=e.currentTarget,box=document.querySelector('#learningLessonList .course-game-options');
       const games=[...box.querySelectorAll('input:checked')].map(x=>x.value);
