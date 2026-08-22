@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aluni Admin V60 — Game theo bài học</title>
+<title>Aluni Admin V60.1 — Game theo toàn khóa</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="access-config.js?v=20260813-2"></script>
 <style>
@@ -1122,7 +1122,15 @@ async function loadLearningContent(){
   try{
     const j=await api('/admin/learning/course-content?course_id='+encodeURIComponent(courseId));
     const lessons=j.lessons||[];
-    $('learningLessonList').innerHTML=lessons.map(l=>`<details class="lesson-admin" data-kind="lesson" data-id="${esc(l.id)}">
+    const gameChoices=[['bubble','🫧 Bong bóng'],['orchard','🍎 Hái quả'],['mushroom','🍄 Rừng nấm'],['fishing','🎣 Câu cá'],['writing','✍️ Viết chữ']];
+    const commonGames=gameChoices.filter(([code])=>lessons.length&&lessons.every(l=>(l.games||[]).includes(code))).map(([code])=>code);
+    const bulkGameBox=lessons.length?`<details class="inline-editor" open>
+      <summary><b>🎮 Áp dụng game cho toàn bộ bài của khóa này</b></summary><div>
+        <p class="muted">Chỉ tác động khóa <b>${esc(activeCourse?.title||'đang chọn')}</b>. Bộ game đã chọn sẽ thay thế thiết lập game hiện tại của toàn bộ ${lessons.length} bài; sau đó vẫn có thể mở từng bài để bỏ hoặc thêm riêng.</p>
+        <div class="row course-game-options">${gameChoices.map(([code,label])=>`<label style="display:flex;align-items:center;gap:7px"><input type="checkbox" value="${code}" style="width:auto" ${commonGames.includes(code)?'checked':''}> ${label}</label>`).join('')}</div>
+        <button class="primary applyCourseGames" data-course="${esc(courseId)}" style="margin-top:10px">Áp dụng cho toàn bộ ${lessons.length} bài</button>
+      </div></details>`:'';
+    $('learningLessonList').innerHTML=bulkGameBox+(lessons.map(l=>`<details class="lesson-admin" data-kind="lesson" data-id="${esc(l.id)}">
       <summary><span class="lesson-summary-main"><span class="drag-handle" draggable="true" title="Giữ và kéo để đổi vị trí">⋮⋮</span><span>Bài ${String(l.lesson_number).padStart(2,'0')} — ${esc(cleanLessonTitle(l.title,l.lesson_number))}</span></span><span class="row"><span class="content-state video ${l.videos.length?'ready':''}">▶ ${l.videos.length} video</span><span class="content-state ${l.shadowing?'ready':''}">🎥 ${l.shadowing?'Có':'Chưa'}</span><span class="content-state grammar ${l.grammar?'ready':''}">📚 ${l.grammar?'Có':'Chưa'}</span><span class="content-state writing ${(l.writing||[]).length?'ready':''}">✍ ${(l.writing||[]).length} từ</span><span class="content-state ${(l.games||[]).length?'ready':''}">🎮 ${(l.games||[]).length} game</span></span></summary>
       <div class="lesson-admin-body">
         <div class="grid2"><div><label>Số bài</label><input class="editLessonNumber" data-id="${esc(l.id)}" type="number" min="0" value="${Number(l.lesson_number)}"></div><div><label>Tên bài</label><input class="editLessonTitle" data-id="${esc(l.id)}" value="${esc(l.title)}"></div></div>
@@ -1151,12 +1159,25 @@ async function loadLearningContent(){
           <div class="row game-options" data-lesson="${esc(l.id)}">${[['bubble','🫧 Bong bóng'],['orchard','🍎 Hái quả'],['mushroom','🍄 Rừng nấm'],['fishing','🎣 Câu cá'],['writing','✍️ Viết chữ']].map(([code,label])=>`<label style="display:flex;align-items:center;gap:7px"><input type="checkbox" value="${code}" style="width:auto" ${(l.games||[]).includes(code)?'checked':''}> ${label}</label>`).join('')}</div>
           <button class="primary saveLessonGames" data-lesson="${esc(l.id)}" style="margin-top:10px">Lưu game của bài</button>
         </div></details>
-      </div></details>`).join('')||`<div class="empty-manager"><b>Khóa này chưa có bài học</b><span class="muted">Nhập số bài và tên bài ở ngay phía trên rồi bấm “Thêm bài mới”. Sau khi tạo, khung sửa video và tải tài liệu sẽ hiện tại đây.</span><div class="row"><button class="ghost focusNewLesson">＋ Tạo bài đầu tiên</button></div></div>`;
+      </div></details>`).join('')||`<div class="empty-manager"><b>Khóa này chưa có bài học</b><span class="muted">Nhập số bài và tên bài ở ngay phía trên rồi bấm “Thêm bài mới”. Sau khi tạo, khung sửa video và tải tài liệu sẽ hiện tại đây.</span><div class="row"><button class="ghost focusNewLesson">＋ Tạo bài đầu tiên</button></div></div>`);
     bindLearningContentActions();
     document.querySelectorAll('#learningLessonList .openLinkedGrammar').forEach(b=>b.onclick=()=>openLinkedEditor('grammar',b.dataset.course,b.dataset.lesson));
     document.querySelectorAll('#learningLessonList .openLinkedWriting').forEach(b=>b.onclick=()=>openLinkedEditor('writing',b.dataset.course,b.dataset.lesson));
     document.querySelectorAll('#learningLessonList .openLinkedShadow').forEach(b=>b.onclick=()=>openLinkedEditor('shadow',b.dataset.course,'',Number(b.dataset.number),b.dataset.title));
     document.querySelectorAll('#learningLessonList .saveLessonGames').forEach(b=>b.onclick=async()=>{const lesson=b.dataset.lesson,box=document.querySelector(`.game-options[data-lesson="${CSS.escape(lesson)}"]`),games=[...box.querySelectorAll('input:checked')].map(x=>x.value);try{await learningPost('/admin/learning/games',{lesson_id:lesson,games});$('learningContentStatus').textContent=`Đã lưu ${games.length} game cho bài học.`}catch(e){}});
+    document.querySelector('#learningLessonList .applyCourseGames')?.addEventListener('click',async e=>{
+      const button=e.currentTarget,box=document.querySelector('#learningLessonList .course-game-options');
+      const games=[...box.querySelectorAll('input:checked')].map(x=>x.value);
+      const message=games.length
+        ?`Áp dụng ${games.length} game đã chọn cho toàn bộ ${lessons.length} bài của khóa “${activeCourse?.title||''}”? Thiết lập game riêng hiện tại của các bài trong khóa này sẽ được thay thế.`
+        :`Xóa toàn bộ game khỏi ${lessons.length} bài của khóa “${activeCourse?.title||''}”?`;
+      if(!confirm(message))return;
+      button.disabled=true;
+      try{
+        await learningPost('/admin/learning/course-games',{course_id:courseId,games});
+        $('learningContentStatus').textContent=games.length?`Đã áp dụng ${games.length} game cho toàn bộ ${lessons.length} bài của khóa.`:`Đã xóa game khỏi toàn bộ ${lessons.length} bài của khóa.`;
+      }catch(err){}finally{button.disabled=false}
+    });
     document.querySelector('.focusNewLesson')?.addEventListener('click',()=>{$('newLessonNumber').focus();$('newLessonNumber').scrollIntoView({behavior:'smooth',block:'center'})});
     $('learningContentStatus').textContent=`Có ${lessons.length} bài. Bấm vào một bài để quản lý.`;
   }catch(e){$('learningContentStatus').textContent=e.message}
