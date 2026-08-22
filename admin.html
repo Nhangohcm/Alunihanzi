@@ -827,7 +827,7 @@ async function loadWritingContent(){
 
 async function loadLearningCourses(loadDetails=true){
   try{
-    await loadLearningGroups();
+    try{await loadLearningGroups()}catch(groupError){learningGroups=[];$('learningGroupStatus').textContent='Chưa tải được nhóm khóa học; danh sách khóa vẫn hoạt động bình thường.'}
     const j=await api('/admin/learning/courses');learningCourses=j.courses||[];
     syncGrammarImportCourses();
     $('statCourseCount').textContent=learningCourses.length;
