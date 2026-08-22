@@ -935,6 +935,7 @@ async function loadAccessSettings(id){
 }
 async function saveAccessSettings(){
   const id=$('manageLearningCourse').value;if(!id){$('accessSettingsStatus').textContent='Hãy chọn khóa học trước.';return}
+  const selectedCourse=learningCourses.find(c=>String(c.id)===String(id));
   const modules={};for(const module of ['video','shadowing','writing','grammar','resource'])modules[module]={mode:document.querySelector(`.moduleAccessMode[data-module="${module}"]`).value,free_lessons:lessonListValue(document.querySelector(`.moduleFreeLessons[data-module="${module}"]`).value)};
   try{
     const globalFree=lessonListValue($('globalFreeLessons').value),courseFree=$('globalCourseAccess').value==='free';
@@ -942,8 +943,18 @@ async function saveAccessSettings(){
     const shadowList=courseFree?[...Array(9999)].map((_,i)=>i+1):(modules.shadowing.mode==='custom'?modules.shadowing.free_lessons:globalFree);
     let freeFirst=0;while(shadowList.includes(freeFirst+1))freeFirst++;
     await api('/admin/shadowing/rule',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:id,access_mode:(courseFree||freeFirst>0)?'free_first':'paid_all',free_lessons:courseFree?9999:freeFirst})});
-    $('accessSettingsStatus').textContent=`Đã lưu quyền toàn khóa và đồng bộ Shadowing: ${courseFree?'miễn phí toàn bộ':freeFirst?`miễn phí Bài 1–${freeFirst}`:'cần kích hoạt toàn bộ'}.`;
-    await loadLearningCourses();await selectLearningCourseEverywhere(id)
+    // Chỉ thay đổi quyền nên không tải lại toàn bộ danh sách khóa. Việc tải lại ở đây
+    // có thể chạy chồng với lần tải khác và làm select tự nhảy về khóa đầu tiên.
+    if(selectedCourse)selectedCourse.access=courseFree?'free':'paid';
+    for(const name of ['manageLearningCourse','learningImportCourse','lessonListImportCourse','grammarImportCourse','grammarManageCourse','writingManageCourse','shadowAdminCourse']){
+      const el=$(name);if(el&&[...el.options].some(o=>o.value===id))el.value=id;
+    }
+    $('editCoursePicker').value=id;
+    localStorage.setItem('aluni_admin_active_course',id);
+    $('statActiveCourse').textContent=selectedCourse?.title||id;
+    $('activeCourseNotice').textContent=`Đang chọn: ${selectedCourse?.title||id} · ${id} · ${selectedCourse?.lesson_count||0} bài`;
+    $('accessSettingsStatus').textContent=`Đã lưu cho “${selectedCourse?.title||id}” và đồng bộ Shadowing: ${courseFree?'miễn phí toàn bộ':freeFirst?`miễn phí Bài 1–${freeFirst}`:'cần kích hoạt toàn bộ'}.`;
+    await loadAccessSettings(id);
   }catch(e){$('accessSettingsStatus').textContent=e.message}
 }
 async function saveLearningCourse(){

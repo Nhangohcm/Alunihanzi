@@ -1395,7 +1395,7 @@ document.querySelector('.app-nav-btn[data-section="grammarSection"]')?.addEventL
 
 // ===== KHÓA HỌC THỐNG NHẤT R6 =====
 let publicLearningCourses=[],publicLearningGroups=[],selectedPublicCourse=null;
-const LEARNING_CACHE_KEY='aluni_learning_catalog_v52';
+const LEARNING_CACHE_KEY='aluni_learning_catalog_v83_3';
 const LEARNING_CACHE_MAX_AGE=2*60*1000;
 function readLearningCache(){try{const saved=JSON.parse(localStorage.getItem(LEARNING_CACHE_KEY)||'null');if(!saved||Date.now()-Number(saved.saved_at||0)>LEARNING_CACHE_MAX_AGE)return[];return Array.isArray(saved.courses)?dedupePublicCourses(saved.courses):[]}catch(e){return[]}}
 function writeLearningCache(list){try{localStorage.setItem(LEARNING_CACHE_KEY,JSON.stringify({saved_at:Date.now(),courses:list}))}catch(e){}}
@@ -1449,7 +1449,7 @@ async function loadPublicLearningCourses(){
   if(cached.length){publicLearningCourses=cached;paintPublicLearningCourses();renderAllCoursesShowcase();renderMyCourses()}
   else{box.innerHTML='<div class="learning-empty">Đang tải khóa học…</div>';const mine=document.getElementById('myCoursesGrid');if(mine)mine.innerHTML='<div class="learning-empty">⏳ Đang tải khóa học của bạn…</div>'}
   try{
-    const r=await fetch(api('/learning-courses'),{cache:'no-store'}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được khóa học.');publicLearningGroups=Array.isArray(j.groups)?j.groups:[];
+    const r=await fetch(api('/learning-courses?refresh='+Date.now()),{cache:'no-store'}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được khóa học.');publicLearningGroups=Array.isArray(j.groups)?j.groups:[];
     const fresh=dedupePublicCourses(Array.isArray(j.courses)?j.courses:[]);
     publicLearningCourses=sortPublicCourses(fresh);writeLearningCache(publicLearningCourses);paintPublicLearningCourses();renderAllCoursesShowcase();renderMyCourses();
     if(!fresh.length)box.innerHTML='<div class="learning-empty">Chưa có khóa học nào được xuất bản.</div>';
