@@ -234,8 +234,19 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
       <div class="row"><button class="primary" id="openNewCourseForm">＋ Tạo khóa học mới</button><button class="ghost" id="openEditCourseForm">✎ Sửa khóa cũ</button></div>
       <div id="oldCoursePicker" hidden style="margin-top:14px"><label>Chọn đúng khóa cần sửa</label><div class="grid2"><select id="editCoursePicker"><option value="">— Chọn khóa học —</option></select><button class="primary" id="confirmEditCourse">Mở khóa đã chọn</button></div><div class="status" id="activeCourseNotice">Tên, mã khóa và số bài sẽ hiện ở đây.</div></div>
     </div>
+    <div class="card" id="courseGroupCard">
+      <h2>2. Nhóm khóa học</h2>
+      <p class="muted">Mỗi nhóm trở thành một hàng ngang riêng trên trang học viên. Số thứ tự quyết định nhóm nào nằm trên.</p>
+      <div class="grid">
+        <div><label>Tên nhóm</label><input id="learningGroupTitle" placeholder="Ví dụ: Cơ bản giao tiếp"></div>
+        <div><label>Biểu tượng</label><input id="learningGroupIcon" value="📚" maxlength="4"></div>
+        <div><label>Thứ tự nhóm</label><input id="learningGroupSort" type="number" value="1" min="1"></div>
+      </div>
+      <input id="learningGroupId" type="hidden"><div class="row" style="margin-top:10px"><button class="primary" id="saveLearningGroup">Lưu nhóm</button><button class="ghost" id="newLearningGroup">Tạo nhóm mới</button></div>
+      <div class="status" id="learningGroupStatus"></div><div class="row" id="learningGroupList" style="margin-top:10px"></div>
+    </div>
     <div class="card course-form-card" id="learningCourseFormCard">
-      <h2 id="learningCourseFormTitle">2. Thông tin khóa học</h2>
+      <h2 id="learningCourseFormTitle">3. Thông tin khóa học</h2>
       <span class="course-form-mode" id="learningCourseFormMode">CHẾ ĐỘ TẠO MỚI</span>
       <p class="muted">Khóa chỉ xuất hiện ở trang học viên khi anh bật <b>Xuất bản</b>.</p>
       <div class="grid">
@@ -245,6 +256,7 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
       </div>
       <div class="grid" style="margin-top:10px">
         <div><label>Loại khóa</label><select id="learningAccess"><option value="free">Miễn phí</option><option value="paid">Có phí</option></select></div>
+        <div><label>Nhóm khóa học</label><select id="learningGroup"><option value="">Chưa phân nhóm</option></select></div>
         <div><label>Thứ tự hiển thị</label><input id="learningSort" type="number" value="0" readonly title="Tự tạo khi kéo thả khóa học"></div>
         <div><label>Trạng thái</label><select id="learningPublished"><option value="0">Lưu nháp / Ẩn</option><option value="1">Xuất bản</option></select></div>
       </div>
@@ -586,7 +598,7 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
 <script>
 const base=String(window.ALUNI_API_BASE||'').replace(/\/+$/,'');
 const $=id=>document.getElementById(id);
-let codes=[],courses=[],learningCourses=[],adminSecret='';
+let codes=[],courses=[],learningCourses=[],learningGroups=[],adminSecret='';
 const SHADOWING_PASS_ID='shadowing-pass';
 let shadowDraftSegments=[];
 let editingShadowId=null;
@@ -815,6 +827,7 @@ async function loadWritingContent(){
 
 async function loadLearningCourses(loadDetails=true){
   try{
+    await loadLearningGroups();
     const j=await api('/admin/learning/courses');learningCourses=j.courses||[];
     syncGrammarImportCourses();
     $('statCourseCount').textContent=learningCourses.length;
@@ -830,7 +843,7 @@ async function loadLearningCourses(loadDetails=true){
       const tr=document.createElement('tr');
       const isPublished=Number(c.published)===1,isProtected=c.id===SHADOWING_PASS_ID;
       tr.className='course-order-row';tr.dataset.id=c.id;tr.draggable=!isProtected;
-      tr.innerHTML=`<td>${isProtected?'':'<button class="course-order-handle" type="button" aria-label="Kéo đổi thứ tự" title="Kéo đổi thứ tự">⋮⋮</button>'}</td><td class="course-order-number">${Number(c.sort_order||0)}</td><td><b>${esc(c.title)}</b><br><span class="muted">${esc(c.id)}</span></td><td>${c.access==='paid'?'Có phí':'Miễn phí'}</td><td>${c.lesson_count||0}</td><td>${isPublished?'<span class="badge">Đã xuất bản</span>':'<span class="muted">Đang ẩn</span>'}</td><td><div class="course-actions"><button class="primary manageLearning" data-id="${esc(c.id)}">Quản lý bài</button><button class="ghost editLearning" data-id="${esc(c.id)}">Sửa khóa</button>${!isProtected?`<button class="ghost toggleLearningCourse" data-id="${esc(c.id)}">${isPublished?'🙈 Ẩn':'👁 Hiện'}</button><button class="danger deleteLearningCourse" data-id="${esc(c.id)}">🗑 Xóa</button>`:''}</div></td>`;
+      tr.innerHTML=`<td>${isProtected?'':'<button class="course-order-handle" type="button" aria-label="Kéo đổi thứ tự" title="Kéo đổi thứ tự">⋮⋮</button>'}</td><td class="course-order-number">${Number(c.sort_order||0)}</td><td><b>${esc(c.title)}</b><br><span class="muted">${esc(c.group_title||'Chưa phân nhóm')} · ${esc(c.id)}</span></td><td>${c.access==='paid'?'Có phí':'Miễn phí'}</td><td>${c.lesson_count||0}</td><td>${isPublished?'<span class="badge">Đã xuất bản</span>':'<span class="muted">Đang ẩn</span>'}</td><td><div class="course-actions"><button class="primary manageLearning" data-id="${esc(c.id)}">Quản lý bài</button><button class="ghost editLearning" data-id="${esc(c.id)}">Sửa khóa</button>${!isProtected?`<button class="ghost toggleLearningCourse" data-id="${esc(c.id)}">${isPublished?'🙈 Ẩn':'👁 Hiện'}</button><button class="danger deleteLearningCourse" data-id="${esc(c.id)}">🗑 Xóa</button>`:''}</div></td>`;
       $('learningCourseBody').appendChild(tr);
     });
     document.querySelectorAll('.editLearning').forEach(b=>b.onclick=()=>editLearningCourse(b.dataset.id));
@@ -844,6 +857,11 @@ async function loadLearningCourses(loadDetails=true){
     if(loadDetails&&learningCourses.length)await loadLearningContent();else if(!learningCourses.length)$('learningLessonList').innerHTML='';
   }catch(e){$('learningStatus').textContent=e.message}
 }
+async function loadLearningGroups(){
+  const j=await api('/admin/learning/course-groups');learningGroups=j.groups||[];const select=$('learningGroup'),current=select.value;select.innerHTML='<option value="">Chưa phân nhóm</option>';learningGroups.forEach(g=>select.add(new Option(`${g.icon||'📚'} ${g.title}`,g.id)));if([...select.options].some(o=>o.value===current))select.value=current;$('learningGroupList').innerHTML=learningGroups.map(g=>`<button class="ghost editLearningGroup" type="button" data-id="${esc(g.id)}">${esc(g.icon||'📚')} ${esc(g.title)} · ${Number(g.course_count||0)} khóa</button>`).join('');document.querySelectorAll('.editLearningGroup').forEach(b=>b.onclick=()=>{const g=learningGroups.find(x=>x.id===b.dataset.id);if(!g)return;$('learningGroupId').value=g.id;$('learningGroupTitle').value=g.title;$('learningGroupIcon').value=g.icon||'📚';$('learningGroupSort').value=Number(g.sort_order||0);$('learningGroupStatus').textContent=`Đang sửa nhóm “${g.title}”.`})
+}
+async function saveLearningGroup(){try{const title=$('learningGroupTitle').value.trim();if(!title)throw new Error('Nhập tên nhóm khóa học.');await api('/admin/learning/course-groups',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:$('learningGroupId').value,title,icon:$('learningGroupIcon').value||'📚',sort_order:Number($('learningGroupSort').value||0),published:true})});$('learningGroupStatus').textContent='Đã lưu nhóm khóa học.';await loadLearningGroups()}catch(e){$('learningGroupStatus').textContent=e.message}}
+function clearLearningGroup(){ $('learningGroupId').value='';$('learningGroupTitle').value='';$('learningGroupIcon').value='📚';$('learningGroupSort').value=learningGroups.length+1;$('learningGroupStatus').textContent='Tạo nhóm mới.'}
 function bindCourseOrdering(){
   const body=$('learningCourseBody');let dragged=null;
   body.querySelectorAll('.course-order-row[draggable="true"]').forEach(row=>{
@@ -856,14 +874,14 @@ function bindCourseOrdering(){
 async function saveCourseOrdering(){
   const ids=[...$('learningCourseBody').querySelectorAll('.course-order-row')].map(x=>x.dataset.id).filter(id=>id!==SHADOWING_PASS_ID);
   $('learningStatus').textContent='Đang lưu thứ tự khóa học…';
-  try{for(let i=0;i<ids.length;i++){const c=learningCourses.find(x=>String(x.id)===String(ids[i]));if(!c||Number(c.sort_order)===i+1)continue;await api('/admin/learning/course',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:c.id,title:c.title||c.name,icon:c.icon||'课',access:c.access||'paid',grammar_access:c.grammar_access||'course',free_lessons:Number(c.free_lessons||0),sort_order:i+1,published:Number(c.published)===1,description:c.description||''})})}await loadLearningCourses(false);$('learningStatus').textContent='Đã lưu thứ tự mới và tự đánh số 1, 2, 3…';}catch(e){$('learningStatus').textContent='Chưa lưu được thứ tự: '+e.message;await loadLearningCourses(false)}
+  try{for(let i=0;i<ids.length;i++){const c=learningCourses.find(x=>String(x.id)===String(ids[i]));if(!c||Number(c.sort_order)===i+1)continue;await api('/admin/learning/course',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:c.id,title:c.title||c.name,icon:c.icon||'课',access:c.access||'paid',grammar_access:c.grammar_access||'course',group_id:c.group_id||'',free_lessons:Number(c.free_lessons||0),sort_order:i+1,published:Number(c.published)===1,description:c.description||''})})}await loadLearningCourses(false);$('learningStatus').textContent='Đã lưu thứ tự mới và tự đánh số 1, 2, 3…';}catch(e){$('learningStatus').textContent='Chưa lưu được thứ tự: '+e.message;await loadLearningCourses(false)}
 }
 async function toggleLearningCourse(id){
   const c=learningCourses.find(x=>x.id===id);if(!c)return;
   const nextPublished=Number(c.published)!==1;
   if(!confirm(`${nextPublished?'Hiện':'Ẩn'} khóa “${c.title}”?\n\n${nextPublished?'Học viên sẽ nhìn thấy khóa khi có quyền truy cập.':'Toàn bộ bài và nội dung vẫn được giữ nguyên.'}`))return;
   try{
-    await api('/admin/learning/course',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:c.id,title:c.title||c.name,icon:c.icon||'课',access:c.access||'paid',grammar_access:c.grammar_access||'course',free_lessons:Number(c.free_lessons||0),sort_order:Number(c.sort_order||0),published:nextPublished,description:c.description||''})});
+    await api('/admin/learning/course',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:c.id,title:c.title||c.name,icon:c.icon||'课',access:c.access||'paid',grammar_access:c.grammar_access||'course',group_id:c.group_id||'',free_lessons:Number(c.free_lessons||0),sort_order:Number(c.sort_order||0),published:nextPublished,description:c.description||''})});
     await loadLearningCourses();$('learningStatus').textContent=`Đã ${nextPublished?'hiện':'ẩn'} khóa “${c.title}”. Dữ liệu bên trong được giữ nguyên.`;
   }catch(e){$('learningStatus').textContent='Không thể đổi trạng thái: '+e.message}
 }
@@ -895,12 +913,12 @@ async function editLearningCourse(id){
   const c=learningCourses.find(x=>x.id===id);if(!c)return;
   await selectLearningCourseEverywhere(id);
   $('learningCourseFormCard').classList.add('open');$('learningCourseFormTitle').textContent='Chỉnh sửa khóa học';$('learningCourseFormMode').textContent='CHẾ ĐỘ CHỈNH SỬA';
-  $('learningId').value=c.id;$('learningId').readOnly=true;$('learningTitle').value=c.title||'';$('learningIcon').value=c.icon||'课';$('learningAccess').value=c.access||'free';$('learningGrammarAccess').value=c.grammar_access||'course';$('learningSort').value=Number(c.sort_order||0);$('learningPublished').value=Number(c.published)?'1':'0';$('learningDescription').value=c.description||'';
+  $('learningId').value=c.id;$('learningId').readOnly=true;$('learningTitle').value=c.title||'';$('learningIcon').value=c.icon||'课';$('learningAccess').value=c.access||'free';$('learningGroup').value=c.group_id||'';$('learningGrammarAccess').value=c.grammar_access||'course';$('learningSort').value=Number(c.sort_order||0);$('learningPublished').value=Number(c.published)?'1':'0';$('learningDescription').value=c.description||'';
   try{const j=await api('/admin/shadowing/rule?course_id='+encodeURIComponent(c.id));const rule=j.rule||{};$('learningShadowAccess').value=rule.access_mode||'paid_all';$('learningShadowFreeLessons').value=Number(rule.free_lessons||0)}catch(e){$('learningShadowAccess').value='paid_all';$('learningShadowFreeLessons').value=0}
   $('learningStatus').textContent=`Đang sửa “${c.title}” · mã ${c.id} · ${c.lesson_count||0} bài.`;$('activeCourseNotice').textContent=$('learningStatus').textContent;await loadAccessSettings(id);$('learningCourseFormCard').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function clearLearningForm(){
-  $('learningId').value='';$('learningId').readOnly=false;$('learningTitle').value='';$('learningIcon').value='拼';$('learningAccess').value='free';$('learningGrammarAccess').value='course';$('learningSort').value='0';$('learningPublished').value='0';$('learningDescription').value='';$('learningShadowAccess').value='paid_all';$('learningShadowFreeLessons').value=0;
+  $('learningId').value='';$('learningId').readOnly=false;$('learningTitle').value='';$('learningIcon').value='拼';$('learningAccess').value='paid';$('learningGroup').value='';$('learningGrammarAccess').value='course';$('learningSort').value='0';$('learningPublished').value='0';$('learningDescription').value='';$('learningShadowAccess').value='free_first';$('learningShadowFreeLessons').value=10;
   $('learningCourseFormCard').classList.remove('open');$('learningStatus').textContent='';
 }
 function openNewLearningCourse(){clearLearningForm();$('learningCourseFormCard').classList.add('open');$('learningCourseFormTitle').textContent='Tạo khóa học mới';$('learningCourseFormMode').textContent='CHẾ ĐỘ TẠO MỚI';$('learningId').focus()}
@@ -933,7 +951,7 @@ async function saveLearningCourse(){
     const id=$('learningId').value.trim(),title=$('learningTitle').value.trim();
     if(!id||!title){$('learningStatus').textContent='Nhập mã khóa và tên khóa.';return}
     const isFreeCourse=$('learningAccess').value==='free',shadowMode=isFreeCourse?'free_first':$('learningShadowAccess').value,shadowFree=isFreeCourse?9999:(shadowMode==='free_first'?Number($('learningShadowFreeLessons').value||0):0);
-    const j=await api('/admin/learning/course',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,title,icon:$('learningIcon').value.trim(),access:$('learningAccess').value,grammar_access:$('learningGrammarAccess').value,free_lessons:isFreeCourse?9999:shadowFree,sort_order:Number($('learningSort').value||0),published:$('learningPublished').value==='1',description:$('learningDescription').value.trim()})});
+    const j=await api('/admin/learning/course',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,title,icon:$('learningIcon').value.trim(),access:$('learningAccess').value,group_id:$('learningGroup').value,grammar_access:$('learningGrammarAccess').value,free_lessons:isFreeCourse?9999:shadowFree,sort_order:Number($('learningSort').value||0),published:$('learningPublished').value==='1',description:$('learningDescription').value.trim()})});
     await api('/admin/shadowing/rule',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:j.id,access_mode:shadowMode,free_lessons:shadowFree})});
     $('learningStatus').textContent=$('learningPublished').value==='1'?'Đã lưu và xuất bản khóa học.':'Đã lưu bản nháp.';$('learningId').value=j.id;await loadLearningCourses();$('manageLearningCourse').value=j.id;$('learningImportCourse').value=j.id;await loadLearningContent();$('learningCourseFormMode').textContent='CHẾ ĐỘ CHỈNH SỬA';$('learningCourseFormTitle').textContent='Chỉnh sửa khóa học';
   }catch(e){$('learningStatus').textContent=e.message}
@@ -1140,7 +1158,7 @@ async function loadLearningContent(){
   try{
     const j=await api('/admin/learning/course-content?course_id='+encodeURIComponent(courseId));
     const lessons=j.lessons||[];
-    const gameChoices=[['bubble','🫧 Bong bóng'],['orchard','🍎 Hái quả'],['mushroom','🍄 Rừng nấm'],['fishing','🎣 Câu cá'],['writing','✍️ Viết chữ']];
+    const gameChoices=[['bubble','🫧 Bong bóng'],['orchard','🥕 Đào cà rốt'],['mushroom','🍄 Rừng nấm'],['fishing','🎣 Câu cá'],['writing','✍️ Viết chữ']];
     const commonGames=gameChoices.filter(([code])=>lessons.length&&lessons.every(l=>(l.games||[]).includes(code))).map(([code])=>code);
     const bulkGameBox=lessons.length?`<details class="inline-editor" open>
       <summary><b>🎮 Áp dụng game cho toàn bộ bài của khóa này</b></summary><div>
@@ -1178,7 +1196,7 @@ async function loadLearningContent(){
         </div></details>
         <details class="inline-editor game-editor"><summary><b>🎮 Chọn game xuất hiện trong bài</b></summary><div>
           <p class="muted">Game tự lấy Hán tự và Pinyin từ phần Từ vựng – Viết chữ; nếu chưa có sẽ dùng câu Shadowing. Không cần nhập lại nghĩa Việt.</p>
-          <div class="row game-options" data-lesson="${esc(l.id)}">${[['bubble','🫧 Bong bóng'],['orchard','🍎 Hái quả'],['mushroom','🍄 Rừng nấm'],['fishing','🎣 Câu cá'],['writing','✍️ Viết chữ']].map(([code,label])=>`<label style="display:flex;align-items:center;gap:7px"><input type="checkbox" value="${code}" style="width:auto" ${(l.games||[]).includes(code)?'checked':''}> ${label}</label>`).join('')}</div>
+          <div class="row game-options" data-lesson="${esc(l.id)}">${[['bubble','🫧 Bong bóng'],['orchard','🥕 Đào cà rốt'],['mushroom','🍄 Rừng nấm'],['fishing','🎣 Câu cá'],['writing','✍️ Viết chữ']].map(([code,label])=>`<label style="display:flex;align-items:center;gap:7px"><input type="checkbox" value="${code}" style="width:auto" ${(l.games||[]).includes(code)?'checked':''}> ${label}</label>`).join('')}</div>
           <div class="row" style="margin-top:10px">
             <button class="primary saveLessonGames" data-lesson="${esc(l.id)}">Lưu game của bài</button>
             <button class="danger removeLessonGames" data-lesson="${esc(l.id)}">🗑 Bỏ game khỏi bài này</button>
@@ -1331,6 +1349,8 @@ $('refreshCodes').onclick=refreshCodes;
 $('downloadCodes').onclick=downloadCodes;
 $('importBtn').onclick=doImport;
 $('templateBtn').onclick=template;
+$('saveLearningGroup').onclick=saveLearningGroup;
+$('newLearningGroup').onclick=clearLearningGroup;
 $('writingManageCourse').onchange=loadWritingContent;
 $('refreshWritingContent').onclick=loadWritingContent;
 $('saveLearningCourse').onclick=saveLearningCourse;
