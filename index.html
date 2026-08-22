@@ -1504,13 +1504,28 @@ async function renderPublicLesson(lesson,button){
   const drawer=document.getElementById('courseDrawer');drawer.classList.add('lesson-open');drawer.scrollTo({top:0,behavior:'smooth'});
   if(Number(lesson.interactive_count||0))await loadInteractiveLesson(selectedPublicCourse.id,Number(lesson.number));
 }
+let aluniGameView='closed';
 function openLearningGame(lessonId,skin='adult',games=''){
   let modal=document.getElementById('aluniGameModal');
-  if(!modal){modal=document.createElement('div');modal.id='aluniGameModal';modal.className='aluni-game-modal';modal.innerHTML='<div class="aluni-game-shell"><button class="aluni-game-close" type="button" aria-label="Đóng game">✕</button><iframe title="Aluni Game" allow="autoplay; fullscreen"></iframe></div>';document.body.appendChild(modal);modal.querySelector('.aluni-game-close').onclick=closeLearningGame;modal.onclick=e=>{if(e.target===modal)closeLearningGame()}}
+  if(!modal){modal=document.createElement('div');modal.id='aluniGameModal';modal.className='aluni-game-modal';modal.innerHTML='<div class="aluni-game-shell"><button class="aluni-game-close" type="button" aria-label="Quay lại">←</button><iframe title="Aluni Game" allow="autoplay; fullscreen; screen-wake-lock"></iframe></div>';document.body.appendChild(modal);modal.querySelector('.aluni-game-close').onclick=requestLearningGameBack;modal.onclick=e=>{if(e.target===modal)requestLearningGameBack()}}
   const endpoint=lessonId?shadowApi(`/learning/game-data?lesson_id=${encodeURIComponent(lessonId)}`):'',frame=modal.querySelector('iframe');
-  frame.src=`aluni-game.html?embedded=1&skin=${encodeURIComponent(skin)}&games=${encodeURIComponent(games)}${endpoint?`&data=${encodeURIComponent(endpoint)}`:''}`;modal.classList.add('show');document.body.style.overflow='hidden';
+  frame.src=`aluni-game.html?embedded=1&skin=${encodeURIComponent(skin)}&games=${encodeURIComponent(games)}${endpoint?`&data=${encodeURIComponent(endpoint)}`:''}`;modal.classList.add('show');document.body.style.overflow='hidden';aluniGameView='menu';
+  if(history.state?.aluniLevel!=='game-menu')aluniPushView('game-menu',{sectionId:document.querySelector('.app-section.active')?.id||'learningSection'});
 }
-function closeLearningGame(){const modal=document.getElementById('aluniGameModal');if(!modal)return;modal.classList.remove('show');const frame=modal.querySelector('iframe');if(frame)frame.src='about:blank';document.body.style.overflow=''}
+function requestLearningGameBack(){
+  const modal=document.getElementById('aluniGameModal');if(!modal?.classList.contains('show'))return;
+  if(history.state?.aluniLevel==='game-stage'||history.state?.aluniLevel==='game-menu'){history.back();return}
+  if(aluniGameView==='stage'){modal.querySelector('iframe')?.contentWindow?.postMessage({type:'aluni-game-back'},'*');aluniGameView='menu'}else closeLearningGame();
+}
+function closeLearningGame(){const modal=document.getElementById('aluniGameModal');if(!modal)return;modal.classList.remove('show');const frame=modal.querySelector('iframe');if(frame)frame.src='about:blank';document.body.style.overflow='';aluniGameView='closed'}
+window.addEventListener('message',e=>{
+  const modal=document.getElementById('aluniGameModal'),frame=modal?.querySelector('iframe');
+  if(!modal?.classList.contains('show')||e.source!==frame?.contentWindow)return;
+  if(e.data?.type==='aluni-game-ui-back'){requestLearningGameBack();return}
+  if(e.data?.type!=='aluni-game-view')return;
+  if(e.data.view==='stage'&&aluniGameView!=='stage'){aluniGameView='stage';if(history.state?.aluniLevel!=='game-stage')aluniPushView('game-stage',{sectionId:document.querySelector('.app-section.active')?.id||'learningSection'})}
+  else if(e.data.view==='menu')aluniGameView='menu';
+});
 let interactiveLessonItems=[],interactiveLessonIndex=0,interactiveWriter=null,interactiveWritingCharacter='';
 async function loadInteractiveLesson(courseId,lessonNumber){
   const host=document.getElementById('interactiveLessonHost');if(!host)return;
@@ -1679,7 +1694,7 @@ async function openLessonShadowing(courseId,videoId){
 function leaveShadowStudyUi(){if(shadowRecorder?.state==='recording')shadowRecorder.stop();else stopShadowTracks();if(shadowPlayer?.pauseVideo)shadowPlayer.pauseVideo();document.body.classList.remove('shadow-study-mode');setActiveAppSection('learningSection');const drawer=document.getElementById('courseDrawer');if(shadowCourseContext&&drawer){drawer.classList.add('show','course-view','lesson-open');document.getElementById('courseDrawerBackdrop').classList.add('show');document.body.style.overflow='hidden';drawer.scrollTo({top:0,behavior:'auto'})}}
 function backFromShadowStudy(){if(!aluniHandlingPop&&history.state?.aluniNav){history.back();return}leaveShadowStudyUi()}
 document.getElementById('shadowStudyBack')?.addEventListener('click',backFromShadowStudy);
-window.addEventListener('popstate',e=>{aluniHandlingPop=true;try{const drawer=document.getElementById('courseDrawer'),kidsPanel=document.getElementById('kidsStudyPanel');if(document.body.classList.contains('shadow-study-mode'))leaveShadowStudyUi();else if(document.body.classList.contains('writing-study-mode'))leaveWritingStudyUi();else if(kidsPanel&&!kidsPanel.hidden)closeKidsLesson(true);else if(drawer?.classList.contains('show')){if(drawer.classList.contains('lesson-open'))showCourseLessonList(true);else if(courseDrawerOrigin==='explore'&&drawer.classList.contains('course-view')){drawer.classList.remove('course-view');drawer.classList.add('catalog-view');document.getElementById('courseDrawerMode').textContent='KHÁM PHÁ TẤT CẢ KHÓA HỌC';document.getElementById('courseDrawerTitle').textContent='Tất cả khóa học Aluni'}else closeCourseDrawer(true)}else if(e.state?.sectionId)setActiveAppSection(e.state.sectionId)}finally{aluniHandlingPop=false}});
+window.addEventListener('popstate',e=>{aluniHandlingPop=true;try{const gameModal=document.getElementById('aluniGameModal'),gameFrame=gameModal?.querySelector('iframe'),drawer=document.getElementById('courseDrawer'),kidsPanel=document.getElementById('kidsStudyPanel');if(gameModal?.classList.contains('show')){if(aluniGameView==='stage'){gameFrame?.contentWindow?.postMessage({type:'aluni-game-back'},'*');aluniGameView='menu'}else closeLearningGame()}else if(document.body.classList.contains('shadow-study-mode'))leaveShadowStudyUi();else if(document.body.classList.contains('writing-study-mode'))leaveWritingStudyUi();else if(kidsPanel&&!kidsPanel.hidden)closeKidsLesson(true);else if(drawer?.classList.contains('show')){if(drawer.classList.contains('lesson-open'))showCourseLessonList(true);else if(courseDrawerOrigin==='explore'&&drawer.classList.contains('course-view')){drawer.classList.remove('course-view');drawer.classList.add('catalog-view');document.getElementById('courseDrawerMode').textContent='KHÁM PHÁ TẤT CẢ KHÓA HỌC';document.getElementById('courseDrawerTitle').textContent='Tất cả khóa học Aluni'}else closeCourseDrawer(true)}else if(e.state?.sectionId)setActiveAppSection(e.state.sectionId)}finally{aluniHandlingPop=false}});
 
 // ===== SHADOWING V22 =====
 let shadowCourses = [];
