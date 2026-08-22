@@ -88,6 +88,7 @@ button{transition:transform .16s ease,box-shadow .16s ease,background .16s ease}
 .content-state{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;font-size:.78rem;font-weight:800;background:#f0f2f7;color:#748099}.content-state.ready{background:#e8f8f1;color:#17835b}.content-state.video.ready{background:#e8f1ff;color:#3569c8}.content-state.grammar.ready{background:#f1ecff;color:#6e50c9}.content-state.writing.ready{background:#fff2e7;color:#c46a25}
 .manager-layout{display:grid;grid-template-columns:minmax(260px,330px) minmax(0,1fr);gap:16px;align-items:start}.manager-sidebar{position:sticky;top:132px}.manager-main{min-width:0}
 table th{background:#f7f9fd;color:#52607b;font-size:.78rem;text-transform:uppercase;letter-spacing:.035em}table tbody tr:hover{background:#fafbff}
+.course-order-row{transition:opacity .16s,background .16s}.course-order-row.dragging{opacity:.42}.course-order-row.drag-over{background:#eef4ff!important}.course-order-handle{border:0;background:transparent;cursor:grab;font-size:1.25rem;padding:8px;color:#697695}.course-order-handle:active{cursor:grabbing}
 @media(min-width:1200px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.learning-wide-grid{display:grid;grid-template-columns:minmax(340px,.75fr) minmax(0,1.55fr);gap:16px;align-items:start}.learning-wide-grid>.card{margin-bottom:0}}
 @media(max-width:1000px){.course-dashboard{grid-template-columns:1fr 1fr}.manager-layout{grid-template-columns:1fr}.manager-sidebar{position:static}.wrap{width:min(100% - 24px,960px)}}
 @media(max-width:760px){.wrap{width:min(100% - 16px,720px);padding-top:10px}.card{padding:15px;border-radius:15px}.admin-app>.card:first-child{top:4px}.center-intro{align-items:flex-start}.center-icon{width:46px;height:46px;flex-basis:46px}.course-dashboard{grid-template-columns:1fr 1fr}.tabs{margin-left:-4px;margin-right:-4px}.tab{padding:9px 11px}.course-manager-head>div{min-width:100%}}
@@ -244,7 +245,7 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
       </div>
       <div class="grid" style="margin-top:10px">
         <div><label>Loại khóa</label><select id="learningAccess"><option value="free">Miễn phí</option><option value="paid">Có phí</option></select></div>
-        <div><label>Thứ tự hiển thị</label><input id="learningSort" type="number" value="0"></div>
+        <div><label>Thứ tự hiển thị</label><input id="learningSort" type="number" value="0" readonly title="Tự tạo khi kéo thả khóa học"></div>
         <div><label>Trạng thái</label><select id="learningPublished"><option value="0">Lưu nháp / Ẩn</option><option value="1">Xuất bản</option></select></div>
       </div>
       <div style="margin-top:10px"><label>Mô tả khóa học</label><input id="learningDescription" placeholder="Mô tả ngắn hiển thị trên thẻ khóa học"></div>
@@ -351,8 +352,9 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
 
     <div class="card">
       <h2>📚 Danh sách khóa học</h2>
+      <p class="muted">Giữ biểu tượng <b>⋮⋮</b> rồi kéo khóa lên hoặc xuống. Hệ thống tự đánh lại thứ tự 1, 2, 3… và lưu ngay.</p>
       <p class="muted">Bấm <b>Quản lý bài</b> để đi thẳng tới nơi thêm/sửa video và tài liệu của khóa.</p>
-      <div class="tablewrap"><table><thead><tr><th>Thứ tự</th><th>Khóa học</th><th>Loại</th><th>Số bài</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody id="learningCourseBody"></tbody></table></div>
+      <div class="tablewrap"><table><thead><tr><th>Kéo</th><th>Thứ tự</th><th>Khóa học</th><th>Loại</th><th>Số bài</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody id="learningCourseBody"></tbody></table></div>
     </div>
   </section>
 
@@ -827,18 +829,34 @@ async function loadLearningCourses(loadDetails=true){
       $('editCoursePicker').add(new Option(`${c.title} · ${c.id} · ${c.lesson_count||0} bài`,c.id));
       const tr=document.createElement('tr');
       const isPublished=Number(c.published)===1,isProtected=c.id===SHADOWING_PASS_ID;
-      tr.innerHTML=`<td>${Number(c.sort_order||0)}</td><td><b>${esc(c.title)}</b><br><span class="muted">${esc(c.id)}</span></td><td>${c.access==='paid'?'Có phí':'Miễn phí'}</td><td>${c.lesson_count||0}</td><td>${isPublished?'<span class="badge">Đã xuất bản</span>':'<span class="muted">Đang ẩn</span>'}</td><td><div class="course-actions"><button class="primary manageLearning" data-id="${esc(c.id)}">Quản lý bài</button><button class="ghost editLearning" data-id="${esc(c.id)}">Sửa khóa</button>${!isProtected?`<button class="ghost toggleLearningCourse" data-id="${esc(c.id)}">${isPublished?'🙈 Ẩn':'👁 Hiện'}</button><button class="danger deleteLearningCourse" data-id="${esc(c.id)}">🗑 Xóa</button>`:''}</div></td>`;
+      tr.className='course-order-row';tr.dataset.id=c.id;tr.draggable=!isProtected;
+      tr.innerHTML=`<td>${isProtected?'':'<button class="course-order-handle" type="button" aria-label="Kéo đổi thứ tự" title="Kéo đổi thứ tự">⋮⋮</button>'}</td><td class="course-order-number">${Number(c.sort_order||0)}</td><td><b>${esc(c.title)}</b><br><span class="muted">${esc(c.id)}</span></td><td>${c.access==='paid'?'Có phí':'Miễn phí'}</td><td>${c.lesson_count||0}</td><td>${isPublished?'<span class="badge">Đã xuất bản</span>':'<span class="muted">Đang ẩn</span>'}</td><td><div class="course-actions"><button class="primary manageLearning" data-id="${esc(c.id)}">Quản lý bài</button><button class="ghost editLearning" data-id="${esc(c.id)}">Sửa khóa</button>${!isProtected?`<button class="ghost toggleLearningCourse" data-id="${esc(c.id)}">${isPublished?'🙈 Ẩn':'👁 Hiện'}</button><button class="danger deleteLearningCourse" data-id="${esc(c.id)}">🗑 Xóa</button>`:''}</div></td>`;
       $('learningCourseBody').appendChild(tr);
     });
     document.querySelectorAll('.editLearning').forEach(b=>b.onclick=()=>editLearningCourse(b.dataset.id));
     document.querySelectorAll('.manageLearning').forEach(b=>b.onclick=()=>manageLearningCourseById(b.dataset.id));
     document.querySelectorAll('.toggleLearningCourse').forEach(b=>b.onclick=()=>toggleLearningCourse(b.dataset.id));
     document.querySelectorAll('.deleteLearningCourse').forEach(b=>b.onclick=()=>deleteLearningCourse(b.dataset.id));
+    bindCourseOrdering();
     if(selected&&learningCourses.some(c=>c.id===selected))$('manageLearningCourse').value=selected;
     refreshBulkLectureCourses();refreshUnifiedShadowTargets();
     $('learningStatus').textContent=`Có ${learningCourses.length} khóa học trong hệ thống.`;
     if(loadDetails&&learningCourses.length)await loadLearningContent();else if(!learningCourses.length)$('learningLessonList').innerHTML='';
   }catch(e){$('learningStatus').textContent=e.message}
+}
+function bindCourseOrdering(){
+  const body=$('learningCourseBody');let dragged=null;
+  body.querySelectorAll('.course-order-row[draggable="true"]').forEach(row=>{
+    row.addEventListener('dragstart',e=>{dragged=row;row.classList.add('dragging');e.dataTransfer.effectAllowed='move'});
+    row.addEventListener('dragend',()=>{row.classList.remove('dragging');body.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over'));dragged=null;saveCourseOrdering()});
+    row.addEventListener('dragover',e=>{e.preventDefault();if(!dragged||dragged===row)return;row.classList.add('drag-over');const r=row.getBoundingClientRect();body.insertBefore(dragged,e.clientY<r.top+r.height/2?row:row.nextSibling)});
+    row.addEventListener('dragleave',()=>row.classList.remove('drag-over'));
+  });
+}
+async function saveCourseOrdering(){
+  const ids=[...$('learningCourseBody').querySelectorAll('.course-order-row')].map(x=>x.dataset.id).filter(id=>id!==SHADOWING_PASS_ID);
+  $('learningStatus').textContent='Đang lưu thứ tự khóa học…';
+  try{for(let i=0;i<ids.length;i++){const c=learningCourses.find(x=>String(x.id)===String(ids[i]));if(!c||Number(c.sort_order)===i+1)continue;await api('/admin/learning/course',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:c.id,title:c.title||c.name,icon:c.icon||'课',access:c.access||'paid',grammar_access:c.grammar_access||'course',free_lessons:Number(c.free_lessons||0),sort_order:i+1,published:Number(c.published)===1,description:c.description||''})})}await loadLearningCourses(false);$('learningStatus').textContent='Đã lưu thứ tự mới và tự đánh số 1, 2, 3…';}catch(e){$('learningStatus').textContent='Chưa lưu được thứ tự: '+e.message;await loadLearningCourses(false)}
 }
 async function toggleLearningCourse(id){
   const c=learningCourses.find(x=>x.id===id);if(!c)return;
