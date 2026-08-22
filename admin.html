@@ -206,6 +206,13 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
       <h2>Sửa từ vựng viết chữ theo từng bài</h2>
       <div class="course-manager-head"><div><label>Chọn khóa học</label><select id="writingManageCourse"></select></div><button class="ghost" id="refreshWritingContent">Làm mới danh sách</button></div>
       <p class="muted">Mỗi dòng: <b>Hán tự | pinyin | nghĩa Việt</b>. Nội dung lưu ở đây cũng hiện ngay trong bài tương ứng tại Khóa học.</p>
+      <details class="inline-editor" style="margin-top:12px">
+        <summary><b>✨ Lấy chữ từ Shadowing</b> <span class="muted">— công cụ bổ trợ, không thay file từ vựng riêng</span></summary>
+        <p class="muted">Hệ thống lấy các chữ Hán không trùng từ câu Shadowing của từng bài. Anh có thể xóa bớt trong phần xem trước rồi mới lưu.</p>
+        <div class="row"><button class="ghost" id="previewWritingFromShadow">👁 Xem trước chữ từ Shadowing</button><select id="writingShadowMode" style="max-width:330px"><option value="append">Bổ sung, giữ dữ liệu đang có</option><option value="empty_only">Chỉ lưu vào bài đang có 0 từ</option><option value="replace">Thay danh sách hiện tại</option></select><button class="primary" id="saveWritingFromShadow" disabled>✍ Lưu vào Viết chữ</button></div>
+        <div class="status" id="writingShadowStatus">Chọn khóa rồi bấm Xem trước.</div>
+        <div id="writingShadowPreview"></div>
+      </details>
       <div class="status" id="writingContentStatus"></div>
       <div id="writingLessonList"></div>
     </div>
@@ -824,6 +831,17 @@ async function loadWritingContent(){
     $('writingContentStatus').textContent=`Có ${lessons.length} bài. Bấm vào một bài để sửa từ vựng.`;
   }catch(e){$('writingContentStatus').textContent=e.message}
 }
+let writingShadowDraft=[];
+async function previewWritingFromShadow(){
+  const courseId=$('writingManageCourse').value;if(!courseId){$('writingShadowStatus').textContent='Hãy chọn khóa học.';return}
+  $('writingShadowStatus').textContent='Đang đọc câu Shadowing...';$('saveWritingFromShadow').disabled=true;
+  try{const j=await api('/admin/writing/from-shadowing?course_id='+encodeURIComponent(courseId));writingShadowDraft=j.lessons||[];$('writingShadowPreview').innerHTML=writingShadowDraft.map(x=>`<div class="item-admin" style="display:block;margin-top:8px"><b>Bài ${String(x.lesson_number).padStart(2,'0')} · ${esc(x.lesson_title)}</b> <span class="muted">(${x.existing_count||0} từ đang có)</span><textarea class="shadowWritingChars" data-lesson="${esc(x.lesson_id)}" style="margin-top:7px" placeholder="Bài này chưa có câu Shadowing">${esc((x.characters||[]).join(' '))}</textarea></div>`).join('')||'<div class="muted">Khóa này chưa có câu Shadowing để lấy chữ.</div>';$('writingShadowStatus').textContent=`Đã xem trước ${writingShadowDraft.reduce((s,x)=>s+(x.characters||[]).length,0)} chữ trong ${writingShadowDraft.length} bài. Có thể xóa chữ không cần rồi bấm Lưu.`;$('saveWritingFromShadow').disabled=!writingShadowDraft.length}catch(e){$('writingShadowStatus').textContent=e.message}
+}
+async function saveWritingFromShadow(){
+  const courseId=$('writingManageCourse').value,lessons=[...document.querySelectorAll('.shadowWritingChars')].map(el=>({lesson_id:el.dataset.lesson,characters:[...new Set(el.value.match(/[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/g)||[])]}));if(!courseId||!lessons.length)return;
+  $('saveWritingFromShadow').disabled=true;$('writingShadowStatus').textContent='Đang lưu chữ vào đúng từng bài...';
+  try{const j=await api('/admin/writing/from-shadowing',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:courseId,mode:$('writingShadowMode').value,lessons})});$('writingShadowStatus').textContent=`Đã lưu ${j.saved_count||0} chữ vào ${j.lesson_count||0} bài. Danh sách riêng đã có vẫn được giữ theo chế độ đã chọn.`;await loadWritingContent()}catch(e){$('writingShadowStatus').textContent=e.message}finally{$('saveWritingFromShadow').disabled=false}
+}
 
 async function loadLearningCourses(loadDetails=true){
   try{
@@ -1364,6 +1382,8 @@ $('saveLearningGroup').onclick=saveLearningGroup;
 $('newLearningGroup').onclick=clearLearningGroup;
 $('writingManageCourse').onchange=loadWritingContent;
 $('refreshWritingContent').onclick=loadWritingContent;
+$('previewWritingFromShadow').onclick=previewWritingFromShadow;
+$('saveWritingFromShadow').onclick=saveWritingFromShadow;
 $('saveLearningCourse').onclick=saveLearningCourse;
 $('clearLearningForm').onclick=clearLearningForm;
 $('openNewCourseForm').onclick=openNewLearningCourse;
