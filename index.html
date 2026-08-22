@@ -1466,7 +1466,15 @@ async function openOwnedCourse(courseId){
   const course=publicLearningCourses.find(c=>String(c.id)===String(courseId)),button=document.querySelector(`.learning-course-btn[data-course="${CSS.escape(String(courseId))}"]`);if(!course||!button)return;
   openCourseDrawer('course',`${course.title} · ${(course.lessons||[]).length} bài`);await selectPublicCourse(course,button);
 }
-async function openMiniCourse(courseId){const course=publicLearningCourses.find(c=>String(c.id)===String(courseId)),button=document.querySelector(`.learning-course-btn[data-course="${CSS.escape(String(courseId))}"]`);if(!course||!button)return;openCourseDrawer('mini',`Mini Shadowing · ${course.title}`);await selectPublicCourse(course,button);const review=document.querySelector('.learning-lesson-btn[data-review="1"]');if(review)review.click()}
+async function openMiniCourse(courseId){
+  const course=publicLearningCourses.find(c=>String(c.id)===String(courseId)),button=document.querySelector(`.learning-course-btn[data-course="${CSS.escape(String(courseId))}"]`);if(!course||!button)return;
+  openCourseDrawer('mini',`Ôn nhanh · ${course.title}`);selectedPublicCourse=course;document.querySelectorAll('.learning-course-btn').forEach(x=>x.classList.remove('active'));button.classList.add('active');
+  const full=await hasFullAccess(course.id),box=document.getElementById('learningPublicLessons'),detail=document.getElementById('learningPublicDetail'),rows=[];
+  (course.lessons||[]).forEach(l=>(l.shadowing_videos||[]).forEach((s,i)=>rows.push({lesson:l,id:s.id,title:s.title||`Shadowing ${i+1}`,locked:!(full||lessonOpenWithoutCode(course,l))})));
+  document.getElementById('courseDrawerMode').textContent='MINI SHADOWING';document.getElementById('courseDrawerTitle').textContent=`Ôn nhanh · ${course.title}`;detail.innerHTML='';
+  box.innerHTML=rows.map(x=>`<button class="learning-lesson-btn miniShadowDirect" data-id="${shadowEsc(x.id)}" data-locked="${x.locked?'1':'0'}"><b>${x.locked?'🔒':'✓'} Bài ${String(x.lesson.number).padStart(2,'0')} · ${shadowEsc(cleanPublicLessonTitle(x.lesson.title,x.lesson.number))}</b><div class="hint">Shadowing · ${shadowEsc(x.title)}${x.locked?' · Cần kích hoạt':' · Luyện ngay'}</div></button>`).join('')||'<div class="learning-empty">Khóa này chưa có video Shadowing.</div>';
+  box.querySelectorAll('.miniShadowDirect').forEach(b=>b.onclick=()=>b.dataset.locked==='1'?openAccess():openLessonShadowing(course.id,b.dataset.id));
+}
 let courseDrawerOrigin='explore';
 async function openExploredCourse(course,button){
   aluniPushView('course',{sectionId:'learningSection'});
@@ -1490,8 +1498,7 @@ function backCourseDrawer(){
 async function selectPublicCourse(course,button){
   document.getElementById('courseDrawer').classList.remove('lesson-open');selectedPublicCourse=course;document.querySelectorAll('.learning-course-btn').forEach(x=>x.classList.remove('active'));button.classList.add('active');const box=document.getElementById('learningPublicLessons');box.innerHTML='';document.getElementById('learningPublicDetail').innerHTML='';
   if(!(course.lessons||[]).length){box.innerHTML='<div class="learning-empty">Khóa đã được tạo nhưng chưa có bài học. Hãy thêm bài trong Admin.</div>';return}
-  const full=await hasFullAccess(course.id),allShadows=(course.lessons||[]).reduce((sum,l)=>sum+(l.shadowing_videos||[]).length,0);
-  if(allShadows){const review=document.createElement('button');review.className='learning-lesson-btn';review.dataset.review='1';review.innerHTML=`<b>🎥 Mini Shadowing</b><div class="hint">${allShadows} video ôn nhanh đi cùng khóa học</div>`;review.onclick=()=>full||freeLessonNumbers(course).length?renderCourseShadowReview(course,review,full):openAccess();box.appendChild(review)}
+  const full=await hasFullAccess(course.id);
   course.lessons.forEach(l=>{const shadowCount=(l.shadowing_videos||[]).length,locked=!(full||lessonOpenWithoutCode(course,l)),available=[Number(l.interactive_count||0)&&`${Number(l.interactive_count)} thẻ học`,(l.videos||[]).length&&'Bài giảng',shadowCount&&'Shadowing',l.grammar_set_id&&'Bài tập',Number(l.writing_count||0)&&'Viết chữ',(l.games||[]).length&&`🎮 ${l.games.length} game`,(l.resources||[]).length&&'Tài liệu'].filter(Boolean),b=document.createElement('button');b.className='learning-lesson-btn';b.innerHTML=`<b>${locked?'🔒 ':'✓ '}Bài ${String(l.number).padStart(2,'0')} · ${shadowEsc(cleanPublicLessonTitle(l.title,l.number))}</b>${available.length?`<div class="hint">${available.join(' · ')}${!locked&&!full?' · Học miễn phí':''}</div>`:''}`;b.onclick=()=>locked?openAccess():renderPublicLesson(l,b);box.appendChild(b);});
 }
 function renderCourseShadowReview(course,button,full=false){
