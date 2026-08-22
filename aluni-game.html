@@ -22,12 +22,19 @@
 @media(max-width:620px){.tree{height:440px;width:100%}.tree .crown{left:0;right:0}.fruit{width:98px;height:98px;font-size:4.8rem}.fruit b{font-size:1.5rem}.picker{font-size:4.3rem}.basket{width:155px}.orchard{min-height:500px}}
 @media(max-width:430px){.app{width:calc(100% - 12px)}.topbar{gap:5px;padding:8px}.pill{padding:8px 10px}.brand small{font-size:.68rem}.pet-modal-card{padding:12px}.pet-card .pet-icon{font-size:2.8rem}.pet-map{min-height:330px}.pet-tree{font-size:4.5rem}.pet-home{font-size:4rem}.map-pet{font-size:2.8rem}.pet-panel small{width:100%}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important}}
+.sound-gate{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:22px;background:rgba(36,43,77,.68);backdrop-filter:blur(7px)}
+.sound-gate[hidden]{display:none}.sound-gate-card{width:min(420px,100%);padding:24px;border:3px solid #fff;border-radius:28px;background:linear-gradient(145deg,#fff8c9,#e5f7ff,#f5e7ff);text-align:center;box-shadow:0 24px 70px #17214566}.sound-gate-card h2{margin:0 0 10px}.sound-gate-card button{border:0;border-radius:18px;padding:14px 20px;background:linear-gradient(135deg,#675ce8,#9b68e8);color:#fff;font-weight:900;font-size:1.05rem}.sound-gate-card small{display:block;margin-top:10px;color:#5b6380}.rotate-tip{display:none}
+@media(max-width:620px){html,body{width:100%;min-height:100%;background:#eef5ff}.embedded-game .app{width:100%;padding:0 0 max(10px,env(safe-area-inset-bottom))}.embedded-game .topbar{position:relative;top:0;border-radius:0;padding:7px 54px 7px 8px}.embedded-game .hero,.embedded-game .menu{display:none!important}.embedded-game .stage{min-height:100dvh;margin:0;padding:6px;border:0;border-radius:0;background:#f8f8ff}.embedded-game .hud{padding-right:48px}.embedded-game .prompt{margin:7px auto 5px}.embedded-game .prompt h2{font-size:1.25rem}.embedded-game .prompt p{margin:5px 0;font-size:.86rem;line-height:1.25}.embedded-game .speak{width:42px;height:42px}.embedded-game .scene{min-height:max(470px,calc(100dvh - 190px));border-radius:18px}.game-bubble{max-width:96px;max-height:96px;font-size:1.65rem}.tree{width:100%;height:430px;bottom:55px}.tree .crown{left:0;right:0;height:220px}.fruit{width:76px;height:76px;font-size:3.55rem}.fruit b{font-size:1.2rem}.mushroom{font-size:4rem}.mushroom b{font-size:1.05rem}.fish{font-size:4.2rem}.fish b{font-size:1.05rem}.picker{font-size:3.6rem}.basket{width:145px;height:66px;font-size:.82rem}}
+@media(max-width:620px) and (orientation:portrait){.rotate-tip{display:block;margin:4px auto 6px;padding:6px 10px;border-radius:12px;background:#fff5c8;color:#554c79;font-size:.76rem;font-weight:900;text-align:center}}
+@media(max-width:950px) and (orientation:landscape){.embedded-game .topbar{padding:4px 54px 4px 8px}.embedded-game .brand small{display:none}.embedded-game .stage{min-height:100dvh;padding:4px}.embedded-game .prompt{margin:3px auto}.embedded-game .prompt p{margin:3px 0}.embedded-game .scene{min-height:calc(100dvh - 145px)}}
 </style>
 </head>
 <body>
+<div class="sound-gate" id="soundGate" hidden><div class="sound-gate-card"><h2>🔊 Bật âm thanh trò chơi</h2><p>Chạm một lần để nghe từ, nhạc và hiệu ứng trên điện thoại.</p><button id="enableSoundBtn" type="button">Bắt đầu chơi có âm thanh</button><small>Game ưu tiên màn hình ngang; nếu máy đang khóa dọc vẫn có thể chơi.</small></div></div>
 <div class="sea-bg"></div><div class="sea-floor"></div>
 <main class="app">
  <header class="topbar"><div class="brand"><button class="dino tickle-dino" id="tickleDino" aria-label="Cù chú khủng long">🦖</button><div>ALUNI KIDS<small>Game học chữ</small></div></div><div class="top-spacer"></div><button class="pill stars" id="starBtn">⭐ <span id="starCount">0</span></button><button class="pill" id="petBtn">🐾</button><button class="pill" id="musicBtn">🎵</button><button class="pill" id="dataBtn">⚙️</button></header>
+ <div class="rotate-tip">📱↻ Xoay ngang để chơi rộng và đẹp hơn</div>
  <section class="hero"><h1>Chơi vui · Viết giỏi!</h1><p>Vượt 5 thế giới để giải cứu những chữ Hán.</p><button class="mascot tickle-dino" id="heroDino" aria-label="Cù chú khủng long">🦖</button></section>
  <section class="menu" id="levelMenu"></section>
  <section class="stage" id="stage"><div class="hud"><button class="pill" id="homeBtn">← Màn chơi</button><div class="progress"><i id="progressBar"></i></div><span class="pill">⭐ <b id="roundStars">0</b></span></div><div class="prompt"><h2 id="promptTitle"></h2><p id="promptText"></p><button class="speak" id="speakBtn">🔊</button></div><div class="scene" id="scene"></div></section>
@@ -65,6 +72,7 @@ const CARD_CATALOG=[
 function loadPetState(){try{const x=JSON.parse(localStorage.getItem('aluniPetState'));if(x&&Array.isArray(x.owned)){x.avatar=x.avatar||{gender:'girl',outfit:'⚔️'};return x}}catch{}return{owned:['dino'],pets:{dino:{xp:0,level:1}},cards:[],selected:'dino',avatar:{gender:'girl',outfit:'⚔️'}}}
 let petState=loadPetState();
 let words=loadWords(),stars=Number(localStorage.getItem('aluniGameStars')||0),unlocked=Number(localStorage.getItem('aluniGameUnlocked')||1),level=0,round=0,target=null,musicOn=true,audioCtx=null,musicTimer=null,selectedFruit=null,enabledGameCodes=[];
+let audioUnlocked=false;const mobileAudioMode=matchMedia('(pointer:coarse)').matches||innerWidth<=620;
 const $=id=>document.getElementById(id),shuffle=a=>[...a].sort(()=>Math.random()-.5);
 function loadWords(){try{return JSON.parse(localStorage.getItem('aluniGameWords'))||DEFAULT_WORDS}catch{return DEFAULT_WORDS}}
 function saveProgress(){localStorage.setItem('aluniGameStars',stars);localStorage.setItem('aluniGameUnlocked',unlocked);$('starCount').textContent=stars;if($('petStars'))$('petStars').textContent=stars}
@@ -76,8 +84,10 @@ function sfx(kind){if(kind==='tap'){tone(520,.1,.09);tone(850,.12,.06,'sine',.06
 function tickleDino(el){if(el.classList.contains('giggling'))return;el.classList.add('giggling');[760,920,1080,850,1040,1200].forEach((f,i)=>tone(f,.1,.1,'sine',i*.09));try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance('hi hi hi hi hi');u.lang='vi-VN';u.rate=1.65;u.pitch=2;speechSynthesis.speak(u)}catch{}showToast('Hí hí hí… nhột quá! 😆');setTimeout(()=>el.classList.remove('giggling'),1250)}
 function startMusic(){if(musicTimer||!musicOn)return;const lead=[659,659,784,880,988,880,1047,988,880,784,659,784,880,988,1175,1047],bass=[165,196,220,247,262,247,220,196],victory=[1319,1568,1760,2093];let i=0;const play=()=>{if(!musicOn){musicTimer=null;return}const step=i%lead.length,beat=i%4;tone(lead[step],.13,.035,beat===0?'square':'triangle');tone(bass[i%bass.length],.16,.024,'square');if(beat===0){tone(90,.045,.04,'square');tone(180,.025,.018,'sine',.025)}if(beat===2)tone(130,.035,.025,'square');if(i%8===7)tone(victory[(i/8)%victory.length|0],.11,.022,'triangle');if(i%16===14){tone(1175,.08,.018,'square');tone(1397,.08,.018,'square',.075)}i++;musicTimer=setTimeout(play,145)};play()}
 function stopMusic(){clearTimeout(musicTimer);musicTimer=null}
-function speak(w=target){if(!w)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(w.hanzi);u.lang='zh-CN';u.rate=.78;speechSynthesis.speak(u)}
-function startLevel(i){level=i;round=0;$('levelMenu').style.display='none';$('stage').classList.add('show');startMusic();nextRound()}
+function unlockGameAudio(){audioUnlocked=true;try{getAudio()?.resume?.();speechSynthesis.resume();speechSynthesis.getVoices()}catch{}}
+function speak(w=target){if(!w||!('speechSynthesis'in window))return;unlockGameAudio();speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(w.hanzi);u.lang='zh-CN';u.rate=.78;u.volume=1;u.pitch=1;const voices=speechSynthesis.getVoices();u.voice=voices.find(v=>/^zh(-|_)?(CN)?/i.test(v.lang))||voices.find(v=>/Chinese|Mandarin/i.test(v.name))||null;speechSynthesis.speak(u)}
+function requestLandscape(){try{if(matchMedia('(max-width:950px)').matches&&screen.orientation?.lock)screen.orientation.lock('landscape').catch(()=>{})}catch{}}
+function startLevel(i){unlockGameAudio();requestLandscape();level=i;round=0;$('levelMenu').style.display='none';$('stage').classList.add('show');startMusic();nextRound()}
 function nextRound(){if(round>=5)return finishLevel();target=words[(level*3+round)%words.length];$('progressBar').style.width=`${round*20}%`;$('roundStars').textContent=round;$('promptTitle').textContent=`${LEVELS[level].icon} ${LEVELS[level].name}`;renderScene()}
 function choices(){return shuffle([target,...shuffle(words.filter(x=>x!==target)).slice(0,3)])}
 function renderScene(){const s=$('scene');s.className='scene '+LEVELS[level].scene;if(level===0)renderBubbles(s);if(level===1)renderOrchard(s);if(level===2)renderForest(s);if(level===3)renderPond(s);if(level===4)renderWriter(s)}
@@ -126,10 +136,13 @@ async function bootGame(){
  const params=new URLSearchParams(location.search),requested=(params.get('games')||'').split(',').map(x=>x.trim()).filter(x=>GAME_CODES.includes(x));
  enabledGameCodes=[...new Set(requested)];document.body.dataset.skin=params.get('skin')||'kids';
  if(params.get('embedded')==='1')document.body.classList.add('embedded-game');
+ if(mobileAudioMode)$('soundGate').hidden=false;
  const dataUrl=params.get('data');
  if(dataUrl){try{const r=await fetch(dataUrl,{cache:'no-store'}),j=await r.json();if(r.ok&&Array.isArray(j.words)&&j.words.length>=4)words=j.words.map(x=>({hanzi:String(x.hanzi||'').trim(),pinyin:String(x.pinyin||'').trim()})).filter(x=>x.hanzi&&x.pinyin);if(!enabledGameCodes.length&&Array.isArray(j.games))enabledGameCodes=j.games.filter(x=>GAME_CODES.includes(x))}catch(e){console.warn('Không tải được dữ liệu game của bài, dùng bộ từ dự phòng.',e)}}
  saveProgress();renderMenu();
 }
+$('enableSoundBtn').onclick=()=>{unlockGameAudio();$('soundGate').hidden=true;sfx('tap');setTimeout(()=>speak(target||words[0]),80)};
+if('speechSynthesis'in window)speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
 bootGame();
 </script>
 </body></html>
