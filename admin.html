@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aluni Admin V60.2 — Chọn tất cả game</title>
+<title>Aluni Admin V76 — Nhập ZIP AutoSub</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="access-config.js?v=20260813-2"></script>
 <style>
 :root{--bg:#f5f0e7;--paper:#fffdf8;--ink:#26382f;--muted:#727972;--green:#718875;--line:#ddd6ca;--soft:#edf2ea}
@@ -411,6 +412,23 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
   </section>
 
   <section class="pane" id="shadowPane">
+    <div class="card" id="autoSubZipImport">
+      <h2>📦 Nhập ZIP AutoSub vào kho Media / Shadowing</h2>
+      <p class="muted">Đọc gói AutoSub, cho chọn đúng playlist cần nhập, kiểm tra file thiếu và video trùng YouTube ID. Chỉ khi bấm xác nhận dữ liệu mới được lưu.</p>
+      <div class="grid">
+        <div><label>ZIP AutoSub</label><input id="autoSubZipFile" type="file" accept=".zip"></div>
+        <div><label>Level mặc định</label><select id="autoSubLevel"><option value="zh:1">Level 1</option><option value="zh:0">Level 0</option><option value="zh:2">Level 2</option><option value="zh:3">Level 3</option><option value="zh:4">Level 4</option></select></div>
+        <div><label>Trạng thái sau khi nhập</label><select id="autoSubPublish"><option value="0">Bản nháp — kiểm tra trước</option><option value="1">Xuất bản ngay</option></select></div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <label><input id="autoSubShowShadow" type="checkbox" checked style="width:auto"> Hiện ở Shadowing</label>
+        <label><input id="autoSubShowKids" type="checkbox" style="width:auto"> Hiện ở Kids</label>
+        <button class="ghost" id="autoSubPreview">🔎 Đọc và kiểm tra ZIP</button>
+        <button class="primary" id="autoSubRun" disabled>⬆ Nhập các playlist đã chọn</button>
+      </div>
+      <div class="status" id="autoSubStatus">Chưa có ZIP. Mỗi playlist mặc định chưa được chọn để tránh nhập nhầm.</div>
+      <div id="autoSubPreviewBox" class="tablewrap" hidden></div>
+    </div>
     <div class="card" id="unifiedShadowImport">
       <h2>⬆ Nhập Shadowing hàng loạt dùng chung</h2>
       <p class="muted">Một quy trình duy nhất: <b>chọn đích và thiết lập → nhập link/SRT/XLSX → xem trước → lưu</b>. Nội dung Kids vẫn dùng chung kho Media; chỉ cần chọn đúng ngôn ngữ và nơi hiển thị.</p>
@@ -2130,6 +2148,65 @@ async function openKidsInShadow(){
   $('shadowStatus').className='status ok';
 }
 
+// V76 — nhập trọn gói AutoSub vào kho Media dùng chung
+let autoSubZip=null,autoSubPackage=null;
+function autoSubYoutubeId(value){return String(value||'').trim().toLowerCase()}
+function autoSubSetStatus(text,kind=''){const el=$('autoSubStatus');el.textContent=text;el.className=`status ${kind}`}
+function autoSubSelected(){return autoSubPackage?autoSubPackage.playlists.filter(p=>document.querySelector(`.autoSubPick[data-code="${p.code}"]`)?.checked):[]}
+function renderAutoSubPackage(){
+  const known=new Map((mediaAdmin.items||[]).filter(x=>x.youtube_id).map(x=>[String(x.youtube_id).toLowerCase(),x]));
+  for(const p of autoSubPackage.playlists){p.duplicateCount=p.videos.filter(v=>known.has(v.videoId.toLowerCase())).length;p.readyCount=p.videos.filter(v=>v.review&&v.hasSrt&&v.hasXlsx).length}
+  $('autoSubPreviewBox').hidden=false;
+  $('autoSubPreviewBox').innerHTML=`<table><thead><tr><th>Chọn</th><th>Mã</th><th>Playlist</th><th>Video</th><th>Đủ bộ</th><th>Đã có</th><th>Sẽ nhập mới</th></tr></thead><tbody>${autoSubPackage.playlists.map(p=>`<tr><td><input class="autoSubPick" data-code="${p.code}" type="checkbox" style="width:auto"></td><td><b>${esc(p.code)}</b></td><td>${esc(p.title)}<br><small>${esc(p.playlistId)}</small></td><td>${p.videos.length}</td><td>${p.readyCount}/${p.videos.length}</td><td>${p.duplicateCount}</td><td><b>${Math.max(0,p.readyCount-p.duplicateCount)}</b></td></tr>`).join('')}</tbody></table>`;
+  document.querySelectorAll('.autoSubPick').forEach(x=>x.onchange=()=>{$('autoSubRun').disabled=!autoSubSelected().length;const list=autoSubSelected();autoSubSetStatus(list.length?`Đã chọn ${list.length} playlist · ${list.reduce((n,p)=>n+p.videos.length,0)} video. Bấm Nhập để tiếp tục.`:'Chưa chọn playlist nào.','')});
+  $('autoSubRun').disabled=true;
+}
+async function readAutoSubZip(){
+  try{
+    const file=$('autoSubZipFile').files[0];if(!file)throw new Error('Anh hãy chọn file ZIP AutoSub.');if(typeof JSZip==='undefined')throw new Error('Chưa tải được thư viện đọc ZIP. Hãy kiểm tra Internet và tải lại trang.');
+    autoSubSetStatus('Đang đọc và kiểm tra ZIP…');autoSubZip=await JSZip.loadAsync(file);
+    const manifestEntry=autoSubZip.file(/(?:^|\/)ALUNI_MANIFEST\.json$/i)[0];if(!manifestEntry)throw new Error('ZIP không có ALUNI_MANIFEST.json.');
+    const manifest=JSON.parse(await manifestEntry.async('text'));const root=manifestEntry.name.slice(0,-'ALUNI_MANIFEST.json'.length);
+    const codes=[...new Set(Object.keys(autoSubZip.files).map(n=>{const m=n.match(new RegExp(`^${root.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}(P\\d{3})/`,'i'));return m?m[1].toUpperCase():''}).filter(Boolean))].sort();
+    const playlists=[];
+    for(const code of codes){
+      const prefix=`${root}${code}/`,reviewEntries=autoSubZip.file(new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}.*\\.review\\.json$`,'i'));const videos=[];
+      for(const entry of reviewEntries){
+        const review=JSON.parse(await entry.async('text')),videoId=String(review.video_id||'').trim();if(!videoId)continue;const base=entry.name.replace(/\.review\.json$/i,'');
+        const meta=(manifest.videos||[]).find(x=>String(x.video_id)===videoId)||{};
+        videos.push({videoId,title:meta.video_title||videoId,url:meta.video_url||`https://www.youtube.com/watch?v=${videoId}`,review,hasSrt:!!autoSubZip.file(`${base}.srt`),hasXlsx:!!autoSubZip.file(`${base}.xlsx`)});
+      }
+      if(!videos.length)continue;const firstMeta=(manifest.videos||[]).find(x=>String(x.video_id)===videos[0].videoId)||{};
+      playlists.push({code,playlistId:String(firstMeta.playlist_id||reviewEntries[0]?.name||code),title:String(firstMeta.playlist_title||code),url:firstMeta.playlist_id?`https://www.youtube.com/playlist?list=${firstMeta.playlist_id}`:'',videos});
+    }
+    if(!playlists.length)throw new Error('Không tìm thấy playlist có file review trong ZIP.');
+    autoSubPackage={fileName:file.name,manifest,root,playlists};renderAutoSubPackage();autoSubSetStatus(`Đã đọc ${playlists.length} playlist · ${playlists.reduce((n,p)=>n+p.videos.length,0)} video. Hãy đánh dấu đúng playlist cần nhập.`,'ok');
+  }catch(e){autoSubPackage=null;$('autoSubRun').disabled=true;autoSubSetStatus(e.message,'err')}
+}
+async function runAutoSubImport(){
+  const selected=autoSubSelected();if(!selected.length)return autoSubSetStatus('Chưa chọn playlist cần nhập.','err');
+  const bad=selected.flatMap(p=>p.videos.filter(v=>!v.review||!v.hasSrt||!v.hasXlsx).map(v=>`${p.code}/${v.videoId}`));if(bad.length)return autoSubSetStatus(`Không nhập vì thiếu bộ SRT/XLSX: ${bad.slice(0,8).join(', ')}${bad.length>8?'…':''}`,'err');
+  if(!confirm(`Nhập ${selected.length} playlist, ${selected.reduce((n,p)=>n+p.videos.length,0)} video vào kho dùng chung? Video trùng sẽ được bỏ qua.`))return;
+  $('autoSubRun').disabled=true;
+  try{
+    const channel=autoSubPackage.manifest.channel||{};autoSubSetStatus('Đang lưu thông tin kênh…');
+    const channelResult=await api('/admin/media/channel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:channel.id||undefined,name:channel.title||'Kênh AutoSub',youtube_url:channel.url||'',thumbnail_url:channel.thumbnail||'',sort_order:0})});
+    let done=0,duplicates=0,total=selected.reduce((n,p)=>n+p.videos.length,0);
+    for(const p of selected){
+      autoSubSetStatus(`Đang tạo playlist ${p.code}: ${p.title}…`);
+      const playlistResult=await api('/admin/media/playlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:p.playlistId,channel_id:channelResult.id,title:p.title,youtube_url:p.url,language_code:'zh',level_id:$('autoSubLevel').value,content_type:'animation',access_mode:'custom',show_shadowing:$('autoSubShowShadow').checked,show_kids:$('autoSubShowKids').checked,published:$('autoSubPublish').value==='1',sort_order:Number(p.code.replace(/\D/g,''))||0})});
+      const itemResult=await api('/admin/media/items-import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({playlist_id:playlistResult.id,duplicate_mode:'skip_global',items:p.videos.map((v,i)=>({item_number:i+1,title:v.title,youtube_url:v.url,access_override:'inherit',published:$('autoSubPublish').value==='1',sort_order:i+1}))})});duplicates+=Number(itemResult.skipped||0);await loadMediaAdmin();
+      for(const v of p.videos){
+        const item=(mediaAdmin.items||[]).find(x=>String(x.playlist_id)===String(playlistResult.id)&&String(x.youtube_id||'').toLowerCase()===v.videoId.toLowerCase());
+        if(!item){done++;autoSubSetStatus(`Đang nhập ${done}/${total}; bỏ qua video trùng ở playlist khác…`);continue}
+        if(!item.shadow_video_id){const segments=(v.review.segments||[]).map(s=>({start_sec:Number(s.start||0),end_sec:Number(s.end||0),hanzi:String(s.simplified||s.text||''),pinyin:String(s.pinyin||''),vi:String(s.vietnamese||'')})).filter(s=>s.hanzi&&s.end_sec>s.start_sec);if(!segments.length)throw new Error(`${p.code}/${v.videoId} không có câu hợp lệ.`);await api('/admin/media/item-transcript',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:Number(item.id),segments})})}
+        done++;autoSubSetStatus(`Đang nhập ${done}/${total} video · ${p.code}…`);
+      }
+    }
+    await loadMediaAdmin();autoSubSetStatus(`Hoàn tất. Đã kiểm tra ${total} video; bỏ qua ${duplicates} video trùng. Playlist đang ở ${$('autoSubPublish').value==='1'?'trạng thái xuất bản':'bản nháp để anh kiểm tra'}.`,'ok');renderAutoSubPackage();
+  }catch(e){autoSubSetStatus(`Đã dừng an toàn: ${e.message}. Bấm Nhập lại để tiếp tục; video đã có sẽ không bị tạo trùng.`,'err')}finally{$('autoSubRun').disabled=!autoSubSelected().length}
+}
+
 $('kidsLevel').onchange=updateKidsHierarchy;$('kidsSeriesType').onchange=updateKidsHierarchy;
 $('kidsLessonSeries').onchange=()=>{resetKidsLesson();loadKidsLessons()};
 $('kidsSaveLanguage').onclick=saveKidsLanguage;$('kidsNewLanguage').onclick=resetKidsLanguage;
@@ -2141,6 +2218,7 @@ $('kidsOpenShadow').onclick=openKidsInShadow;
 $('previewInteractiveCourse').onclick=previewInteractiveCourse;
 $('runInteractiveCourse').onclick=runInteractiveCourse;
 $('interactiveCourseFile').onchange=()=>{interactiveCourseDraft=null;$('runInteractiveCourse').disabled=true;$('interactiveCoursePreview').hidden=true;$('interactiveCourseStatus').textContent='Đã chọn file. Bấm “Kiểm tra file”.';$('interactiveCourseStatus').className='status'};
+$('autoSubPreview').onclick=readAutoSubZip;$('autoSubRun').onclick=runAutoSubImport;
 
 </script>
 </body>
