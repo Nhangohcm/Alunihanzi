@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Aluni Admin V82 — Auto điền ZIP và kiểm tra trước xuất bản</title>
+  <title>Aluni Admin V83 — Playlist độc lập, lộ trình tùy chọn</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="access-config.js?v=20260813-2"></script>
@@ -1557,8 +1557,9 @@ async function auditSelectedMediaPlaylist(){
   $('mediaImportStatus').textContent='Đang kiểm tra toàn bộ video và các câu phụ đề…';$('mediaPublishPlaylist').disabled=true;
   try{
     const j=await api('/admin/media/playlist-audit?id='+encodeURIComponent(id));mediaLastAudit=j;const s=j.summary||{};
-    const problems=[];if(s.invalid_item)problems.push(`${s.invalid_item} video thiếu link/YouTube ID`);if(s.missing_shadow)problems.push(`${s.missing_shadow} video chưa có phụ đề`);if(s.empty_transcript)problems.push(`${s.empty_transcript} video rỗng`);if(s.missing_hanzi)problems.push(`${s.missing_hanzi} câu thiếu Hán tự`);if(s.missing_pinyin)problems.push(`${s.missing_pinyin} câu thiếu Pinyin`);if(s.missing_vi)problems.push(`${s.missing_vi} câu thiếu nghĩa Việt`);if(!j.access_ready)problems.push('chưa chọn miễn phí hoặc gắn gói/mã kích hoạt');
-    $('mediaImportStatus').textContent=j.ready?`Đạt kiểm tra: ${s.total_items}/${s.total_items} video, ${s.total_segments} câu đầy đủ. Có thể xuất bản toàn playlist.`:`Chưa thể xuất bản: ${problems.join('; ')||'dữ liệu chưa đạt'}.`;
+    const problems=Array.isArray(j.reasons)?j.reasons.slice():[];if(!problems.length&&!j.ready){if(s.invalid_item)problems.push(`${s.invalid_item} video thiếu link/YouTube ID`);if(s.missing_shadow)problems.push(`${s.missing_shadow} video chưa có phụ đề`);if(s.empty_transcript)problems.push(`${s.empty_transcript} video rỗng`);if(s.missing_hanzi)problems.push(`${s.missing_hanzi} câu thiếu Hán tự`);if(s.missing_pinyin)problems.push(`${s.missing_pinyin} câu thiếu Pinyin`);if(s.missing_vi)problems.push(`${s.missing_vi} câu thiếu nghĩa Việt`);if(!j.access_ready)problems.push('chưa chọn miễn phí hoặc gắn gói/mã kích hoạt')}
+    const routeNote=' Lộ trình/ngày là tùy chọn; anh có thể gán bài vào Ngày 1, 2, 3 sau.';
+    $('mediaImportStatus').textContent=j.ready?`Đạt kiểm tra: ${s.total_items}/${s.total_items} video, ${s.total_segments} câu đầy đủ. Có thể xuất bản playlist độc lập.${routeNote}`:`Chưa thể xuất bản: ${problems.join('; ')||'worker cũ chưa trả lý do cụ thể'}.${routeNote}`;
     $('mediaPublishPlaylist').disabled=!j.ready;
     const samples=j.samples||[];$('mediaAuditPreview').hidden=false;$('mediaAuditPreview').innerHTML=`<table><thead><tr><th colspan="6">Kết quả kiểm tra · mẫu đầu, giữa và cuối playlist</th></tr><tr><th>STT</th><th>Tên bài</th><th>Số câu</th><th>Hán tự</th><th>Pinyin</th><th>Nghĩa Việt</th><th></th></tr></thead><tbody>${samples.map(x=>`<tr><td>${x.item_number}</td><td>${esc(x.title)}</td><td>${x.segment_count}</td><td>${x.missing_hanzi?'Thiếu '+x.missing_hanzi:'Đủ'}</td><td>${x.missing_pinyin?'Thiếu '+x.missing_pinyin:'Đủ'}</td><td>${x.missing_vi?'Thiếu '+x.missing_vi:'Đủ'}</td><td><button class="ghost mediaAuditOpen" data-id="${x.id}">Mở kiểm tra</button></td></tr>`).join('')}</tbody></table>`;document.querySelectorAll('.mediaAuditOpen').forEach(b=>b.onclick=()=>openMediaItem(Number(b.dataset.id)));
     return j;
