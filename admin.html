@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Aluni Admin V79 — Aluni Kids 10 bài miễn phí</title>
+  <title>Aluni Admin V81 — Auto điền ZIP và tải đích nhanh</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="access-config.js?v=20260813-2"></script>
@@ -703,7 +703,12 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   if(b.dataset.pane==='contentPane') loadCourses();
   if(b.dataset.pane==='learningPane') loadLearningCourses();
   if(b.dataset.pane==='grammarPane') loadGrammarCourses();
-  if(b.dataset.pane==='shadowPane'){ loadCourses().then(()=>{loadShadowRule();loadShadowAdminVideos();loadShadowCourseLessons();loadMediaAdmin();}); }
+  if(b.dataset.pane==='shadowPane'){
+    // Kho Media không phụ thuộc danh sách khóa học. Tải ngay để ô "Đích cần nhập"
+    // xuất hiện tức thì; danh sách khóa người lớn sẽ được bổ sung khi loadCourses xong.
+    loadMediaAdmin();
+    loadCourses().then(()=>{loadShadowRule();loadShadowAdminVideos();loadShadowCourseLessons();renderMediaAdminOptions();});
+  }
   if(b.dataset.pane==='kidsPane') loadKidsData();
 });
 
@@ -1530,9 +1535,20 @@ function formatShadowTime(seconds){
   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${s}`;
 }
 
-let mediaAdmin={channels:[],playlists:[],items:[],paths:[],path_days:[],path_day_items:[]},mediaDraftSegments=[],editingMediaPathDay=0;
-async function loadMediaAdmin(){
-  try{mediaAdmin=await api('/admin/media/bootstrap');const cs=$('mediaPlaylistChannel'),ps=$('mediaImportPlaylist'),product=$('mediaPlaylistProduct');cs.innerHTML='';ps.innerHTML='';product.innerHTML='<option value="">Không gắn gói</option><option value="aluni-kids">🧸 Aluni Kids — mã riêng</option>';mediaAdmin.channels.forEach(c=>cs.add(new Option(c.name,c.id)));mediaAdmin.playlists.forEach(p=>ps.add(new Option(`${p.channel_name} → ${p.title}`,p.id)));(learningCourses||[]).filter(c=>String(c.id)!==SHADOWING_PASS_ID).forEach(c=>product.add(new Option(`Khóa người lớn: ${c.title}`,c.id)));syncMediaLevels();renderMediaItems();refreshUnifiedShadowTargets();renderMediaPathManager()}catch(e){$('mediaImportStatus').textContent=e.message}
+let mediaAdmin={channels:[],playlists:[],items:[],paths:[],path_days:[],path_day_items:[]},mediaDraftSegments=[],editingMediaPathDay=0,mediaAdminPromise=null,mediaAdminLoadedAt=0;
+function renderMediaAdminOptions(){
+  const cs=$('mediaPlaylistChannel'),ps=$('mediaImportPlaylist'),product=$('mediaPlaylistProduct'),oldChannel=cs.value,oldPlaylist=ps.value,oldProduct=product.value;
+  cs.innerHTML='';ps.innerHTML='';product.innerHTML='<option value="">Không gắn gói</option><option value="aluni-kids">🧸 Aluni Kids — mã riêng</option>';
+  mediaAdmin.channels.forEach(c=>cs.add(new Option(c.name,c.id)));mediaAdmin.playlists.forEach(p=>ps.add(new Option(`${p.channel_name} → ${p.title}`,p.id)));(learningCourses||[]).filter(c=>String(c.id)!==SHADOWING_PASS_ID).forEach(c=>product.add(new Option(`Khóa người lớn: ${c.title}`,c.id)));
+  if([...cs.options].some(o=>o.value===oldChannel))cs.value=oldChannel;if([...ps.options].some(o=>o.value===oldPlaylist))ps.value=oldPlaylist;if([...product.options].some(o=>o.value===oldProduct))product.value=oldProduct;
+  syncMediaLevels();renderMediaItems();refreshUnifiedShadowTargets();renderMediaPathManager();
+}
+async function loadMediaAdmin(force=false){
+  if(!force&&mediaAdminLoadedAt&&Date.now()-mediaAdminLoadedAt<15000){renderMediaAdminOptions();return mediaAdmin}
+  if(mediaAdminPromise)return mediaAdminPromise;
+  const target=$('unifiedShadowTarget');if(target&&!target.options.length)target.innerHTML='<option value="">Đang tải danh sách đích…</option>';
+  mediaAdminPromise=(async()=>{try{mediaAdmin=await api('/admin/media/bootstrap');mediaAdminLoadedAt=Date.now();renderMediaAdminOptions();return mediaAdmin}catch(e){$('mediaImportStatus').textContent=e.message;throw e}finally{mediaAdminPromise=null}})();
+  return mediaAdminPromise;
 }
 
 let mediaLastAudit=null;
@@ -2189,12 +2205,23 @@ let autoSubZip=null,autoSubPackage=null;
 function autoSubYoutubeId(value){return String(value||'').trim().toLowerCase()}
 function autoSubSetStatus(text,kind=''){const el=$('autoSubStatus');el.textContent=text;el.className=`status ${kind}`}
 function autoSubSelected(){return autoSubPackage?autoSubPackage.playlists.filter(p=>document.querySelector(`.autoSubPick[data-code="${p.code}"]`)?.checked):[]}
+function autoSubFillMediaSetup(p){
+  if(!autoSubPackage||!p)return;
+  const channel=autoSubPackage.manifest.channel||{},channelName=String(channel.title||channel.name||'Kênh AutoSub'),channelUrl=String(channel.url||channel.youtube_url||''),playlistUrl=String(p.url||'');
+  $('mediaChannelName').value=channelName;$('mediaChannelUrl').value=channelUrl;$('mediaChannelOrder').value=Number(String(p.code||'').replace(/\D/g,''))||0;
+  const existingChannel=(mediaAdmin.channels||[]).find(x=>String(x.id)===String(channel.id)||String(x.youtube_url||'')===channelUrl||String(x.name||'').trim().toLowerCase()===channelName.trim().toLowerCase());
+  if(existingChannel)$('mediaPlaylistChannel').value=existingChannel.id;
+  const existingPlaylist=(mediaAdmin.playlists||[]).find(x=>String(x.id)===String(p.playlistId)||String(x.youtube_url||'')===playlistUrl);
+  $('mediaPlaylistId').value=existingPlaylist?.id||p.playlistId||'';$('mediaPlaylistTitle').value=p.title||'';$('mediaPlaylistUrl').value=playlistUrl;$('mediaPlaylistAccess').value='paid';$('mediaPlaylistProduct').value='aluni-kids';$('mediaPlaylistLanguage').value='zh';syncMediaLevels($('autoSubLevel').value||'zh:1');$('mediaPlaylistContent').value='animation';$('mediaPlaylistFreeItems').value=10;$('mediaPlaylistOrder').value=Number(String(p.code||'').replace(/\D/g,''))||0;$('mediaShowShadow').checked=true;$('mediaShowKids').checked=true;$('mediaPlaylistPublished').checked=!!Number(existingPlaylist?.published||0);document.querySelectorAll('.mediaProgram').forEach(x=>x.checked=x.value==='shadow100');
+  if(existingPlaylist){$('mediaImportPlaylist').value=existingPlaylist.id;$('unifiedShadowTarget').value=existingPlaylist.id}
+  $('mediaPlaylistStatus').textContent=`Đã tự điền từ ZIP: ${channelName} → ${p.title}. Anh chỉ cần kiểm tra Level, quyền và bấm Lưu thiết lập playlist.`;
+}
 function renderAutoSubPackage(){
   const known=new Map((mediaAdmin.items||[]).filter(x=>x.youtube_id).map(x=>[String(x.youtube_id).toLowerCase(),x]));
   for(const p of autoSubPackage.playlists){p.duplicateCount=p.videos.filter(v=>known.has(v.videoId.toLowerCase())).length;p.readyCount=p.videos.filter(v=>v.review&&v.hasSrt&&v.hasXlsx).length}
   $('autoSubPreviewBox').hidden=false;
   $('autoSubPreviewBox').innerHTML=`<table><thead><tr><th>Chọn</th><th>Mã</th><th>Playlist</th><th>Video</th><th>Đủ bộ</th><th>Đã có</th><th>Sẽ nhập mới</th></tr></thead><tbody>${autoSubPackage.playlists.map(p=>`<tr><td><input class="autoSubPick" data-code="${p.code}" type="checkbox" style="width:auto"></td><td><b>${esc(p.code)}</b></td><td>${esc(p.title)}<br><small>${esc(p.playlistId)}</small></td><td>${p.videos.length}</td><td>${p.readyCount}/${p.videos.length}</td><td>${p.duplicateCount}</td><td><b>${Math.max(0,p.readyCount-p.duplicateCount)}</b></td></tr>`).join('')}</tbody></table>`;
-  document.querySelectorAll('.autoSubPick').forEach(x=>x.onchange=()=>{$('autoSubRun').disabled=!autoSubSelected().length;const list=autoSubSelected();autoSubSetStatus(list.length?`Đã chọn ${list.length} playlist · ${list.reduce((n,p)=>n+p.videos.length,0)} video. Bấm Nhập để tiếp tục.`:'Chưa chọn playlist nào.','')});
+  document.querySelectorAll('.autoSubPick').forEach(x=>x.onchange=()=>{$('autoSubRun').disabled=!autoSubSelected().length;const list=autoSubSelected();if(x.checked)autoSubFillMediaSetup(autoSubPackage.playlists.find(p=>p.code===x.dataset.code));autoSubSetStatus(list.length?`Đã chọn ${list.length} playlist · ${list.reduce((n,p)=>n+p.videos.length,0)} video. Thông tin kênh/playlist đã được tự điền bên dưới.`:'Chưa chọn playlist nào.','')});
   $('autoSubRun').disabled=true;
 }
 async function readAutoSubZip(){
@@ -2216,7 +2243,7 @@ async function readAutoSubZip(){
       playlists.push({code,playlistId:String(firstMeta.playlist_id||reviewEntries[0]?.name||code),title:String(firstMeta.playlist_title||code),url:firstMeta.playlist_id?`https://www.youtube.com/playlist?list=${firstMeta.playlist_id}`:'',videos});
     }
     if(!playlists.length)throw new Error('Không tìm thấy playlist có file review trong ZIP.');
-    autoSubPackage={fileName:file.name,manifest,root,playlists};renderAutoSubPackage();autoSubSetStatus(`Đã đọc ${playlists.length} playlist · ${playlists.reduce((n,p)=>n+p.videos.length,0)} video. Hãy đánh dấu đúng playlist cần nhập.`,'ok');
+    autoSubPackage={fileName:file.name,manifest,root,playlists};renderAutoSubPackage();autoSubFillMediaSetup(playlists[0]);autoSubSetStatus(`Đã đọc ${playlists.length} playlist · ${playlists.reduce((n,p)=>n+p.videos.length,0)} video. Đã tự điền kênh, link kênh, playlist và link playlist từ ZIP; hãy đánh dấu playlist cần nhập.`,'ok');
   }catch(e){autoSubPackage=null;$('autoSubRun').disabled=true;autoSubSetStatus(e.message,'err')}
 }
 async function runAutoSubImport(){
