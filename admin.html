@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Aluni Admin V78 — Kiểm tra và xuất bản playlist</title>
+  <title>Aluni Admin V79 — Aluni Kids 10 bài miễn phí</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="access-config.js?v=20260813-2"></script>
@@ -146,7 +146,7 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
     <div class="card">
       <h2>Mã kích hoạt</h2>
       <div class="grid">
-        <div><label>Loại quyền</label><select id="codeType"><option value="all">Toàn bộ website — ALL ACCESS</option><option value="course">Một khóa học — COURSE_ACCESS</option><option value="shadowing">Shadowing theo năm — SHADOWING_PASS</option></select></div>
+        <div><label>Loại quyền</label><select id="codeType"><option value="all">Toàn bộ website — ALL ACCESS</option><option value="course">Một khóa học — COURSE_ACCESS</option><option value="shadowing">Shadowing theo năm — SHADOWING_PASS</option><option value="kids">Aluni Kids — KIDS PASS</option></select></div>
         <div><label id="codeProductLabel">Khóa học</label><select id="codeCourse"><option value="50plus">50+ Phản xạ</option></select></div>
         <div><label>Số mã cần tạo</label><input id="count" type="number" min="1" max="200" value="20"></div>
       </div>
@@ -444,7 +444,8 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
         <div class="row" style="margin-top:10px"><button class="ghost" id="mediaSaveChannel">Lưu kênh</button><span class="status" id="mediaChannelStatus"></span></div>
         <input id="mediaPlaylistId" type="hidden"><div class="grid" style="margin-top:12px"><div><label>Chọn kênh</label><select id="mediaPlaylistChannel"></select></div><div><label>Tên Playlist / Series</label><input id="mediaPlaylistTitle"></div><div><label>Link playlist</label><input id="mediaPlaylistUrl"></div></div>
         <div class="grid" style="margin-top:10px"><div><label>Quyền mặc định</label><select id="mediaPlaylistAccess"><option value="free">Miễn phí toàn bộ playlist</option><option value="paid">Có phí toàn bộ playlist</option><option value="custom">Tùy chỉnh từng bài</option></select></div><div><label>Gói/mã kích hoạt</label><select id="mediaPlaylistProduct"><option value="">Không gắn gói</option></select></div><div><label>Ngôn ngữ</label><select id="mediaPlaylistLanguage"><option value="zh">🇨🇳 Tiếng Trung</option><option value="en">🇬🇧 Tiếng Anh</option></select></div></div>
-        <div class="grid" style="margin-top:10px"><div><label>Loại nội dung</label><select id="mediaPlaylistContent"><option value="animation">🎬 Hoạt hình</option><option value="song">🎵 Songs</option></select></div><div><label>Level</label><select id="mediaPlaylistLevel"></select></div><div><label>Thứ tự playlist</label><input id="mediaPlaylistOrder" type="number" value="0"></div></div>
+        <div class="grid" style="margin-top:10px"><div><label>Loại nội dung</label><select id="mediaPlaylistContent"><option value="animation">🎬 Hoạt hình</option><option value="song">🎵 Songs</option></select></div><div><label>Level</label><select id="mediaPlaylistLevel"></select></div><div><label>Số bài đầu miễn phí</label><input id="mediaPlaylistFreeItems" type="number" min="0" max="1000" value="10"><small class="muted">Nhập 10 để miễn phí bài 1–10; các bài sau dùng gói đã chọn.</small></div></div>
+        <div class="grid" style="margin-top:10px"><div><label>Thứ tự playlist</label><input id="mediaPlaylistOrder" type="number" value="0"></div></div>
         <div style="margin-top:12px"><label>Lộ trình Kids — có thể chọn nhiều mục</label><div class="row"><label><input class="mediaProgram" type="checkbox" value="warmup" style="width:auto"> 🚀 Khởi động</label><label><input class="mediaProgram" type="checkbox" value="shadow100" style="width:auto"> 💯 100 ngày Shadowing</label><label><input class="mediaProgram" type="checkbox" value="mindmap" style="width:auto"> 🧠 Mindmap & thuyết trình</label><label><input class="mediaProgram" type="checkbox" value="yct" style="width:auto"> 🎓 YCT cho bé</label></div></div>
         <div class="row" style="margin-top:10px"><label><input type="checkbox" id="mediaShowShadow" checked style="width:auto"> Hiện ở Shadowing</label><label><input type="checkbox" id="mediaShowKids" style="width:auto"> Hiện ở Kids</label><label><input type="checkbox" id="mediaPlaylistPublished" style="width:auto"> Xuất bản playlist</label><button class="ghost" id="mediaSavePlaylist">Lưu thiết lập playlist</button></div>
         <div class="status" id="mediaPlaylistStatus"></div>
@@ -627,6 +628,7 @@ const base=String(window.ALUNI_API_BASE||'').replace(/\/+$/,'');
 const $=id=>document.getElementById(id);
 let codes=[],courses=[],learningCourses=[],learningGroups=[],adminSecret='';
 const SHADOWING_PASS_ID='shadowing-pass';
+const KIDS_PASS_ID='aluni-kids';
 let shadowDraftSegments=[];
 let editingShadowId=null;
 let shadowCourseLessons=[];
@@ -744,19 +746,21 @@ async function refreshAccessAlerts(){
 $('refreshAccessAlerts').onclick=refreshAccessAlerts;
 async function generate(){
   try{
-    const isShadow=$('codeType').value==='shadowing',isAll=$('codeType').value==='all',courseId=isAll?'all-access':isShadow?SHADOWING_PASS_ID:$('codeCourse').value;
+    const isShadow=$('codeType').value==='shadowing',isKids=$('codeType').value==='kids',isAll=$('codeType').value==='all',courseId=isAll?'all-access':isShadow?SHADOWING_PASS_ID:isKids?KIDS_PASS_ID:$('codeCourse').value;
     if(isShadow&&!courses.some(c=>String(c.id)===SHADOWING_PASS_ID))throw new Error('Hãy bấm “Khởi tạo gói Shadowing 1 năm” trước khi tạo mã.');
-    await api('/admin/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:courseId,count:Number($('count').value||1),entitlement_type:isAll?'ALL_ACCESS':isShadow?'SHADOWING_PASS':'COURSE_ACCESS',duration_months:Number($('codeDuration').value||12)})});
+    await api('/admin/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:courseId,count:Number($('count').value||1),entitlement_type:isAll?'ALL_ACCESS':isShadow?'SHADOWING_PASS':isKids?'KIDS_PASS':'COURSE_ACCESS',duration_months:Number($('codeDuration').value||12)})});
     await refreshCodes();
   }catch(e){$('codeStatus').textContent=e.message}
 }
 function syncCodeType(refresh=true){
-  const isShadow=$('codeType').value==='shadowing',isAll=$('codeType').value==='all',select=$('codeCourse');
+  const isShadow=$('codeType').value==='shadowing',isKids=$('codeType').value==='kids',isAll=$('codeType').value==='all',select=$('codeCourse');
   if(![...select.options].some(o=>o.value==='all-access'))select.add(new Option('Toàn bộ website Aluni','all-access'),0);
-  $('codeProductLabel').textContent=isAll?'Phạm vi':isShadow?'Gói quyền':'Khóa học';$('setupShadowPass').style.display=isShadow?'inline-block':'none';select.disabled=isAll;
-  [...select.options].forEach(o=>o.hidden=isAll?o.value!=='all-access':isShadow?String(o.value)!==SHADOWING_PASS_ID:[SHADOWING_PASS_ID,'all-access'].includes(String(o.value)));
+  if(![...select.options].some(o=>o.value===KIDS_PASS_ID))select.add(new Option('🧸 Aluni Kids — mã riêng',KIDS_PASS_ID));
+  $('codeProductLabel').textContent=isAll?'Phạm vi':(isShadow||isKids)?'Gói quyền':'Khóa học';$('setupShadowPass').style.display=isShadow?'inline-block':'none';select.disabled=isAll;
+  [...select.options].forEach(o=>o.hidden=isAll?o.value!=='all-access':isShadow?String(o.value)!==SHADOWING_PASS_ID:isKids?String(o.value)!==KIDS_PASS_ID:[SHADOWING_PASS_ID,KIDS_PASS_ID,'all-access'].includes(String(o.value)));
   if(isAll){select.value='all-access';$('codeTypeHelp').textContent='Mã ALL ACCESS mở tất cả khóa học, Shadowing, Hoạt hình và các phần nội dung trong thời hạn đã chọn.'}
   else if(isShadow){select.value=SHADOWING_PASS_ID;$('codeTypeHelp').textContent='Mã SHADOWING_PASS chỉ mở kho Shadowing độc lập và Hoạt hình.'}
+  else if(isKids){select.value=KIDS_PASS_ID;$('codeTypeHelp').textContent='Mã KIDS PASS chỉ mở nội dung Aluni Kids có phí; không mở các khóa học người lớn.'}
   else{const first=[...select.options].find(o=>!o.hidden);if(first&&(!select.value||select.selectedOptions[0]?.hidden))select.value=first.value;$('codeTypeHelp').textContent='Mã COURSE_ACCESS chỉ mở đúng khóa học đã chọn.'}
   if(refresh)refreshCodes();
 }
@@ -798,6 +802,7 @@ async function loadCourses(loadDetails=true){
         if($('writingManageCourse'))$('writingManageCourse').add(new Option(`${c.name} (${c.lesson_count||0} bài)`,c.id));
       }
     });
+    $('codeCourse').add(new Option('🧸 Aluni Kids — mã riêng',KIDS_PASS_ID));
     if(selectedShadow&&courses.some(c=>String(c.id)===String(selectedShadow)))$('shadowAdminCourse').value=selectedShadow;
     if(selectedWriting&&courses.some(c=>String(c.id)===String(selectedWriting)))$('writingManageCourse').value=selectedWriting;
     if(selectedImport&&courses.some(c=>String(c.id)===String(selectedImport)))$('importCourse').value=selectedImport;
@@ -1527,7 +1532,7 @@ function formatShadowTime(seconds){
 
 let mediaAdmin={channels:[],playlists:[],items:[],paths:[],path_days:[],path_day_items:[]},mediaDraftSegments=[],editingMediaPathDay=0;
 async function loadMediaAdmin(){
-  try{mediaAdmin=await api('/admin/media/bootstrap');const cs=$('mediaPlaylistChannel'),ps=$('mediaImportPlaylist'),product=$('mediaPlaylistProduct');cs.innerHTML='';ps.innerHTML='';product.innerHTML='<option value="">Không gắn gói</option>';mediaAdmin.channels.forEach(c=>cs.add(new Option(c.name,c.id)));mediaAdmin.playlists.forEach(p=>ps.add(new Option(`${p.channel_name} → ${p.title}`,p.id)));(learningCourses||[]).forEach(c=>product.add(new Option(c.title,c.id)));syncMediaLevels();renderMediaItems();refreshUnifiedShadowTargets();renderMediaPathManager()}catch(e){$('mediaImportStatus').textContent=e.message}
+  try{mediaAdmin=await api('/admin/media/bootstrap');const cs=$('mediaPlaylistChannel'),ps=$('mediaImportPlaylist'),product=$('mediaPlaylistProduct');cs.innerHTML='';ps.innerHTML='';product.innerHTML='<option value="">Không gắn gói</option><option value="aluni-kids">🧸 Aluni Kids — mã riêng</option>';mediaAdmin.channels.forEach(c=>cs.add(new Option(c.name,c.id)));mediaAdmin.playlists.forEach(p=>ps.add(new Option(`${p.channel_name} → ${p.title}`,p.id)));(learningCourses||[]).filter(c=>String(c.id)!==SHADOWING_PASS_ID).forEach(c=>product.add(new Option(`Khóa người lớn: ${c.title}`,c.id)));syncMediaLevels();renderMediaItems();refreshUnifiedShadowTargets();renderMediaPathManager()}catch(e){$('mediaImportStatus').textContent=e.message}
 }
 
 let mediaLastAudit=null;
@@ -1567,9 +1572,9 @@ function syncMediaLevels(selected=''){
 function selectedMediaPrograms(){return [...document.querySelectorAll('.mediaProgram:checked')].map(x=>x.value)}
 function loadMediaPlaylistEditor(id){
   const p=(mediaAdmin.playlists||[]).find(x=>String(x.id)===String(id));if(!p)return;
-  $('mediaPlaylistId').value=p.id;$('mediaPlaylistChannel').value=p.channel_id;$('mediaPlaylistTitle').value=p.title||'';$('mediaPlaylistUrl').value=p.youtube_url||'';$('mediaPlaylistAccess').value=p.access_mode||'custom';$('mediaPlaylistProduct').value=p.product_course_id||'';$('mediaPlaylistLanguage').value=p.language_code||'zh';syncMediaLevels(p.level_id||'');$('mediaPlaylistContent').value=/song/.test(String(p.content_type||''))?'song':'animation';$('mediaPlaylistOrder').value=Number(p.sort_order||0);$('mediaShowShadow').checked=Number(p.show_shadowing)!==0;$('mediaShowKids').checked=Number(p.show_kids)===1;$('mediaPlaylistPublished').checked=Number(p.published)===1;const programs=new Set(String(p.program_codes||'').split(',').filter(Boolean));document.querySelectorAll('.mediaProgram').forEach(x=>x.checked=programs.has(x.value));$('mediaPlaylistStatus').textContent='Đang sửa playlist đã chọn; đổi Level/lộ trình rồi bấm Lưu thiết lập playlist.';
+  $('mediaPlaylistId').value=p.id;$('mediaPlaylistChannel').value=p.channel_id;$('mediaPlaylistTitle').value=p.title||'';$('mediaPlaylistUrl').value=p.youtube_url||'';$('mediaPlaylistAccess').value=p.access_mode||'custom';$('mediaPlaylistProduct').value=p.product_course_id||'';$('mediaPlaylistLanguage').value=p.language_code||'zh';syncMediaLevels(p.level_id||'');$('mediaPlaylistContent').value=/song/.test(String(p.content_type||''))?'song':'animation';$('mediaPlaylistFreeItems').value=Number(p.free_items||0);$('mediaPlaylistOrder').value=Number(p.sort_order||0);$('mediaShowShadow').checked=Number(p.show_shadowing)!==0;$('mediaShowKids').checked=Number(p.show_kids)===1;$('mediaPlaylistPublished').checked=Number(p.published)===1;const programs=new Set(String(p.program_codes||'').split(',').filter(Boolean));document.querySelectorAll('.mediaProgram').forEach(x=>x.checked=programs.has(x.value));$('mediaPlaylistStatus').textContent='Đang sửa playlist đã chọn; đổi quyền, số bài miễn phí, Level/lộ trình rồi bấm Lưu thiết lập playlist.';
 }
-async function saveMediaPlaylist(){try{const j=await api('/admin/media/playlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:$('mediaPlaylistId').value||undefined,channel_id:$('mediaPlaylistChannel').value,title:$('mediaPlaylistTitle').value,youtube_url:$('mediaPlaylistUrl').value,access_mode:$('mediaPlaylistAccess').value,product_course_id:$('mediaPlaylistProduct').value,language_code:$('mediaPlaylistLanguage').value,level_id:$('mediaPlaylistLevel').value,content_type:$('mediaPlaylistContent').value,program_codes:selectedMediaPrograms(),sort_order:Number($('mediaPlaylistOrder').value||0),show_shadowing:$('mediaShowShadow').checked,show_kids:$('mediaShowKids').checked,published:$('mediaPlaylistPublished').checked})});$('mediaPlaylistStatus').textContent='Đã lưu playlist, Level và lộ trình.';$('mediaPlaylistId').value=j.id;await loadMediaAdmin();$('mediaImportPlaylist').value=j.id;$('unifiedShadowTarget').value=j.id;renderMediaItems()}catch(e){$('mediaPlaylistStatus').textContent=e.message}}
+async function saveMediaPlaylist(){try{const j=await api('/admin/media/playlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:$('mediaPlaylistId').value||undefined,channel_id:$('mediaPlaylistChannel').value,title:$('mediaPlaylistTitle').value,youtube_url:$('mediaPlaylistUrl').value,access_mode:$('mediaPlaylistAccess').value,product_course_id:$('mediaPlaylistProduct').value,free_items:Number($('mediaPlaylistFreeItems').value||0),language_code:$('mediaPlaylistLanguage').value,level_id:$('mediaPlaylistLevel').value,content_type:$('mediaPlaylistContent').value,program_codes:selectedMediaPrograms(),sort_order:Number($('mediaPlaylistOrder').value||0),show_shadowing:$('mediaShowShadow').checked,show_kids:$('mediaShowKids').checked,published:$('mediaPlaylistPublished').checked})});$('mediaPlaylistStatus').textContent='Đã lưu playlist, quyền Kids, số bài miễn phí, Level và lộ trình.';$('mediaPlaylistId').value=j.id;await loadMediaAdmin();$('mediaImportPlaylist').value=j.id;$('unifiedShadowTarget').value=j.id;renderMediaItems()}catch(e){$('mediaPlaylistStatus').textContent=e.message}}
 async function readMediaLinkRows(){const file=$('mediaLinkFile').files[0];if(file){const rows=await parseFile(file);return rows.map((r,i)=>({item_number:Number(r.item_number||r.number||r.stt||i+1),title:r.title||r.name||r['Tên video']||`Bài ${i+1}`,youtube_url:r.youtube_url||r.url||r.link||r['Link YouTube'],access_override:r.access_override||'inherit',published:String(r.published??'1')!=='0'})).filter(x=>x.youtube_url)}return $('mediaBulkLinks').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map((line,i)=>{const cut=line.indexOf('|'),url=cut>=0?line.slice(cut+1).trim():line,title=cut>=0?line.slice(0,cut).trim():`Bài ${i+1}`;return{item_number:i+1,title,youtube_url:url,access_override:'inherit',published:true}})}
 async function importMediaLinks(){try{const items=await readMediaLinkRows();if(!items.length)throw new Error('Chưa có link hợp lệ.');const j=await api('/admin/media/items-import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({playlist_id:$('mediaImportPlaylist').value,items})});$('mediaImportStatus').textContent=`Đã tạo ${j.created}, cập nhật ${j.updated} video.`;await loadMediaAdmin()}catch(e){$('mediaImportStatus').textContent=e.message}}
 function renderMediaTranscriptEditor(){
