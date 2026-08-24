@@ -181,13 +181,12 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
   <section class="pane" id="readingPane">
     <div class="card">
       <h2>📖 Luyện đọc liên kết tự động với Khóa học</h2>
-      <p class="muted">Chọn khóa một lần, tải file bài đọc và file từ tra cứu. Hệ thống ghép toàn bộ dữ liệu vào đúng bài theo <b>lesson_number</b>; không cần chọn từng bài nhỏ.</p>
-      <div class="grid">
+      <p class="muted">Chọn khóa một lần rồi tải <b>một file XLSX tổng hợp</b>. Hệ thống tự đọc sheet câu luyện đọc và sheet từ tra cứu, sau đó ghép toàn bộ dữ liệu vào đúng bài.</p>
+      <div class="grid2">
         <div><label>Khóa học đích</label><select id="readingImportCourse"></select></div>
-        <div><label>File bài đọc nhiều bài — XLSX/CSV</label><input id="readingPassageFile" type="file" accept=".xlsx,.xls,.csv"></div>
-        <div><label>File từ tra cứu nhiều bài — XLSX/CSV</label><input id="readingVocabFile" type="file" accept=".xlsx,.xls,.csv"></div>
+        <div><label>File Luyện đọc tổng hợp — XLSX</label><input id="readingCombinedFile" type="file" accept=".xlsx,.xls"></div>
       </div>
-      <p class="muted">Có thể chỉ cập nhật một trong hai file. File bài đọc dùng các cột: <b>lesson_number, reading_title, sentence_number, hanzi, pinyin, vi</b>. File từ tra cứu dùng: <b>lesson_number, hanzi, pinyin, vi, highlight_mode</b>.</p>
+      <p class="muted">Admin nhận cả mẫu chuẩn <b>CAU_LUYEN_DOC + TU_VUNG</b> và mẫu đơn giản <b>BAI_DOC + TU_VUNG</b>. Tiêu đề có thể nằm ở dòng 1 hoặc dòng 4; có thể dùng <b>LessonCode/LessonNo</b> hoặc <b>lesson_number</b>.</p>
       <div class="row" style="margin-top:10px"><button class="ghost" id="previewReadingImport">👁 Kiểm tra trước</button><button class="primary" id="runReadingImport" disabled>⬆ Nhập và gắn tất cả</button><button class="ghost" id="readingTemplateBtn">⬇ Tải file mẫu</button></div>
       <div class="status" id="readingImportStatus">Chọn khóa và file, sau đó bấm “Kiểm tra trước”.</div>
       <div class="tablewrap" id="readingImportPreview" hidden></div>
@@ -857,25 +856,40 @@ async function parseFile(file){
   return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
 }
 let readingImportDraft={reading:[],vocab:[]};
-async function readingRowsFromFile(file,kind){
-  if(!file)return[];
-  const n=file.name.toLowerCase();
-  if(n.endsWith('.csv'))return parseFile(file);
-  const wb=XLSX.read(await file.arrayBuffer(),{type:'array'}),names=wb.SheetNames||[];
-  const patterns=kind==='reading'?[/bai.?doc/i,/luyen.?doc/i,/reading/i,/noi.?dung/i]:[/tu.?vung/i,/tra.?cuu/i,/vocab/i,/dictionary/i];
-  const name=names.find(x=>patterns.some(p=>p.test(x)))||names[0];
-  return name?XLSX.utils.sheet_to_json(wb.Sheets[name],{defval:''}):[];
+function sheetRowsAtHeader(wb,patterns,required=[]){
+  const name=(wb.SheetNames||[]).find(x=>patterns.some(p=>p.test(x)));if(!name)return[];
+  const sheet=wb.Sheets[name],matrix=XLSX.utils.sheet_to_json(sheet,{header:1,defval:''});
+  const headerIndex=matrix.findIndex(row=>{const cells=(row||[]).map(x=>String(x).trim().toLowerCase());return required.every(group=>group.some(x=>cells.includes(String(x).toLowerCase()))) });
+  if(headerIndex<0)return[];
+  return XLSX.utils.sheet_to_json(sheet,{range:headerIndex,defval:''});
+}
+function rowValue(row,names){
+  const entries=Object.entries(row||{}),wanted=names.map(x=>String(x).trim().toLowerCase());
+  const found=entries.find(([k])=>wanted.includes(String(k).trim().toLowerCase()));return found?found[1]:'';
+}
+function lessonNumberFromCode(code){const m=String(code||'').match(/(?:B|BAI|LESSON)[-_ ]*0*(\d+)$/i)||String(code||'').match(/(\d+)$/);return m?Number(m[1]):NaN}
+async function parseCombinedReadingFile(file){
+  const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
+  const lessonRows=sheetRowsAtHeader(wb,[/^BAI_HOC$/i,/danh.?sach.?bai/i],[['LessonCode','lesson_code'],['LessonNo','lesson_number']]);
+  const lessonMap=new Map();for(const x of lessonRows){const code=String(rowValue(x,['LessonCode','lesson_code'])).trim(),n=Number(rowValue(x,['LessonNo','lesson_number']));if(code&&Number.isInteger(n))lessonMap.set(code,{number:n,title:String(rowValue(x,['LessonTitle','lesson_title'])).trim()})}
+  const sourceReading=sheetRowsAtHeader(wb,[/^CAU_LUYEN_DOC$/i,/cau.?luyen.?doc/i,/^BAI_DOC$/i,/reading/i],[['Hanzi','hanzi'],['SentenceNo','sentence_number','seq']]);
+  const sourceVocab=sheetRowsAtHeader(wb,[/^TU_VUNG$/i,/tu.?vung/i,/tra.?cuu/i,/vocab/i],[['Hanzi','hanzi'],['LessonCode','lesson_number','LessonNo']]);
+  const normalNumber=x=>{const code=String(rowValue(x,['LessonCode','lesson_code'])).trim(),raw=rowValue(x,['lesson_number','LessonNo','Số bài','Bài']),direct=String(raw).trim()===''?NaN:Number(raw);return Number.isInteger(direct)&&direct>=0?direct:(lessonMap.get(code)?.number??lessonNumberFromCode(code))};
+  const reading=sourceReading.map((x,i)=>{const code=String(rowValue(x,['LessonCode','lesson_code'])).trim(),lesson=lessonMap.get(code);return{lesson_number:normalNumber(x),reading_title:String(rowValue(x,['reading_title','PassageTitle','Tên bài đọc'])||lesson?.title||'').trim(),sentence_number:Number(rowValue(x,['sentence_number','SentenceNo','seq','Số câu'])||i+1),hanzi:String(rowValue(x,['hanzi','Hanzi','Câu tiếng Trung','Hán tự'])).trim(),pinyin:String(rowValue(x,['pinyin','Pinyin'])).trim(),vi:String(rowValue(x,['vi','Vietnamese','Nghĩa Việt','Nghĩa'])).trim()}}).filter(x=>Number.isInteger(x.lesson_number)&&x.hanzi);
+  const vocab=sourceVocab.map((x,i)=>{const raw=String(rowValue(x,['highlight_mode','HighlightMode'])).trim().toLowerCase();const mode=/không|none/.test(raw)?'none':/đầu|first/.test(raw)?'first':'all';return{lesson_number:normalNumber(x),hanzi:String(rowValue(x,['hanzi','Hanzi','Từ vựng','Hán tự'])).trim(),pinyin:String(rowValue(x,['pinyin','Pinyin'])).trim(),vi:String(rowValue(x,['vi','Vietnamese','Nghĩa Việt','Nghĩa'])).trim(),highlight_mode:mode,sort_order:Number(rowValue(x,['sort_order','VocabNo','STT'])||i+1)}}).filter(x=>Number.isInteger(x.lesson_number)&&x.hanzi);
+  return{reading,vocab,sheetNames:wb.SheetNames||[]};
 }
 function readingLessonNumbers(rows){return [...new Set((rows||[]).map(x=>Number(x.lesson_number??x['Số bài']??x['Bài'])).filter(x=>Number.isInteger(x)&&x>=0))].sort((a,b)=>a-b)}
 async function previewReadingImport(){
-  const courseId=$('readingImportCourse').value,readingFile=$('readingPassageFile').files[0],vocabFile=$('readingVocabFile').files[0];
+  const courseId=$('readingImportCourse').value,file=$('readingCombinedFile').files[0];
   if(!courseId){$('readingImportStatus').textContent='Hãy chọn khóa học.';return}
-  if(!readingFile&&!vocabFile){$('readingImportStatus').textContent='Hãy chọn ít nhất file bài đọc hoặc file từ tra cứu.';return}
+  if(!file){$('readingImportStatus').textContent='Hãy chọn file XLSX tổng hợp.';return}
   $('readingImportStatus').textContent='Đang kiểm tra và ghép theo số bài...';$('runReadingImport').disabled=true;
   try{
-    const [reading,vocab]=await Promise.all([readingRowsFromFile(readingFile,'reading'),readingRowsFromFile(vocabFile,'vocab')]);
+    const {reading,vocab,sheetNames}=await parseCombinedReadingFile(file);
     readingImportDraft={reading,vocab};const a=readingLessonNumbers(reading),b=readingLessonNumbers(vocab),all=[...new Set([...a,...b])].sort((x,y)=>x-y);
-    if(!all.length)throw new Error('Không tìm thấy cột lesson_number/Số bài trong dữ liệu.');
+    if(!reading.length)throw new Error(`Không đọc được câu luyện đọc. Các sheet hiện có: ${sheetNames.join(', ')}.`);
+    if(!vocab.length)throw new Error(`Không đọc được từ tra cứu. Các sheet hiện có: ${sheetNames.join(', ')}.`);
     $('readingImportPreview').hidden=false;$('readingImportPreview').innerHTML=`<table><thead><tr><th>Khóa</th><th>Bài nhận diện</th><th>Câu đọc</th><th>Từ tra cứu</th></tr></thead><tbody><tr><td>${esc($('readingImportCourse').selectedOptions[0]?.textContent||courseId)}</td><td>${all.map(x=>String(x).padStart(2,'0')).join(', ')}</td><td>${reading.length} dòng · ${a.length} bài</td><td>${vocab.length} dòng · ${b.length} bài</td></tr></tbody></table>`;
     $('readingImportStatus').textContent=`Sẵn sàng gắn ${all.length} bài vào khóa đã chọn. Bài không có trong khóa sẽ được Worker báo trước và không lưu dở.`;$('runReadingImport').disabled=false;
   }catch(e){$('readingImportStatus').textContent=e.message}
@@ -1482,6 +1496,7 @@ $('runReadingImport').onclick=runReadingImport;
 $('readingTemplateBtn').onclick=readingTemplate;
 $('refreshReadingStatus').onclick=loadReadingStatus;
 $('readingImportCourse').onchange=()=>{readingImportDraft={reading:[],vocab:[]};$('runReadingImport').disabled=true;$('readingImportPreview').hidden=true;loadReadingStatus()};
+$('readingCombinedFile').onchange=()=>{readingImportDraft={reading:[],vocab:[]};$('runReadingImport').disabled=true;$('readingImportPreview').hidden=true;$('readingImportStatus').textContent='Đã chọn file. Bấm “Kiểm tra trước”.'};
 $('saveLearningGroup').onclick=saveLearningGroup;
 $('newLearningGroup').onclick=clearLearningGroup;
 $('writingManageCourse').onchange=loadWritingContent;
