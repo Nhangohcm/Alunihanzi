@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Aluni Admin V81 — Auto điền ZIP và tải đích nhanh</title>
+  <title>Aluni Admin V82 — Auto điền ZIP và kiểm tra trước xuất bản</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="access-config.js?v=20260813-2"></script>
@@ -1475,7 +1475,7 @@ $('mediaSavePathDay').onclick=saveMediaPathDay;
 $('mediaNewPathDay').onclick=()=>{editingMediaPathDay=0;$('mediaPathDayNumber').value=Number($('mediaPathDayNumber').value||0)+1;renderMediaPathManager();};
 $('mediaImportLinks').onclick=importMediaLinks;
 $('mediaRefresh').onclick=loadMediaAdmin;
-$('mediaImportPlaylist').onchange=()=>{mediaLastAudit=null;$('mediaPublishPlaylist').disabled=true;$('mediaAuditPreview').hidden=true;renderMediaItems()};
+$('mediaImportPlaylist').onchange=()=>{mediaLastAudit=null;$('mediaPublishPlaylist').disabled=true;$('mediaAuditPreview').hidden=true;loadMediaPlaylistEditor($('mediaImportPlaylist').value);renderMediaItems()};
 $('mediaAuditPlaylist').onclick=auditSelectedMediaPlaylist;
 $('mediaPublishPlaylist').onclick=()=>setSelectedMediaPlaylistPublished(true);
 $('mediaUnpublishPlaylist').onclick=()=>setSelectedMediaPlaylistPublished(false);
@@ -1541,7 +1541,7 @@ function renderMediaAdminOptions(){
   cs.innerHTML='';ps.innerHTML='';product.innerHTML='<option value="">Không gắn gói</option><option value="aluni-kids">🧸 Aluni Kids — mã riêng</option>';
   mediaAdmin.channels.forEach(c=>cs.add(new Option(c.name,c.id)));mediaAdmin.playlists.forEach(p=>ps.add(new Option(`${p.channel_name} → ${p.title}`,p.id)));(learningCourses||[]).filter(c=>String(c.id)!==SHADOWING_PASS_ID).forEach(c=>product.add(new Option(`Khóa người lớn: ${c.title}`,c.id)));
   if([...cs.options].some(o=>o.value===oldChannel))cs.value=oldChannel;if([...ps.options].some(o=>o.value===oldPlaylist))ps.value=oldPlaylist;if([...product.options].some(o=>o.value===oldProduct))product.value=oldProduct;
-  syncMediaLevels();renderMediaItems();refreshUnifiedShadowTargets();renderMediaPathManager();
+  syncMediaLevels();if(oldPlaylist&&[...ps.options].some(o=>o.value===oldPlaylist))loadMediaPlaylistEditor(oldPlaylist);renderMediaItems();refreshUnifiedShadowTargets();renderMediaPathManager();
 }
 async function loadMediaAdmin(force=false){
   if(!force&&mediaAdminLoadedAt&&Date.now()-mediaAdminLoadedAt<15000){renderMediaAdminOptions();return mediaAdmin}
@@ -1586,11 +1586,29 @@ function syncMediaLevels(selected=''){
   if([...level.options].some(o=>o.value===selected))level.value=selected;
 }
 function selectedMediaPrograms(){return [...document.querySelectorAll('.mediaProgram:checked')].map(x=>x.value)}
+function loadMediaChannelEditor(id){
+  const c=(mediaAdmin.channels||[]).find(x=>String(x.id)===String(id));if(!c)return;
+  $('mediaChannelName').value=c.name||'';$('mediaChannelUrl').value=c.youtube_url||'';$('mediaChannelOrder').value=Number(c.sort_order||0);
+}
 function loadMediaPlaylistEditor(id){
   const p=(mediaAdmin.playlists||[]).find(x=>String(x.id)===String(id));if(!p)return;
-  $('mediaPlaylistId').value=p.id;$('mediaPlaylistChannel').value=p.channel_id;$('mediaPlaylistTitle').value=p.title||'';$('mediaPlaylistUrl').value=p.youtube_url||'';$('mediaPlaylistAccess').value=p.access_mode||'custom';$('mediaPlaylistProduct').value=p.product_course_id||'';$('mediaPlaylistLanguage').value=p.language_code||'zh';syncMediaLevels(p.level_id||'');$('mediaPlaylistContent').value=/song/.test(String(p.content_type||''))?'song':'animation';$('mediaPlaylistFreeItems').value=Number(p.free_items||0);$('mediaPlaylistOrder').value=Number(p.sort_order||0);$('mediaShowShadow').checked=Number(p.show_shadowing)!==0;$('mediaShowKids').checked=Number(p.show_kids)===1;$('mediaPlaylistPublished').checked=Number(p.published)===1;const programs=new Set(String(p.program_codes||'').split(',').filter(Boolean));document.querySelectorAll('.mediaProgram').forEach(x=>x.checked=programs.has(x.value));$('mediaPlaylistStatus').textContent='Đang sửa playlist đã chọn; đổi quyền, số bài miễn phí, Level/lộ trình rồi bấm Lưu thiết lập playlist.';
+  loadMediaChannelEditor(p.channel_id);$('mediaPlaylistId').value=p.id;$('mediaPlaylistChannel').value=p.channel_id;$('mediaPlaylistTitle').value=p.title||'';$('mediaPlaylistUrl').value=p.youtube_url||'';$('mediaPlaylistAccess').value=p.access_mode||'custom';$('mediaPlaylistProduct').value=p.product_course_id||'';$('mediaPlaylistLanguage').value=p.language_code||'zh';syncMediaLevels(p.level_id||'');$('mediaPlaylistContent').value=/song/.test(String(p.content_type||''))?'song':'animation';$('mediaPlaylistFreeItems').value=Number(p.free_items||0);$('mediaPlaylistOrder').value=Number(p.sort_order||0);$('mediaShowShadow').checked=Number(p.show_shadowing)!==0;$('mediaShowKids').checked=Number(p.show_kids)===1;$('mediaPlaylistPublished').checked=Number(p.published)===1;const programs=new Set(String(p.program_codes||'').split(',').filter(Boolean));document.querySelectorAll('.mediaProgram').forEach(x=>x.checked=programs.has(x.value));$('mediaPlaylistStatus').textContent='Đã tự nạp kênh và playlist đã chọn. Kiểm tra quyền, Level/lộ trình rồi bấm Lưu thiết lập playlist.';
 }
-async function saveMediaPlaylist(){try{const publish=$('mediaPlaylistPublished').checked;const j=await api('/admin/media/playlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:$('mediaPlaylistId').value||undefined,channel_id:$('mediaPlaylistChannel').value,title:$('mediaPlaylistTitle').value,youtube_url:$('mediaPlaylistUrl').value,access_mode:$('mediaPlaylistAccess').value,product_course_id:$('mediaPlaylistProduct').value,free_items:Number($('mediaPlaylistFreeItems').value||0),language_code:$('mediaPlaylistLanguage').value,level_id:$('mediaPlaylistLevel').value,content_type:$('mediaPlaylistContent').value,program_codes:selectedMediaPrograms(),sort_order:Number($('mediaPlaylistOrder').value||0),show_shadowing:$('mediaShowShadow').checked,show_kids:$('mediaShowKids').checked,published:publish})});if(publish){await api('/admin/media/playlist-publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:j.id,published:true})})}$('mediaPlaylistStatus').textContent=publish?'Đã lưu và xuất bản toàn bộ playlist cùng các bài bên trong.':'Đã lưu playlist ở bản nháp.';$('mediaPlaylistId').value=j.id;await loadMediaAdmin();$('mediaImportPlaylist').value=j.id;$('unifiedShadowTarget').value=j.id;loadMediaPlaylistEditor(j.id);renderMediaItems()}catch(e){$('mediaPlaylistStatus').textContent=e.message}}
+async function saveMediaPlaylist(){
+  try{
+    const wantsPublish=$('mediaPlaylistPublished').checked,title=$('mediaPlaylistTitle').value.trim(),channelId=$('mediaPlaylistChannel').value;
+    if(!channelId||!title)throw new Error('Thiếu kênh hoặc tên playlist. Hãy chọn Đích cần nhập hoặc đọc lại ZIP để tự điền.');
+    $('mediaPlaylistStatus').textContent='Đang lưu thiết lập playlist ở bản nháp để kiểm tra an toàn…';
+    const j=await api('/admin/media/playlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:$('mediaPlaylistId').value||undefined,channel_id:channelId,title,youtube_url:$('mediaPlaylistUrl').value,access_mode:$('mediaPlaylistAccess').value,product_course_id:$('mediaPlaylistProduct').value,free_items:Number($('mediaPlaylistFreeItems').value||0),language_code:$('mediaPlaylistLanguage').value,level_id:$('mediaPlaylistLevel').value,content_type:$('mediaPlaylistContent').value,program_codes:selectedMediaPrograms(),sort_order:Number($('mediaPlaylistOrder').value||0),show_shadowing:$('mediaShowShadow').checked,show_kids:$('mediaShowKids').checked,published:false})});
+    $('mediaPlaylistId').value=j.id;await loadMediaAdmin(true);$('mediaImportPlaylist').value=j.id;$('unifiedShadowTarget').value=j.id;loadMediaPlaylistEditor(j.id);renderMediaItems();
+    if(!wantsPublish){$('mediaPlaylistStatus').textContent='Đã lưu playlist ở bản nháp.';return}
+    $('mediaPlaylistStatus').textContent='Đã lưu. Đang kiểm tra toàn bộ video và phụ đề trước khi xuất bản…';
+    const checked=await auditSelectedMediaPlaylist();
+    if(!checked?.ready){$('mediaPlaylistStatus').textContent=`Đã lưu bản nháp nhưng chưa xuất bản. ${$('mediaImportStatus').textContent}`;$('mediaAuditPreview').scrollIntoView({behavior:'smooth',block:'center'});return}
+    const published=await api('/admin/media/playlist-publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:j.id,published:true})});
+    $('mediaPlaylistStatus').textContent=`Đã kiểm tra an toàn và xuất bản ${published.item_count} video, ${published.segment_count} câu.`;$('mediaImportStatus').textContent=$('mediaPlaylistStatus').textContent;await loadMediaAdmin(true);$('mediaImportPlaylist').value=j.id;loadMediaPlaylistEditor(j.id);renderMediaItems();
+  }catch(e){$('mediaPlaylistStatus').textContent=e.message}
+}
 async function readMediaLinkRows(){const file=$('mediaLinkFile').files[0];if(file){const rows=await parseFile(file);return rows.map((r,i)=>({item_number:Number(r.item_number||r.number||r.stt||i+1),title:r.title||r.name||r['Tên video']||`Bài ${i+1}`,youtube_url:r.youtube_url||r.url||r.link||r['Link YouTube'],access_override:r.access_override||'inherit',published:String(r.published??'1')!=='0'})).filter(x=>x.youtube_url)}return $('mediaBulkLinks').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map((line,i)=>{const cut=line.indexOf('|'),url=cut>=0?line.slice(cut+1).trim():line,title=cut>=0?line.slice(0,cut).trim():`Bài ${i+1}`;return{item_number:i+1,title,youtube_url:url,access_override:'inherit',published:true}})}
 async function importMediaLinks(){try{const items=await readMediaLinkRows();if(!items.length)throw new Error('Chưa có link hợp lệ.');const j=await api('/admin/media/items-import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({playlist_id:$('mediaImportPlaylist').value,items})});$('mediaImportStatus').textContent=`Đã tạo ${j.created}, cập nhật ${j.updated} video.`;await loadMediaAdmin()}catch(e){$('mediaImportStatus').textContent=e.message}}
 function renderMediaTranscriptEditor(){
