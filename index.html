@@ -1534,8 +1534,7 @@ async function renderPublicLesson(lesson,button){
   if(Number(lesson.interactive_count||0))await loadInteractiveLesson(selectedPublicCourse.id,Number(lesson.number));
 }
 function openReadingLesson(courseId,lessonNumber,readingUrl=''){
-  const fallback=`https://xuong-luyen-doc-aluni.tiengtrungphanxa.chatgpt.site/?course_id=${encodeURIComponent(courseId)}&lesson_number=${Number(lessonNumber)}`;
-  window.open(readingUrl||fallback,'_blank','noopener');
+  window.location.href=`reading.html?course_id=${encodeURIComponent(courseId)}&lesson_number=${Number(lessonNumber)}`;
 }
 let aluniGameView='closed';
 function openLearningGame(lessonId,skin='adult',games=''){
