@@ -134,6 +134,7 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
     </div>
     <div class="tabs">
       <button class="tab active" data-pane="codesPane">🔑 Mã kích hoạt</button>
+      <button class="tab" data-pane="learnersPane">👥 Học viên & Tiến độ</button>
       <button class="tab" data-pane="learningPane">🎓 Khóa học</button>
       <button class="tab" data-pane="contentPane">🗂️ Kho từ vựng</button>
       <button class="tab" data-pane="grammarPane">📚 Ngữ pháp & Bài tập</button>
@@ -175,6 +176,20 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
       <div class="status" id="accessAlertStatus"></div>
       <div class="tablewrap"><table><thead><tr><th>Thời gian</th><th>Mã/Học viên</th><th>Liên hệ</th><th>Thiết bị bị từ chối</th><th>Xử lý</th></tr></thead><tbody id="accessAlertBody"></tbody></table></div>
     </div>
+  </section>
+
+  <section class="pane" id="learnersPane">
+    <div class="card">
+      <div class="row" style="align-items:center"><div style="margin-right:auto"><h2 style="margin-bottom:5px">Học viên & Tiến độ</h2><p class="muted" style="margin:0">Theo dõi mã đang học, bài đã mở, lần hoạt động gần nhất và tài sản trong Game phản xạ.</p></div><button class="primary" id="refreshLearners">Làm mới dữ liệu</button></div>
+      <div class="course-dashboard">
+        <div class="stat-card"><span class="stat-icon">👥</span><div class="stat-value" id="learnerTotal">0</div><div class="stat-label">Học viên đang kích hoạt</div></div>
+        <div class="stat-card"><span class="stat-icon">🟢</span><div class="stat-value" id="learnerActive7d">0</div><div class="stat-label">Hoạt động trong 7 ngày</div></div>
+        <div class="stat-card"><span class="stat-icon">📖</span><div class="stat-value" id="learnerLessons">0</div><div class="stat-label">Tổng lượt bài đã mở</div></div>
+        <div class="stat-card"><span class="stat-icon">⭐</span><div class="stat-value" id="learnerStars">0</div><div class="stat-label">Tổng sao game đang có</div></div>
+      </div>
+      <div class="status" id="learnerStatus"></div>
+    </div>
+    <div class="card"><div class="tablewrap"><table><thead><tr><th>Học viên</th><th>Mã / Khóa</th><th>Tiến độ</th><th>Game</th><th>Thiết bị</th><th>Hoạt động gần nhất</th><th>Hết hạn</th></tr></thead><tbody id="learnerBody"></tbody></table></div></div>
   </section>
 
   <section class="pane" id="contentPane">
@@ -709,6 +724,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   b.classList.add('active');
   $(b.dataset.pane).classList.add('active');
   if(b.dataset.pane==='contentPane') loadCourses();
+  if(b.dataset.pane==='learnersPane') loadLearners();
   if(b.dataset.pane==='learningPane') loadLearningCourses();
   if(b.dataset.pane==='grammarPane') loadGrammarCourses();
   if(b.dataset.pane==='shadowPane'){
@@ -719,6 +735,19 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   }
   if(b.dataset.pane==='kidsPane') loadKidsData();
 });
+
+async function loadLearners(){
+  const status=$('learnerStatus');status.textContent='Đang tải dữ liệu học viên...';
+  try{
+    const j=await api('/admin/learners'),rows=j.learners||[];
+    $('learnerTotal').textContent=Number(j.summary?.total||0).toLocaleString('vi-VN');
+    $('learnerActive7d').textContent=Number(j.summary?.active_7d||0).toLocaleString('vi-VN');
+    $('learnerLessons').textContent=rows.reduce((n,x)=>n+Number(x.lessons_opened||0),0).toLocaleString('vi-VN');
+    $('learnerStars').textContent=rows.reduce((n,x)=>n+Number(x.game_stars||0),0).toLocaleString('vi-VN');
+    $('learnerBody').innerHTML=rows.length?rows.map(x=>`<tr><td><b>${esc(x.student_name||'Chưa có tên')}</b><br><small>${esc(x.identity||'')}</small></td><td><code>${esc(x.code||'')}</code><br><small>${esc(x.course_id||'')}</small></td><td><b>${Number(x.lessons_opened||0)} bài đã mở</b><br><small>${Number(x.lessons_completed||0)} bài hoàn thành</small></td><td><b>⭐ ${Number(x.game_stars||0)}</b><br><small>${Number(x.pet_count||0)} thú · mở ${Number(x.game_unlocked||1)} màn</small></td><td>${Number(x.device_count||0)} / 2</td><td>${fmt(x.last_active_at)}</td><td>${fmt(x.expires_at)}</td></tr>`).join(''):'<tr><td colspan="7" class="muted">Chưa có học viên đang kích hoạt.</td></tr>';
+    status.textContent=`Đã cập nhật ${rows.length} học viên.`;status.className='status ok';
+  }catch(e){status.textContent=e.message;status.className='status err'}
+}
 
 async function refreshCodes(){
   try{
@@ -1449,6 +1478,7 @@ $('codeCourse').onchange=refreshCodes;
 $('setupShadowPass').onclick=setupShadowPass;
 $('refreshCodes').onclick=refreshCodes;
 $('downloadCodes').onclick=downloadCodes;
+$('refreshLearners').onclick=loadLearners;
 $('importBtn').onclick=doImport;
 $('templateBtn').onclick=template;
 $('saveLearningGroup').onclick=saveLearningGroup;

@@ -415,6 +415,10 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
     overflow:visible!important;
     padding-top:8px!important;
   }
+  .shadow-study-mode #shadowPlayerCard.transcript-mode{
+    top:72px!important;
+    height:calc(100dvh - 72px)!important;
+  }
   #shadowPlayerCard.transcript-mode>.shadow-main{
     position:sticky;
     top:8px;
@@ -449,6 +453,10 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
   #shadowPlayerCard.transcript-mode #shadowTranscript .transcript-line.active{
     outline:2px solid #718875;
     outline-offset:1px;
+  }
+  body.shadow-study-mode #shadowPlayerCard.transcript-mode{
+    inset:72px 0 0!important;
+    height:calc(100dvh - 72px)!important;
   }
 }
 
@@ -499,6 +507,10 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding-top:5px}
     overflow-x:hidden!important;
     overscroll-behavior:contain!important;
     align-content:start!important;
+  }
+  body.shadow-study-mode #shadowPlayerCard.transcript-mode{
+    inset:72px 0 0!important;
+    height:calc(100dvh - 72px)!important;
   }
 }
 
@@ -1109,7 +1121,7 @@ $('writingDictClose').onclick=closeWritingDictionary;$('writingDictDismiss').onc
 document.body.appendChild($('accessModal'));
 $('accessActivateBtn').onclick=activate;$('accessCancelBtn').onclick=closeAccess;$('accessCloseBtn').onclick=closeAccess;$('accessModal').onclick=e=>{if(e.target===$('accessModal'))closeAccess()};
 function closeSalesPopup(){$('salesPopup').hidden=true;sessionStorage.setItem('aluni_sales_popup_seen','1');setActiveAppSection('learningSection');updateAppNavToggle()}
-function setupSalesPopup(){const url=String(window.ALUNI_SALES_PAGE_URL||'#'),image=String(window.ALUNI_SALES_POPUP_IMAGE||'poster-gia-vuong.png'),poster=$('salesPopupImage'),shouldOpen=!savedEntitlements()[ALL_ACCESS_ID];let opened=false;const openFast=()=>{if(!shouldOpen||opened)return;opened=true;$('salesPopup').hidden=false};$('salesBuyNow').href=url;$('salesBuyNow').onclick=e=>{if(url==='#'){e.preventDefault();closeSalesPopup();openAccess()}};if(image){poster.fetchPriority='high';poster.onload=()=>setTimeout(openFast,80);poster.onerror=()=>{poster.hidden=true;$('salesPopupContent').hidden=false;openFast()};poster.src=image;poster.hidden=false;$('salesPopupContent').hidden=true}else openFast();if(shouldOpen)setTimeout(openFast,350)}
+function setupSalesPopup(){const url=String(window.ALUNI_SALES_PAGE_URL||'https://tieng-trung-aluni.nhangohcm.chatgpt.site/'),image=String(window.ALUNI_SALES_POPUP_IMAGE||'poster-gia-vuong.png'),poster=$('salesPopupImage'),shouldOpen=!savedEntitlements()[ALL_ACCESS_ID]&&!sessionStorage.getItem('aluni_sales_popup_seen');let opened=false;const openFast=()=>{if(!shouldOpen||opened)return;opened=true;$('salesPopup').hidden=false};$('salesBuyNow').href=url;$('salesBuyNow').onclick=()=>sessionStorage.setItem('aluni_sales_popup_seen','1');if(image){poster.fetchPriority='high';poster.onload=()=>setTimeout(openFast,80);poster.onerror=()=>{poster.hidden=true;$('salesPopupContent').hidden=false;openFast()};poster.src=image;poster.hidden=false;$('salesPopupContent').hidden=true}else openFast();if(shouldOpen)setTimeout(openFast,350)}
 $('salesPopupClose').onclick=closeSalesPopup;$('salesUseFree').onclick=closeSalesPopup;$('salesPopup').onclick=e=>{if(e.target===$('salesPopup'))closeSalesPopup()};setupSalesPopup();
 $('animateBtn').onclick=()=>writer&&writer.animateCharacter();$('quizBtn').onclick=()=>currentChars.length&&buildWriter(currentChars[currentCharIndex],true);$('resetBtn').onclick=()=>currentChars.length&&buildWriter(currentChars[currentCharIndex],true);$('nextCharBtn').onclick=nextPracticeChar;$('radicalBtn').onclick=()=>{radicalMode=!radicalMode;$('radicalBtn').textContent=`🎨 Tách bộ thủ: ${radicalMode?'BẬT':'TẮT'}`;if(currentChars.length)buildWriter(currentChars[currentCharIndex],false)};$('speakPractice').onclick=()=>currentItem&&speak(currentItem.hanzi);
 loadRemoteContent();
@@ -1524,21 +1536,28 @@ function openCourseLessonVideo(video){
   host.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 async function renderPublicLesson(lesson,button){
+  trackStudentActivity(selectedPublicCourse?.id,Number(lesson.number),'lesson','open');
   aluniPushView('lesson',{sectionId:'learningSection',lessonNumber:Number(lesson.number)});
   document.querySelectorAll('.learning-lesson-btn').forEach(x=>x.classList.remove('active'));button.classList.add('active');const videos=lesson.videos||[],resources=lesson.resources||[],shadows=lesson.shadowing_videos||[],hasShadow=shadows.length>0;
   const hasWriting=Number(lesson.writing_count||0)>0,hasReading=Number(lesson.reading_count||0)>0;
-  document.getElementById('learningPublicDetail').innerHTML=`<button class="lesson-detail-back" type="button" onclick="showCourseLessonList()">← Danh sách bài học</button><div class="learning-detail"><div class="brand">BÀI ${String(lesson.number).padStart(2,'0')}</div><h2>${shadowEsc(cleanPublicLessonTitle(lesson.title,lesson.number))}</h2>${Number(lesson.interactive_count||0)?'<div id="interactiveLessonHost" class="interactive-shell"><div class="interactive-loading">Đang tải thẻ học tương tác…</div></div>':''}<div id="learningCourseVideoPlayer" class="course-video-player"></div>${videos.map((v,i)=>`<div class="learning-video"><span>▶ Bài giảng · ${shadowEsc(v.title)}</span><button class="btn soft courseLessonVideoBtn" data-video-index="${i}">Xem tại đây</button></div>`).join('')}${shadows.map((s,i)=>`<div class="learning-video"><span>🎥 Shadowing · ${shadowEsc(s.title||`Video ${i+1}`)}</span><button class="btn primary" onclick="openLessonShadowing('${shadowEsc(selectedPublicCourse.id)}','${s.id}')">Luyện ngay</button></div>`).join('')}${hasReading?`<div class="learning-video reading-launch-row"><span>📖 Luyện đọc</span><button class="btn primary courseReadingBtn" data-reading-url="${shadowEsc(lesson.reading_url||'')}">Luyện đọc</button></div>`:''}${(lesson.games||[]).length?`<div class="learning-video game-launch-row"><span>🎮 Game luyện tập · ${lesson.games.length} màn đã chọn</span><button class="btn primary" onclick="openLearningGame('${shadowEsc(lesson.id)}','adult','${shadowEsc(lesson.games.join(','))}')">Chơi game</button></div>`:''}${hasWriting?`<div class="learning-video"><span>✍ Viết chữ · ${Number(lesson.writing_count)} từ</span><button class="btn primary" onclick="openWritingLesson('${shadowEsc(selectedPublicCourse.id)}',${Number(lesson.number)})">Luyện viết</button></div>`:''}${lesson.grammar_set_id?`<div class="learning-video"><span>✓ Ngữ pháp & bài tập · ${shadowEsc(lesson.grammar_title||'Nội dung bài')}</span><button class="btn primary" onclick="openGrammarSet(${Number(lesson.grammar_set_id)})">Mở</button></div>`:''}${resources.map(r=>`<div class="learning-resource"><span>📄 Tài liệu · ${shadowEsc(r.title)}</span><a class="btn soft" href="${shadowEsc(r.url)}" target="_blank" rel="noopener">${r.access_mode==='view'?'Xem':'Tải / mở'}</a></div>`).join('')}</div>`;
+  document.getElementById('learningPublicDetail').innerHTML=`<button class="lesson-detail-back" type="button" onclick="showCourseLessonList()">← Danh sách bài học</button><div class="learning-detail"><div class="brand">BÀI ${String(lesson.number).padStart(2,'0')}</div><h2>${shadowEsc(cleanPublicLessonTitle(lesson.title,lesson.number))}</h2>${Number(lesson.interactive_count||0)?'<div id="interactiveLessonHost" class="interactive-shell"><div class="interactive-loading">Đang tải thẻ học tương tác…</div></div>':''}<div id="learningCourseVideoPlayer" class="course-video-player"></div>${videos.map((v,i)=>`<div class="learning-video"><span>▶ Bài giảng · ${shadowEsc(v.title)}</span><button class="btn soft courseLessonVideoBtn" data-video-index="${i}">Xem tại đây</button></div>`).join('')}${shadows.map((s,i)=>`<div class="learning-video"><span>🎥 Shadowing · ${shadowEsc(s.title||`Video ${i+1}`)}</span><button class="btn primary" onclick="openLessonShadowing('${shadowEsc(selectedPublicCourse.id)}','${s.id}')">Luyện ngay</button></div>`).join('')}${hasReading?`<div class="learning-video reading-launch-row"><span>📖 Luyện đọc</span><button class="btn primary courseReadingBtn" data-reading-url="${shadowEsc(lesson.reading_url||'')}">Luyện đọc</button></div>`:''}${(lesson.games||[]).length?`<div class="learning-video game-launch-row"><span>🎮 Game luyện tập · ${lesson.games.length} màn đã chọn</span><button class="btn primary" onclick="openLearningGame('${shadowEsc(lesson.id)}','adult','${shadowEsc(lesson.games.join(','))}')">Chơi game</button></div>`:''}${hasWriting?`<div class="learning-video"><span>✍ Viết chữ · ${Number(lesson.writing_count)} từ</span><button class="btn primary" onclick="openWritingLesson('${shadowEsc(selectedPublicCourse.id)}',${Number(lesson.number)})">Luyện viết</button></div>`:''}${lesson.grammar_set_id?`<div class="learning-video"><span>✓ Ngữ pháp & bài tập · ${shadowEsc(lesson.grammar_title||'Nội dung bài')}</span><button class="btn primary" onclick="openGrammarSet(${Number(lesson.grammar_set_id)})">Mở</button></div>`:''}${resources.map(r=>`<div class="learning-resource"><span>📄 Tài liệu · ${shadowEsc(r.title)}</span><a class="btn soft" href="${shadowEsc(r.url)}" target="_blank" rel="noopener">${r.access_mode==='view'?'Xem':'Tải / mở'}</a></div>`).join('')}<div class="learning-video"><span>✅ Đã học xong nội dung bài này</span><button class="btn primary" onclick="completeCurrentLesson(${Number(lesson.number)})">Đánh dấu hoàn thành</button></div></div>`;
   document.querySelectorAll('#learningPublicDetail .courseLessonVideoBtn').forEach(btn=>btn.onclick=()=>openCourseLessonVideo(videos[Number(btn.dataset.videoIndex)]));
   document.querySelectorAll('#learningPublicDetail .courseReadingBtn').forEach(btn=>btn.onclick=()=>openReadingLesson(selectedPublicCourse.id,Number(lesson.number),btn.dataset.readingUrl));
   const drawer=document.getElementById('courseDrawer');drawer.classList.add('lesson-open');drawer.scrollTo({top:0,behavior:'smooth'});
   if(Number(lesson.interactive_count||0))await loadInteractiveLesson(selectedPublicCourse.id,Number(lesson.number));
 }
+function completeCurrentLesson(lessonNumber){trackStudentActivity(selectedPublicCourse?.id,Number(lessonNumber),'lesson','complete');alert('Đã ghi nhận hoàn thành bài học.');}
 function openReadingLesson(courseId,lessonNumber,readingUrl=''){
   sessionStorage.setItem('aluni_reading_return',JSON.stringify({courseId:String(courseId),lessonNumber:Number(lessonNumber),savedAt:Date.now()}));
   window.location.href=`reading.html?course_id=${encodeURIComponent(courseId)}&lesson_number=${Number(lessonNumber)}`;
 }
 let aluniGameView='closed';
+let aluniGameSaveTimer=null;
+function activeStudentEntitlement(courseId=''){const map=savedEntitlements();return entitlementFor(courseId)||map[ALL_ACCESS_ID]||Object.values(map).find(x=>x?.token)||null}
+async function studentApi(path,method='GET',body=null,courseId=''){const ent=activeStudentEntitlement(courseId);if(!ent?.token)return null;const opts={method,headers:{Authorization:`Bearer ${ent.token}`,'X-Aluni-Device':accessDeviceId(),'X-Aluni-Device-Label':accessDeviceLabel()}};if(body!==null){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(body)}const r=await fetch(api(path),opts);if(!r.ok)return null;return r.json()}
+function trackStudentActivity(courseId,lessonNumber,module,eventType='open'){studentApi('/student/activity','POST',{course_id:String(courseId||''),lesson_number:Number(lessonNumber||0),module:String(module||''),event_type:String(eventType||'open')},courseId).catch(()=>{})}
 function openLearningGame(lessonId,skin='adult',games=''){
+  const lessonNumber=Number(String(lessonId||'').match(/(\d+)(?!.*\d)/)?.[1]||0);trackStudentActivity(selectedPublicCourse?.id,lessonNumber,'game','open');
   let modal=document.getElementById('aluniGameModal');
   if(!modal){modal=document.createElement('div');modal.id='aluniGameModal';modal.className='aluni-game-modal';modal.innerHTML='<div class="aluni-game-shell"><button class="aluni-game-close" type="button" aria-label="Quay lại">←</button><iframe title="Aluni Game" allow="autoplay; fullscreen; screen-wake-lock"></iframe></div>';document.body.appendChild(modal);modal.querySelector('.aluni-game-close').onclick=requestLearningGameBack;modal.onclick=e=>{if(e.target===modal)requestLearningGameBack()}}
   const endpoint=lessonId?shadowApi(`/learning/game-data?lesson_id=${encodeURIComponent(lessonId)}`):'',frame=modal.querySelector('iframe');
@@ -1555,6 +1574,8 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)document.ge
 window.addEventListener('message',e=>{
   const modal=document.getElementById('aluniGameModal'),frame=modal?.querySelector('iframe');
   if(!modal?.classList.contains('show')||e.source!==frame?.contentWindow)return;
+  if(e.data?.type==='aluni-game-state-request'){const localState=e.data.state,courseId=selectedPublicCourse?.id||'';studentApi('/student/game-state','GET',null,courseId).then(j=>{if(j?.state)frame.contentWindow.postMessage({type:'aluni-game-state-load',state:j.state},'*');else{frame.contentWindow.postMessage({type:'aluni-game-state-ready'},'*');if(localState)studentApi('/student/game-state','POST',{state:localState},courseId)}});return}
+  if(e.data?.type==='aluni-game-state-save'){const state=e.data.state,courseId=selectedPublicCourse?.id||'';clearTimeout(aluniGameSaveTimer);aluniGameSaveTimer=setTimeout(()=>studentApi('/student/game-state','POST',{state},courseId),400);return}
   if(e.data?.type==='aluni-game-ui-back'){requestLearningGameBack();return}
   if(e.data?.type!=='aluni-game-view')return;
   if(e.data.view==='stage'&&aluniGameView!=='stage'){aluniGameView='stage';if(history.state?.aluniLevel!=='game-stage')aluniPushView('game-stage',{sectionId:document.querySelector('.app-section.active')?.id||'learningSection'})}

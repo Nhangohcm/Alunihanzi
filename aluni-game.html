@@ -80,7 +80,12 @@ let words=loadWords(),stars=Number(localStorage.getItem('aluniGameStars')||0),un
 let audioUnlocked=false;const mobileAudioMode=matchMedia('(pointer:coarse)').matches||innerWidth<=620;
 const $=id=>document.getElementById(id),shuffle=a=>[...a].sort(()=>Math.random()-.5);
 function loadWords(){try{return JSON.parse(localStorage.getItem('aluniGameWords'))||DEFAULT_WORDS}catch{return DEFAULT_WORDS}}
-function saveProgress(){localStorage.setItem('aluniGameStars',stars);localStorage.setItem('aluniGameUnlocked',unlocked);$('starCount').textContent=stars;if($('petStars'))$('petStars').textContent=stars}
+function gameStateSnapshot(){return{version:1,stars:Number(stars||0),unlocked:Number(unlocked||1),petState,updatedAt:new Date().toISOString()}}
+let cloudStateReady=false,cloudSaveTimer=null;
+function requestCloudState(){try{if(parent!==window)parent.postMessage({type:'aluni-game-state-request',state:gameStateSnapshot()},'*')}catch{}}
+function queueCloudSave(){if(!cloudStateReady||parent===window)return;clearTimeout(cloudSaveTimer);cloudSaveTimer=setTimeout(()=>{try{parent.postMessage({type:'aluni-game-state-save',state:gameStateSnapshot()},'*')}catch{}},350)}
+function applyCloudState(state){if(!state||typeof state!=='object')return;stars=Math.max(0,Number(state.stars||0));unlocked=Math.max(1,Number(state.unlocked||1));if(state.petState&&Array.isArray(state.petState.owned))petState=state.petState;localStorage.setItem('aluniGameStars',stars);localStorage.setItem('aluniGameUnlocked',unlocked);localStorage.setItem('aluniPetState',JSON.stringify(petState));cloudStateReady=true;if($('starCount'))$('starCount').textContent=stars;if($('petStars'))$('petStars').textContent=stars;renderMenu();showToast('Đã khôi phục điểm, thú và cấp độ ☁️')}
+function saveProgress(){localStorage.setItem('aluniGameStars',stars);localStorage.setItem('aluniGameUnlocked',unlocked);$('starCount').textContent=stars;if($('petStars'))$('petStars').textContent=stars;queueCloudSave()}
 function savePetState(){localStorage.setItem('aluniPetState',JSON.stringify(petState));saveProgress()}
 function renderMenu(){const lessonMode=enabledGameCodes.length>0,list=LEVELS.map((x,i)=>({...x,i,code:GAME_CODES[i]})).filter(x=>!lessonMode||enabledGameCodes.includes(x.code));$('levelMenu').innerHTML=list.map(x=>{const locked=!lessonMode&&x.i>=unlocked;return `<button class="level-card ${locked?'locked':''}" data-level="${x.i}"><span class="icon">${x.icon}</span><b>Màn ${x.i+1} · ${x.name}</b><small>${locked?'🔒 Hoàn thành màn trước':x.desc}</small></button>`}).join('');document.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>{const i=+b.dataset.level;if(!lessonMode&&i>=unlocked)return sfx('wrong');startLevel(i)})}
 function getAudio(){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;audioCtx=audioCtx||new AC();audioCtx.resume?.();return audioCtx}
@@ -112,7 +117,7 @@ function finishLevel(){stars+=10;unlocked=Math.max(unlocked,Math.min(LEVELS.leng
 function goHome(){$('stage').classList.remove('show');$('levelMenu').style.display='grid';stopMusic();notifyParent('menu')}
 function gameBackStep(){const pet=$('petModal'),data=$('dataModal');if(pet?.classList.contains('show')){pet.classList.remove('show');return true}if(data?.classList.contains('show')){data.classList.remove('show');return true}if($('stage')?.classList.contains('show')){goHome();return true}return false}
 function requestUiBack(){if(parent!==window)parent.postMessage({type:'aluni-game-ui-back'},'*');else gameBackStep()}
-addEventListener('message',e=>{if(e.data?.type==='aluni-game-pause'){silenceGame();return}if(e.data?.type!=='aluni-game-back')return;const consumed=gameBackStep();if(parent!==window)parent.postMessage({type:'aluni-game-back-result',consumed,view:$('stage').classList.contains('show')?'stage':'menu'},'*')});
+addEventListener('message',e=>{if(e.data?.type==='aluni-game-state-load'){applyCloudState(e.data.state);return}if(e.data?.type==='aluni-game-state-ready'){cloudStateReady=true;queueCloudSave();return}if(e.data?.type==='aluni-game-pause'){silenceGame();return}if(e.data?.type!=='aluni-game-back')return;const consumed=gameBackStep();if(parent!==window)parent.postMessage({type:'aluni-game-back-result',consumed,view:$('stage').classList.contains('show')?'stage':'menu'},'*')});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)silenceGame();else if($('stage')?.classList.contains('show')&&musicOn){unlockGameAudio();startMusic()}});
 addEventListener('pagehide',silenceGame);addEventListener('beforeunload',silenceGame);
 
@@ -149,7 +154,7 @@ async function bootGame(){
  enabledGameCodes=[...new Set(requested)];document.body.dataset.skin=params.get('skin')||'kids';
  if(params.get('embedded')==='1')document.body.classList.add('embedded-game');
  if(mobileAudioMode)$('soundGate').hidden=false;
- saveProgress();renderMenu();notifyParent('menu');
+ saveProgress();renderMenu();notifyParent('menu');requestCloudState();
  const dataUrl=params.get('data');
  if(dataUrl){try{const r=await fetch(dataUrl,{cache:'no-store'}),j=await r.json();if(r.ok&&Array.isArray(j.words)&&j.words.length>=4)words=j.words.map(x=>({hanzi:String(x.hanzi||'').trim(),pinyin:String(x.pinyin||'').trim()})).filter(x=>x.hanzi&&x.pinyin);if(!enabledGameCodes.length&&Array.isArray(j.games))enabledGameCodes=j.games.filter(x=>GAME_CODES.includes(x));renderMenu()}catch(e){console.warn('Không tải được dữ liệu game của bài, dùng bộ từ dự phòng.',e)}}
 }
