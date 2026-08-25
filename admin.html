@@ -207,6 +207,12 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
       <h2>Sửa kho từ vựng theo từng bài</h2>
       <div class="course-manager-head"><div><label>Chọn khóa học</label><select id="writingManageCourse"></select></div><button class="ghost" id="refreshWritingContent">Làm mới danh sách</button></div>
       <p class="muted">Mỗi dòng: <b>Hán tự | pinyin | nghĩa Việt</b>. Có thể sửa tại đây hoặc mở trực tiếp Kho từ vựng trong từng bài ở tab Khóa học.</p>
+      <div class="shadow-course-rule" style="margin-top:12px;background:#eef9f4;border-color:#cceadb">
+        <b>🔗 Dùng kho từ vựng hiện có cho cả 3 chức năng</b>
+        <p class="muted" style="margin:6px 0">Dành cho NPCR và khóa cũ đã có Luyện đọc/Game. Hệ thống sẽ liên kết đúng theo số bài, giữ nguyên dữ liệu cũ và bật thêm Viết chữ Hán; không cần tải file lại.</p>
+        <div class="row"><button class="ghost" id="previewExistingVocabulary">Kiểm tra kho hiện có</button><button class="primary" id="linkExistingVocabulary" disabled>Áp dụng cho Luyện đọc + Game + Viết chữ</button></div>
+        <div class="status" id="existingVocabularyStatus">Chọn khóa học để kiểm tra.</div>
+      </div>
       <details class="inline-editor" style="margin-top:12px">
         <summary><b>✨ Lấy chữ từ Shadowing</b> <span class="muted">— công cụ bổ trợ, không thay file từ vựng riêng</span></summary>
         <p class="muted">Hệ thống lấy các chữ Hán không trùng từ câu Shadowing của từng bài. Anh có thể xóa bớt trong phần xem trước rồi mới lưu.</p>
@@ -302,9 +308,11 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
       <div class="tablewrap" id="bulkLecturePreview" hidden></div>
     </div>
     <div class="card module-access-card" data-module="shadowing"><h2>5. Shadowing</h2><div class="grid2"><select class="moduleAccessMode" data-module="shadowing"><option value="inherit">Áp dụng theo quyền toàn khóa</option><option value="custom">Miễn phí các bài riêng</option></select><input class="moduleFreeLessons" data-module="shadowing" placeholder="Số bài, ví dụ: 1, 4"></div><button class="ghost modulePane" data-pane-target="shadowPane">Mở tab Shadowing của khóa này</button></div>
-    <div class="card module-access-card" data-module="writing"><h2>6. Viết chữ</h2><div class="grid2"><select class="moduleAccessMode" data-module="writing"><option value="inherit">Áp dụng theo quyền toàn khóa</option><option value="custom">Miễn phí các bài riêng</option></select><input class="moduleFreeLessons" data-module="writing" placeholder="Số bài, ví dụ: 1, 4"></div><button class="ghost modulePane" data-pane-target="writingPane">Mở tab Viết chữ Hán của khóa này</button></div>
-    <div class="card module-access-card" data-module="grammar"><h2>7. Ngữ pháp & Bài tập</h2><div class="grid2"><select class="moduleAccessMode" data-module="grammar"><option value="inherit">Áp dụng theo quyền toàn khóa</option><option value="custom">Miễn phí các bài riêng</option></select><input class="moduleFreeLessons" data-module="grammar" placeholder="Số bài, ví dụ: 1, 4"></div><button class="ghost modulePane" data-pane-target="grammarPane">Mở tab Ngữ pháp của khóa này</button></div>
-    <div class="card module-access-card" data-module="resource"><h2>8. Tài liệu</h2><div class="grid2"><select class="moduleAccessMode" data-module="resource"><option value="inherit">Áp dụng theo quyền toàn khóa</option><option value="custom">Miễn phí các bài riêng</option></select><input class="moduleFreeLessons" data-module="resource" placeholder="Số bài, ví dụ: 1, 4"></div><button class="ghost moduleOpen" data-target="learningLessonManager">Quản lý tài liệu theo bài</button></div>
+    <div class="card"><h2>6. Luyện đọc nhanh</h2><p class="muted">Dùng Kho từ vựng của từng bài và áp dụng theo quyền của khóa học.</p><button class="ghost moduleOpen" data-target="learningLessonManager">Quản lý kho từ theo từng bài</button></div>
+    <div class="card"><h2>7. Game phản xạ</h2><p class="muted">Dùng chung Kho từ vựng; vẫn chọn bộ game riêng cho toàn khóa hoặc từng bài.</p><button class="ghost moduleOpen" data-target="learningLessonManager">Tùy chỉnh Game theo bài</button></div>
+    <div class="card module-access-card" data-module="writing"><h2>8. Viết chữ Hán</h2><div class="grid2"><select class="moduleAccessMode" data-module="writing"><option value="inherit">Áp dụng theo quyền toàn khóa</option><option value="custom">Miễn phí các bài riêng</option></select><input class="moduleFreeLessons" data-module="writing" placeholder="Số bài, ví dụ: 1, 4"></div><button class="ghost modulePane" data-pane-target="contentPane">Mở Kho từ vựng của khóa này</button></div>
+    <div class="card module-access-card" data-module="grammar"><h2>9. Ngữ pháp & Bài tập</h2><div class="grid2"><select class="moduleAccessMode" data-module="grammar"><option value="inherit">Áp dụng theo quyền toàn khóa</option><option value="custom">Miễn phí các bài riêng</option></select><input class="moduleFreeLessons" data-module="grammar" placeholder="Số bài, ví dụ: 1, 4"></div><button class="ghost modulePane" data-pane-target="grammarPane">Mở tab Ngữ pháp của khóa này</button></div>
+    <div class="card module-access-card" data-module="resource"><h2>10. Tài liệu</h2><div class="grid2"><select class="moduleAccessMode" data-module="resource"><option value="inherit">Áp dụng theo quyền toàn khóa</option><option value="custom">Miễn phí các bài riêng</option></select><input class="moduleFreeLessons" data-module="resource" placeholder="Số bài, ví dụ: 1, 4"></div><button class="ghost moduleOpen" data-target="learningLessonManager">Quản lý tài liệu theo bài</button></div>
 
     <div class="card manager-anchor" id="learningLessonManager">
       <h2>Video, tài liệu và danh sách nội dung từng bài</h2>
@@ -814,7 +822,7 @@ async function loadCourses(loadDetails=true){
     if(selectedCode&&courses.some(c=>String(c.id)===String(selectedCode)))$('codeCourse').value=selectedCode;
     syncCodeType(false);
     $('contentStatus').textContent=`Có ${courses.filter(c=>String(c.id)!==SHADOWING_PASS_ID).length} khóa được tạo từ tab Khóa học.`;
-    if(loadDetails&&$('writingManageCourse')&&courses.length)await loadWritingContent();
+    if(loadDetails&&$('writingManageCourse')&&courses.length){await loadWritingContent();await previewExistingVocabulary()}
   }catch(e){$('contentStatus').textContent=e.message}
 }
 async function parseFile(file){
@@ -865,6 +873,17 @@ async function loadWritingContent(){
     document.querySelectorAll('#writingLessonList .backToLearning').forEach(b=>b.onclick=()=>openLearningLesson(b.dataset.course,b.dataset.lesson));
     $('writingContentStatus').textContent=`Có ${lessons.length} bài. Bấm vào một bài để sửa từ vựng.`;
   }catch(e){$('writingContentStatus').textContent=e.message}
+}
+async function previewExistingVocabulary(){
+  const courseId=$('writingManageCourse')?.value,status=$('existingVocabularyStatus'),button=$('linkExistingVocabulary');
+  if(!courseId){status.textContent='Hãy chọn khóa học.';button.disabled=true;return}
+  status.textContent='Đang kiểm tra kho từ vựng hiện có...';button.disabled=true;
+  try{const j=await api('/admin/vocabulary/reconcile?course_id='+encodeURIComponent(courseId));const withData=(j.lessons||[]).filter(x=>x.available_count>0||x.current_count>0).length;status.textContent=`Khóa có ${j.lessons?.length||0} bài; tìm thấy dữ liệu từ vựng ở ${withData} bài, tổng ${Math.max(Number(j.total_available||0),Number(j.total_current||0))} mục. ${j.can_link?`Có ${j.can_link} bài cần nối dữ liệu cũ sang kho chung.`:'Dữ liệu đã nằm trong kho chung; có thể bật thêm Viết chữ Hán ngay.'}`;button.disabled=withData===0}catch(e){status.textContent=e.message;button.disabled=true}
+}
+async function linkExistingVocabulary(){
+  const courseId=$('writingManageCourse')?.value,status=$('existingVocabularyStatus'),button=$('linkExistingVocabulary');if(!courseId)return;
+  button.disabled=true;status.textContent='Đang liên kết theo đúng số bài và bật cả 3 chức năng...';
+  try{const j=await api('/admin/vocabulary/reconcile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:courseId})});status.textContent=`Hoàn tất: đã nối ${j.linked_items||0} từ của ${j.linked_lessons||0} bài và bật Luyện đọc nhanh + Game phản xạ + Viết chữ Hán cho ${j.enabled_lessons||0} bài.`;await loadWritingContent()}catch(e){status.textContent=e.message}finally{button.disabled=false}
 }
 let writingShadowDraft=[];
 async function previewWritingFromShadow(){
@@ -1434,8 +1453,10 @@ $('importBtn').onclick=doImport;
 $('templateBtn').onclick=template;
 $('saveLearningGroup').onclick=saveLearningGroup;
 $('newLearningGroup').onclick=clearLearningGroup;
-$('writingManageCourse').onchange=loadWritingContent;
-$('refreshWritingContent').onclick=loadWritingContent;
+$('writingManageCourse').onchange=async()=>{await loadWritingContent();await previewExistingVocabulary()};
+$('refreshWritingContent').onclick=async()=>{await loadWritingContent();await previewExistingVocabulary()};
+$('previewExistingVocabulary').onclick=previewExistingVocabulary;
+$('linkExistingVocabulary').onclick=linkExistingVocabulary;
 $('previewWritingFromShadow').onclick=previewWritingFromShadow;
 $('saveWritingFromShadow').onclick=saveWritingFromShadow;
 $('saveLearningCourse').onclick=saveLearningCourse;
