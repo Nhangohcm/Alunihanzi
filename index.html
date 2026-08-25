@@ -1110,7 +1110,7 @@ document.body.appendChild($('accessModal'));
 $('accessActivateBtn').onclick=activate;$('accessCancelBtn').onclick=closeAccess;$('accessCloseBtn').onclick=closeAccess;$('accessModal').onclick=e=>{if(e.target===$('accessModal'))closeAccess()};
 function closeSalesPopup(){$('salesPopup').hidden=true;sessionStorage.setItem('aluni_sales_popup_seen','1');setActiveAppSection('learningSection');updateAppNavToggle()}
 function setupSalesPopup(){const url=String(window.ALUNI_SALES_PAGE_URL||'#'),image=String(window.ALUNI_SALES_POPUP_IMAGE||'poster-gia-vuong.png'),poster=$('salesPopupImage'),shouldOpen=!savedEntitlements()[ALL_ACCESS_ID];let opened=false;const openFast=()=>{if(!shouldOpen||opened)return;opened=true;$('salesPopup').hidden=false};$('salesBuyNow').href=url;$('salesBuyNow').onclick=e=>{if(url==='#'){e.preventDefault();closeSalesPopup();openAccess()}};if(image){poster.fetchPriority='high';poster.onload=()=>setTimeout(openFast,80);poster.onerror=()=>{poster.hidden=true;$('salesPopupContent').hidden=false;openFast()};poster.src=image;poster.hidden=false;$('salesPopupContent').hidden=true}else openFast();if(shouldOpen)setTimeout(openFast,350)}
-$('salesPopupClose').onclick=closeSalesPopup;$('salesUseFree').onclick=closeSalesPopup;$('salesPopup').onclick=e=>{if(e.target===$('salesPopup'))closeSalesPopup()};setupSalesPopup();
+$('salesPopupClose').onclick=closeSalesPopup;$('salesUseFree').onclick=closeSalesPopup;$('salesPopup').onclick=e=>{if(e.target===$('salesPopup'))closeSalesPopup()};
 $('animateBtn').onclick=()=>writer&&writer.animateCharacter();$('quizBtn').onclick=()=>currentChars.length&&buildWriter(currentChars[currentCharIndex],true);$('resetBtn').onclick=()=>currentChars.length&&buildWriter(currentChars[currentCharIndex],true);$('nextCharBtn').onclick=nextPracticeChar;$('radicalBtn').onclick=()=>{radicalMode=!radicalMode;$('radicalBtn').textContent=`🎨 Tách bộ thủ: ${radicalMode?'BẬT':'TẮT'}`;if(currentChars.length)buildWriter(currentChars[currentCharIndex],false)};$('speakPractice').onclick=()=>currentItem&&speak(currentItem.hanzi);
 loadRemoteContent();
 
@@ -2276,6 +2276,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
   document.body.classList.remove('writing-study-mode','shadow-study-mode');
   setActiveAppSection('learningSection');
   history.replaceState({...history.state,aluniRoot:true,sectionId:'learningSection'},'');
+  // Popup bán hàng thuộc trang chính "Khóa học của tôi". Chỉ khởi tạo
+  // sau khi trang chính đã được chọn, không gắn với luồng Viết chữ.
+  setupSalesPopup();
   loadPublicLearningCourses();
   document.getElementById('startLearningBtn')?.addEventListener('click',()=>document.querySelector('.my-courses-panel')?.scrollIntoView({behavior:'smooth',block:'start'}));
   document.addEventListener('click',e=>{const button=e.target.closest('#topActivateBtn');if(!button)return;e.preventDefault();openAccess()});
