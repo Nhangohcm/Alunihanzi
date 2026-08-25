@@ -200,7 +200,7 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
         <div class="stat-card"><span class="stat-icon">📖</span><div class="stat-value" id="learnerLessons">0</div><div class="stat-label">Tổng lượt bài đã mở</div></div>
         <div class="stat-card"><span class="stat-icon">⭐</span><div class="stat-value" id="learnerStars">0</div><div class="stat-label">Tổng sao game đang có</div></div>
       </div>
-      <div class="learner-tools"><input id="learnerSearch" name="aluni_learner_lookup_v891" type="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="🔎 Nhập tên, SĐT, email hoặc mã học viên..."><button class="ghost" id="learnerSearchClear" type="button">Xóa tìm kiếm</button><select id="learnerFilter"><option value="all">Tất cả học viên</option><option value="active">Đang học</option><option value="inactive">Trên 7 ngày chưa học</option><option value="unused">Mã mới/chưa kích hoạt</option><option value="blocked">Đã khóa</option><option value="expired">Đã hết hạn</option></select><span class="learner-count" id="learnerVisibleCount">0 kết quả</span></div>
+      <div class="learner-tools" role="search"><input type="text" name="fake_username" autocomplete="username" tabindex="-1" aria-hidden="true" style="position:absolute;left:-10000px;width:1px;height:1px"><input id="learnerSearch" name="aluni_student_directory_query_v892" type="search" autocomplete="new-password" autocapitalize="off" spellcheck="false" readonly placeholder="🔎 Nhập tên, SĐT, email hoặc mã học viên..."><button class="ghost" id="learnerSearchClear" type="button">Xóa tìm kiếm</button><select id="learnerFilter"><option value="all">Tất cả học viên</option><option value="active">Đang học</option><option value="inactive">Trên 7 ngày chưa học</option><option value="unused">Mã mới/chưa kích hoạt</option><option value="blocked">Đã khóa</option><option value="expired">Đã hết hạn</option></select><span class="learner-count" id="learnerVisibleCount">0 kết quả</span></div>
       <div class="status" id="learnerStatus"></div>
     </div>
     <div class="card"><div class="tablewrap"><table><thead><tr><th>Học viên</th><th>Mã / Khóa</th><th>Tiến độ</th><th>Game</th><th>Thiết bị</th><th>Hoạt động gần nhất</th><th>Hết hạn</th></tr></thead><tbody id="learnerBody"></tbody></table></div></div>
@@ -758,10 +758,11 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
 });
 
 let learnerRows=[];
+let learnerSearchActive=false;
 const learnerNorm=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'d').toLowerCase().replace(/[^a-z0-9@._+\-\s]/g,'').replace(/\s+/g,' ').trim();
 function learnerViewStatus(x){if(x.status==='blocked')return'blocked';if(x.status==='unused')return'unused';if(x.expires_at&&new Date(x.expires_at).getTime()<Date.now())return'expired';const last=x.last_active_at?new Date(x.last_active_at).getTime():0;return last&&Date.now()-last>7*86400000?'inactive':'active'}
 function renderLearners(){
-  const q=learnerNorm($('learnerSearch').value),filter=$('learnerFilter').value;
+  const q=learnerSearchActive?learnerNorm($('learnerSearch').value):'',filter=$('learnerFilter').value;
   const rows=learnerRows.filter(x=>{const hay=learnerNorm([x.student_name,x.identity,x.code,x.course_id].join(' '));return(!q||hay.includes(q))&&(filter==='all'||learnerViewStatus(x)===filter)});
   $('learnerVisibleCount').textContent=`${rows.length} kết quả`;
   $('learnerBody').innerHTML=rows.length?rows.map(x=>{const state=learnerViewStatus(x),label=state==='blocked'?'Đã khóa':state==='expired'?'Hết hạn':state==='inactive'?'Ít hoạt động':state==='unused'?'Chưa kích hoạt':'Đang học';return`<tr class="learner-row" data-code-id="${Number(x.id)}" title="Bấm để xem hồ sơ chi tiết"><td><b>${esc(x.student_name||'Chưa có tên')}</b><br><small>${esc(x.identity||'')}</small><br><span class="learner-status-pill ${state}">${label}</span></td><td><code>${esc(x.code||'')}</code><br><small>${esc(x.course_id||'')}</small></td><td><b>${Number(x.lessons_opened||0)} bài đã mở</b><br><small>${Number(x.lessons_completed||0)} bài hoàn thành</small></td><td><b>⭐ ${Number(x.game_stars||0)}</b><br><small>${Number(x.pet_count||0)} thú · mở ${Number(x.game_unlocked||1)} màn</small></td><td>${Number(x.device_count||0)} / 2</td><td>${fmt(x.last_active_at)}</td><td>${fmt(x.expires_at)}<br><button class="ghost learner-open" type="button">Xem hồ sơ →</button></td></tr>`}).join(''):'<tr><td colspan="7" class="muted">Không tìm thấy học viên phù hợp.</td></tr>';
@@ -779,9 +780,15 @@ async function loadLearners(){
     status.textContent=`Đã cập nhật ${rows.length} học viên.`;status.className='status ok';
   }catch(e){status.textContent=e.message;status.className='status err'}
 }
-$('learnerSearch').value='';
-$('learnerSearch').addEventListener('input',renderLearners);$('learnerFilter').addEventListener('change',renderLearners);
-$('learnerSearchClear').onclick=()=>{$('learnerSearch').value='';$('learnerFilter').value='all';renderLearners();$('learnerSearch').focus()};
+const learnerSearchInput=$('learnerSearch');
+const beginLearnerSearch=()=>{if(!learnerSearchActive){learnerSearchActive=true;learnerSearchInput.value=''}learnerSearchInput.readOnly=false};
+learnerSearchInput.value='';
+learnerSearchInput.addEventListener('pointerdown',beginLearnerSearch);
+learnerSearchInput.addEventListener('keydown',beginLearnerSearch);
+learnerSearchInput.addEventListener('paste',beginLearnerSearch);
+learnerSearchInput.addEventListener('input',()=>{if(learnerSearchActive)renderLearners()});$('learnerFilter').addEventListener('change',renderLearners);
+$('learnerSearchClear').onclick=()=>{learnerSearchActive=false;learnerSearchInput.value='';learnerSearchInput.readOnly=true;$('learnerFilter').value='all';renderLearners()};
+[50,250,800,1800].forEach(ms=>setTimeout(()=>{if(!learnerSearchActive){learnerSearchInput.value='';renderLearners()}},ms));
 $('exportLearners').onclick=()=>{const quote=v=>'"'+String(v??'').replace(/"/g,'""')+'"',head=['Học viên','SĐT/Email','Mã','Khóa','Trạng thái','Bài đã mở','Bài hoàn thành','Sao game','Số thú','Màn game','Thiết bị','Hoạt động gần nhất','Hết hạn'],lines=[head,...learnerRows.map(x=>[x.student_name,x.identity,x.code,x.course_id,learnerViewStatus(x),x.lessons_opened,x.lessons_completed,x.game_stars,x.pet_count,x.game_unlocked,x.device_count,x.last_active_at,x.expires_at])].map(row=>row.map(quote).join(',')),blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`aluni-hoc-vien-${new Date().toISOString().slice(0,10)}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
 
 const learnerModuleName=value=>({lesson:'Bài học',lecture:'Bài giảng',shadowing:'Shadowing',reading:'Luyện đọc',game:'Game phản xạ',writing:'Viết chữ',grammar:'Ngữ pháp',resource:'Tài liệu'}[String(value||'').toLowerCase()]||String(value||'Hoạt động'));
