@@ -571,17 +571,17 @@ html.aluni-sales-popup-open{overflow:hidden}
 <div class="app-topbar">
   <div class="app-brand-lockup"><div class="app-logo">海</div><div><div class="app-brand-name">TIẾNG TRUNG ALUNI</div><div class="app-brand-tagline">Học nhẹ · Nhớ dai · Phản xạ tự nhiên</div></div></div>
   <nav class="app-nav">
-    <button class="app-nav-btn active" data-section="writingSection">✍ Viết chữ</button>
+    <button class="app-nav-btn" data-section="writingSection">✍ Viết chữ</button>
     <button class="app-nav-btn" data-section="shadowSection">🎥 Shadowing</button>
     <button class="app-nav-btn" data-section="grammarSection">📚 Ngữ pháp</button>
-    <button class="app-nav-btn" data-section="learningSection">🎓 Khóa học của tôi</button>
+    <button class="app-nav-btn active" data-section="learningSection">🎓 Khóa học của tôi</button>
     <button class="app-nav-btn" data-section="kidsPublicSection">🎬 Hoạt hình</button>
     <button class="app-nav-btn" data-section="aiSpeakSection">🤖 AI Speak</button>
   </nav>
   <div class="top-actions"><button class="top-activate" id="topActivateBtn">🔑 Kích hoạt khóa học</button></div>
 </div>
 
-<section class="aluni-section active" id="writingSection">
+<section class="aluni-section" id="writingSection">
 
 <div class="writing-study-bar"><button class="writing-study-back" id="writingStudyBack" type="button">← Quay lại bài học</button><div class="writing-study-title" id="writingStudyTitle">Luyện viết</div></div>
 
@@ -1119,7 +1119,7 @@ if(demoCheck){
   <div class="word-popup-status" id="wordPopupStatus"></div>
 </div>
 
-<section class="aluni-section" id="learningSection">
+<section class="aluni-section active" id="learningSection">
   <div class="wrap">
     <div class="student-hero">
       <div class="student-hero-main"><div class="student-eyebrow">NỀN TẢNG HỌC TIẾNG TRUNG ALUNI</div><h1>Học nhẹ, nhớ dai,<br>phản xạ tự nhiên.</h1><p>Mỗi bài học đi theo một lộ trình rõ ràng: xem bài giảng, luyện Shadowing, làm bài tập, viết chữ và tải tài liệu.</p><div class="hero-actions"><button class="hero-primary" id="startLearningBtn">Bắt đầu học ngay →</button><a class="hero-secondary" href="https://zalo.me/0931444083" target="_blank" rel="noopener">Tư vấn khóa học</a></div></div>
@@ -1823,6 +1823,10 @@ function setShadowSpeed(speed){
 }
 
 document.addEventListener('DOMContentLoaded', ()=>{
+  // Trang chủ học viên luôn bắt đầu tại "Khóa học của tôi".
+  // Viết chữ/Shadowing chỉ mở khi học viên chủ động chọn từ menu hoặc trong bài học.
+  document.body.classList.remove('writing-study-mode','shadow-study-mode');
+  setActiveAppSection('learningSection');
   loadPublicLearningCourses();
   document.getElementById('startLearningBtn')?.addEventListener('click',()=>document.querySelector('.my-courses-panel')?.scrollIntoView({behavior:'smooth',block:'start'}));
   document.addEventListener('click',e=>{const button=e.target.closest('#topActivateBtn');if(!button)return;e.preventDefault();openAccess()});
