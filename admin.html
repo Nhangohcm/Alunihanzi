@@ -438,6 +438,15 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
         <div><label>Phạm vi cập nhật</label><select id="grammarImportScope"><option value="auto">Tự nhận theo sheet có trong file</option><option value="all">Cả ngữ pháp và bài tập</option><option value="theory">Chỉ ngữ pháp & ví dụ</option><option value="exercises">Chỉ bài tập</option></select></div>
         <div><label>Trạng thái sau khi nhập</label><select id="grammarImportPublished"><option value="file">Theo cột published trong file</option><option value="1">Hiện cho học viên</option><option value="0">Lưu nháp / Ẩn</option></select></div>
       </div>
+      <div class="card" style="margin-top:12px;padding:14px;background:#f8f9ff">
+        <label>Nơi hiển thị sau khi nhập</label>
+        <div class="row" style="margin-top:8px">
+          <label><input id="grammarShowInCourse" type="checkbox" checked style="width:auto"> Trong khóa học và bài học tương ứng</label>
+          <label><input id="grammarShowInFree" type="checkbox" checked style="width:auto"> Trong Kho Ngữ pháp free</label>
+          <select id="grammarFreeGroup" style="max-width:260px"><option value="npcr">NPCR</option><option value="50plus">50+</option><option value="hsk1">HSK 3.0 — Cấp 1</option><option value="hsk2">HSK 3.0 — Cấp 2</option><option value="hsk3">HSK 3.0 — Cấp 3</option><option value="hsk4">HSK 3.0 — Cấp 4</option><option value="hsk5">HSK 3.0 — Cấp 5</option><option value="hsk6">HSK 3.0 — Cấp 6</option></select>
+        </div>
+        <p class="muted">Trong khóa học, nội dung vẫn theo quyền của bài/khóa. Trong Kho Ngữ pháp free, nội dung được mở miễn phí hoàn toàn.</p>
+      </div>
       <div class="row" style="margin-top:10px"><button class="ghost" id="previewGrammarImport">👁 Xem trước</button><button class="primary" id="runGrammarImport" disabled>⬆ Nhập dữ liệu</button><button class="ghost" id="grammarXlsxTemplate">⬇ Tải file XLSX mẫu</button></div>
       <div class="status" id="grammarImportStatus">Chọn khóa học đích và file, sau đó bấm “Xem trước”. Hệ thống chưa lưu ngay.</div>
       <div class="tablewrap" id="grammarImportPreview" hidden></div>
@@ -1233,6 +1242,9 @@ function syncGrammarImportCourses(){
   select.add(new Option('Theo course_id trong file (nâng cao)','__file__'));
   if([...select.options].some(o=>o.value===selected))select.value=selected;
 }
+function suggestGrammarFreeGroup(){const id=String($('grammarImportCourse')?.value||'').toLowerCase(),course=learningCourses.find(c=>String(c.id)===String($('grammarImportCourse')?.value)),title=String(course?.title||'').toLowerCase(),select=$('grammarFreeGroup');if(!select)return;if(id.includes('npcr')||title.includes('tân giáo trình'))select.value='npcr';else if(id.includes('50plus')||title.includes('50+')||title.includes('phản xạ'))select.value='50plus'}
+$('grammarImportCourse')?.addEventListener('change',suggestGrammarFreeGroup);
+$('grammarShowInFree')?.addEventListener('change',e=>{$('grammarFreeGroup').disabled=!e.target.checked});
 function normalizeImportRow(row){const out={};Object.entries(row||{}).forEach(([k,v])=>out[String(k).trim().toLowerCase()]=v);return out}
 function importKey(row){return `${String(row.course_id||'').trim()}|${Number(row.lesson_number)}`}
 function sheetRows(wb,name){const actual=wb.SheetNames.find(x=>x.trim().toUpperCase()===name);return actual?XLSX.utils.sheet_to_json(wb.Sheets[actual],{defval:''}).map(normalizeImportRow):[]}
@@ -1261,8 +1273,8 @@ async function previewGrammarWorkbook(){
   catch(e){grammarImportData=null;$('runGrammarImport').disabled=true;$('grammarImportStatus').textContent=e.message}
 }
 async function runGrammarWorkbookImport(){
-  if(!grammarImportData)return;const scope=chosenGrammarScope(grammarImportData),publishMode=$('grammarImportPublished').value,btn=$('runGrammarImport');btn.disabled=true;
-  try{let done=0;for(const g of grammarImportData.groups){if(!g.lesson)throw new Error(`Không tìm thấy ${g.course_id} bài ${g.lesson_number}.`);if(scope!=='exercises'&&!g.theory)throw new Error(`${g.course_id} bài ${g.lesson_number} thiếu dòng NGU_PHAP.`);const published=publishMode==='file'?(g.theory?.published??true):publishMode==='1';await api('/admin/grammar/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lesson_id:g.lesson.id,update_scope:scope,title:g.theory?.title||'',pinyin:g.theory?.pinyin||'',formula:g.theory?.formula||'',explanation:g.theory?.explanation||'',examples:g.examples,questions:g.questions,published})});done++;$('grammarImportStatus').textContent=`Đang nhập ${done}/${grammarImportData.groups.length} bài...`;}$('grammarImportStatus').textContent=`Đã nhập thành công ${done} bài. ${scope==='exercises'?'Phần ngữ pháp cũ được giữ nguyên.':scope==='theory'?'Bài tập cũ được giữ nguyên.':'Ngữ pháp và bài tập đã được cập nhật.'}`;await loadGrammarContent();}
+  if(!grammarImportData)return;const scope=chosenGrammarScope(grammarImportData),publishMode=$('grammarImportPublished').value,btn=$('runGrammarImport'),showInCourse=$('grammarShowInCourse').checked,showInFree=$('grammarShowInFree').checked,freeGroup=$('grammarFreeGroup').value;if(!showInCourse&&!showInFree){$('grammarImportStatus').textContent='Hãy chọn ít nhất một nơi hiển thị.';return}btn.disabled=true;
+  try{let done=0;for(const g of grammarImportData.groups){if(!g.lesson)throw new Error(`Không tìm thấy ${g.course_id} bài ${g.lesson_number}.`);if(scope!=='exercises'&&!g.theory)throw new Error(`${g.course_id} bài ${g.lesson_number} thiếu dòng NGU_PHAP.`);const published=publishMode==='file'?(g.theory?.published??true):publishMode==='1';await api('/admin/grammar/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lesson_id:g.lesson.id,update_scope:scope,title:g.theory?.title||'',pinyin:g.theory?.pinyin||'',formula:g.theory?.formula||'',explanation:g.theory?.explanation||'',examples:g.examples,questions:g.questions,published,show_in_course:showInCourse,show_in_free:showInFree,free_group:freeGroup})});done++;$('grammarImportStatus').textContent=`Đang nhập ${done}/${grammarImportData.groups.length} bài...`;}$('grammarImportStatus').textContent=`Đã nhập thành công ${done} bài · hiển thị: ${showInCourse?'Khóa học':''}${showInCourse&&showInFree?' + ':''}${showInFree?'Kho free':''}. ${scope==='exercises'?'Phần ngữ pháp cũ được giữ nguyên.':scope==='theory'?'Bài tập cũ được giữ nguyên.':'Ngữ pháp và bài tập đã được cập nhật.'}`;await loadGrammarContent();}
   catch(e){$('grammarImportStatus').textContent='Dừng nhập: '+e.message}finally{btn.disabled=false}
 }
 function downloadGrammarXlsxTemplate(){
