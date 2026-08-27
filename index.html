@@ -1358,6 +1358,10 @@ if(demoCheck){
 .grammar-compare-note{margin-top:10px;border-left:3px solid #e09017;padding:7px 0 7px 10px;color:#7a4b09;background:#fff8e8;border-radius:0 9px 9px 0}
 .grammar-compare-examples{display:grid;gap:9px}
 .grammar-compare-examples .grammar-example{border:1px solid #e3e7f1;border-radius:13px;padding:11px 12px;background:#fff;margin:0}
+.grammar-search-under{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:7px}
+.grammar-search-under .hint{margin:0;min-width:0}
+.grammar-chatgpt-advanced{flex:0 0 auto;border:1px solid #cfd6f5;border-radius:999px;background:#f7f8ff;color:#4f5ec7;padding:7px 12px;font-size:.82rem;font-weight:900;cursor:pointer;white-space:nowrap}
+.grammar-chatgpt-advanced:hover{background:#edf0ff;border-color:#9ca9ee}
 @media(max-width:700px){
   #grammarSection .wrap{width:calc(100% - 16px);max-width:100%;overflow-x:hidden}
   #grammarSection .module-card{padding-left:12px;padding-right:12px}
@@ -1368,6 +1372,8 @@ if(demoCheck){
   .grammar-compare-card{padding:12px}
   .grammar-search-row{grid-template-columns:minmax(0,1fr) 76px}
   .grammar-search-submit{width:76px;min-width:0;padding:0 6px}
+  .grammar-search-under{align-items:flex-start;flex-wrap:wrap}
+  .grammar-chatgpt-advanced{margin-left:auto;font-size:.78rem;padding:7px 10px}
 }
 </style>
 <section class="aluni-section" id="grammarSection">
@@ -1380,7 +1386,7 @@ if(demoCheck){
     <div class="module-card grammar-search-box">
       <label for="grammarSearch">🔍 Tìm ngữ pháp bất kỳ</label>
       <div class="grammar-search-row"><input class="grammar-search-input" id="grammarSearch" autocomplete="off" placeholder="Nhập chữ Hán, pinyin hoặc nghĩa Việt…"><button class="grammar-search-submit" id="grammarSearchBtn" type="button">Tìm kiếm</button></div>
-      <div class="hint" id="grammarSearchStatus">Có thể tìm: 把 · suiran · càng ngày càng · 因为…所以…</div>
+      <div class="grammar-search-under"><div class="hint" id="grammarSearchStatus">Có thể tìm: 把 · suiran · càng ngày càng · 因为…所以…</div><button class="grammar-chatgpt-advanced" id="grammarChatGptAdvanced" type="button">✨ Tìm nâng cao với ChatGPT</button></div>
       <div class="grammar-search-results" id="grammarSearchResults" hidden></div>
     </div>
     <div class="module-card"><b>Chọn kho ngữ pháp</b><div class="grammar-library-tabs" id="grammarLibraryTabs"></div></div>
@@ -1413,6 +1419,7 @@ function renderGrammarSearch(){
   const query=grammarNormalize(input.value);if(!query){box.hidden=true;box.innerHTML='';status.textContent=`Có ${grammarCatalog.length} bài ngữ pháp miễn phí. Có thể tìm bằng Hán, pinyin hoặc tiếng Việt.`;return}
   const compact=query.replace(/\s+/g,''),short=query.length<=1,ranked=grammarCatalog.map(x=>{const title=grammarNormalize(x.title),pinyin=grammarNormalize(x.pinyin),formula=grammarNormalize(x.formula),explanation=grammarNormalize(x.explanation),keywords=grammarNormalize(x.question_text),core=[title,pinyin,formula,keywords].join(' '),expanded=[core,explanation].join(' '),coreCompact=core.replace(/\s+/g,''),expandedCompact=expanded.replace(/\s+/g,'');let score=0;if(title===query||pinyin===query)score=120;else if(coreCompact.includes(compact))score=100;else if(!short&&expandedCompact.includes(compact))score=75;else if(!short)score=grammarFuzzyScore(core,query);return{x,score}}).filter(o=>o.score>=60).sort((a,b)=>b.score-a.score).slice(0,8).map(o=>o.x);box.hidden=false;box.innerHTML=`<div class="grammar-results-head"><b>${ranked.length?`${ranked.length} kết quả phù hợp`:'Chưa tìm thấy'}</b><button class="grammar-results-close" id="grammarResultsClose" type="button">× Đóng kết quả</button></div>${ranked.length?ranked.map(x=>`<button class="grammar-search-result" data-id="${grammarEsc(String(x.id))}"><b>${grammarTitleHtml(x.title)}</b><small>${grammarEsc(grammarGroupLabels[x.free_group]||x.course_title)}${String(x.id).startsWith('lib-')?'':` · Bài ${String(x.lesson_number).padStart(2,'0')}`}</small></button>`).join(''):`<div class="grammar-empty">Kho Aluni chưa có mục phù hợp.<br><button class="btn primary" id="grammarChatGptBtn" style="margin-top:12px">💬 Hỏi ChatGPT phân tích sâu</button><div class="hint" style="margin-top:9px">Aluni sẽ chuẩn bị sẵn câu hỏi; học viên chỉ cần dán vào ChatGPT.</div></div>`}`;status.textContent=ranked.length?`Tìm thấy ${ranked.length} kết quả phù hợp nhất trong Kho Aluni.`:'Chưa có trong Kho Aluni. Có thể nhờ ChatGPT giải thích sâu hơn.';box.querySelectorAll('button[data-id]').forEach(b=>b.onclick=()=>openGrammarSet(b.dataset.id));document.getElementById('grammarChatGptBtn')?.addEventListener('click',()=>openGrammarChatGpt(input.value));document.getElementById('grammarResultsClose')?.addEventListener('click',closeGrammarResults);
 }
+const renderGrammarSearchBase=renderGrammarSearch;renderGrammarSearch=function(){renderGrammarSearchBase();const input=document.getElementById('grammarSearch'),status=document.getElementById('grammarSearchStatus');if(input&&status&&!input.value.trim())status.textContent='Có thể tìm: 把 · suiran · càng ngày càng · 因为…所以…'};
 function closeGrammarResults(){const box=document.getElementById('grammarSearchResults'),status=document.getElementById('grammarSearchStatus');if(box){box.hidden=true;box.innerHTML=''}if(status)status.textContent='Kết quả đã đóng. Có thể sửa từ khóa rồi bấm Tìm kiếm.'}
 async function openGrammarChatGpt(query){const q=String(query||'').trim(),prompt=`Bạn là giáo viên tiếng Trung cho người Việt. Hãy giải thích điểm ngữ pháp hoặc cụm sau: "${q}". Trình bày: chữ Hán và pinyin; nghĩa tiếng Việt; công thức; cách dùng; ít nhất 5 ví dụ Trung–pinyin–Việt; lỗi thường gặp; phân biệt với cấu trúc gần giống; và 5 câu bài tập có đáp án.`;const status=document.getElementById('grammarSearchStatus');try{await navigator.clipboard.writeText(prompt);status.textContent='Đã sao chép sẵn câu hỏi. Khi ChatGPT mở, anh/chị chỉ cần dán vào ô chat và gửi.'}catch(e){status.textContent='ChatGPT sẽ mở ở tab mới. Hãy nhập cấu trúc cần hỏi vào ô chat.'}window.open('https://chatgpt.com/','_blank','noopener')}
 async function lookupGrammarAI(query){const status=document.getElementById('grammarSearchStatus'),box=document.getElementById('grammarSearchResults');status.textContent='Đang tra cứu kho ngữ pháp mở rộng…';box.innerHTML='<div class="grammar-empty">AI đang phân tích tiếng Việt, tiếng Trung hoặc pinyin…</div>';try{const r=await fetch(shadowApi('/grammar/lookup?q='+encodeURIComponent(String(query||'').trim())),{cache:'no-store',headers:{'X-Aluni-Device':accessDeviceId()}}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tra cứu được.');activeGrammar=j;renderGrammarSet();const l=j.limit||{};status.textContent=l.cached?'Kết quả đã có sẵn · không trừ lượt.':`Kết quả tra cứu mở rộng · còn ${Number(l.remaining||0)}/${Number(l.daily||10)} lượt AI hôm nay.`;box.hidden=true}catch(e){status.textContent=e.message;box.innerHTML=`<div class="grammar-empty">${grammarEsc(e.message)}</div>`}}
@@ -1455,6 +1462,7 @@ function checkGrammarAnswers(){
 document.getElementById('checkGrammarAnswers')?.addEventListener('click',checkGrammarAnswers);
 document.getElementById('resetGrammarAnswers')?.addEventListener('click',renderGrammarSet);
 document.getElementById('grammarSearchBtn')?.addEventListener('click',renderGrammarSearch);
+document.getElementById('grammarChatGptAdvanced')?.addEventListener('click',()=>{const input=document.getElementById('grammarSearch'),status=document.getElementById('grammarSearchStatus'),query=String(input?.value||'').trim();if(!query){if(status)status.textContent='Hãy nhập điểm ngữ pháp cần tìm trước khi mở ChatGPT.';input?.focus();return}openGrammarChatGpt(query)});
 document.getElementById('grammarSearch')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();renderGrammarSearch()}});
 document.getElementById('grammarSearch')?.addEventListener('input',()=>{const box=document.getElementById('grammarSearchResults');if(box&&!box.hidden)closeGrammarResults()});
 document.querySelector('.app-nav-btn[data-section="grammarSection"]')?.addEventListener('click',loadGrammarCatalog);
