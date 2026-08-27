@@ -462,6 +462,18 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
       <div class="status" id="grammarContentStatus"></div>
       <div id="grammarLessonList"></div>
     </div>
+
+    <div class="card" id="grammarLibraryImportCard">
+      <h2>Kho ngữ pháp độc lập & tra cứu lớn</h2>
+      <p class="muted">Dùng cho ngữ pháp tổng hợp, HSK 2.0, HSK 3.0 và <b>So sánh ngữ pháp</b>. Nội dung ở đây không cần tạo khóa học hoặc bài học trước; từ khóa Hán, pinyin và tiếng Việt được đưa thẳng vào bộ tìm kiếm.</p>
+      <div class="grid">
+        <div><label>File XLSX kho ngữ pháp</label><input id="grammarLibraryFile" type="file" accept=".xlsx,.xls"></div>
+        <div><label>Cách cập nhật</label><select id="grammarLibraryMode"><option value="upsert">Thêm mới và cập nhật theo MA_MUC</option></select></div>
+      </div>
+      <div class="row" style="margin-top:10px"><button class="ghost" id="previewGrammarLibrary">👁 Xem trước kho</button><button class="primary" id="runGrammarLibrary" disabled>⬆ Nhập kho ngữ pháp</button><button class="ghost" id="grammarLibraryTemplate">⬇ Tải mẫu XLSX chuẩn</button></div>
+      <div class="status" id="grammarLibraryStatus">Chọn file gồm các sheet KHO_NGU_PHAP, VI_DU_KHO, BAI_TAP_KHO và SO_SANH.</div>
+      <div class="tablewrap" id="grammarLibraryPreview" hidden></div>
+    </div>
   </section>
 
   <section class="pane" id="shadowPane">
@@ -1234,7 +1246,7 @@ function lessonListTemplate(){
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'DANH_SACH_BAI');XLSX.writeFile(wb,'mau-tao-bai-trong-hang-loat.xlsx');
 }
 
-let grammarImportData=null;
+let grammarImportData=null,grammarLibraryImportData=null;
 function syncGrammarImportCourses(){
   const select=$('grammarImportCourse');if(!select)return;
   const selected=select.value;select.innerHTML='<option value="">— Chọn khóa học đã tạo —</option>';
@@ -1284,6 +1296,24 @@ function downloadGrammarXlsxTemplate(){
   const exercises=[{course_id:'npcr',lesson_number:0,prompt:'Chọn câu đúng.',option_a:'我汉语学习。',option_b:'我学习汉语。',option_c:'学习我汉语。',option_d:'汉语我学习。',correct:'B',explanation:'Trật tự cơ bản là Chủ ngữ + Động từ + Tân ngữ.',sort_order:1}];
   [['NGU_PHAP',grammar],['VI_DU',examples],['BAI_TAP',exercises]].forEach(([name,rows])=>XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),name));XLSX.writeFile(wb,'mau-ngu-phap-bai-tap-aluni.xlsx');
 }
+async function readGrammarLibraryWorkbook(file){
+  const wb=XLSX.read(await file.arrayBuffer(),{type:'array'}),main=sheetRows(wb,'KHO_NGU_PHAP'),examples=sheetRows(wb,'VI_DU_KHO'),questions=sheetRows(wb,'BAI_TAP_KHO'),comparisons=sheetRows(wb,'SO_SANH');
+  if(!main.length)throw new Error('Sheet KHO_NGU_PHAP chưa có dữ liệu.');
+  const groups=new Map(),get=code=>{const key=String(code||'').trim();if(!key)throw new Error('Có dòng thiếu MA_MUC.');if(!groups.has(key))groups.set(key,{entry_code:key,examples:[],questions:[],comparisons:[]});return groups.get(key)};
+  main.forEach((r,i)=>{const g=get(r.ma_muc);if(!String(r.tieu_de||'').trim())throw new Error(`KHO_NGU_PHAP dòng ${i+2} thiếu TIEU_DE.`);Object.assign(g,{content_type:String(r.loai_noi_dung||'ngu_phap').toLowerCase().includes('so')?'comparison':'grammar',free_group:String(r.nhom_hien_thi||'general').trim().toLowerCase(),title:String(r.tieu_de).trim(),pinyin:String(r.pinyin||''),vietnamese_title:String(r.ten_tieng_viet||''),formula:String(r.cong_thuc||''),explanation:String(r.giai_thich||''),keywords_hanzi:String(r.tu_khoa_han||''),keywords_pinyin:String(r.tu_khoa_pinyin||''),keywords_vi:String(r.tu_khoa_viet||''),sort_order:Number(r.thu_tu||i+1),published:publishedValue(r.xuat_ban)})});
+  examples.sort((a,b)=>Number(a.thu_tu||0)-Number(b.thu_tu||0)).forEach(r=>{const g=get(r.ma_muc);if(String(r.hanzi||'').trim())g.examples.push({hanzi:String(r.hanzi).trim(),pinyin:String(r.pinyin||''),vi:String(r.nghia_viet||'')})});
+  questions.sort((a,b)=>Number(a.thu_tu||0)-Number(b.thu_tu||0)).forEach(r=>{const g=get(r.ma_muc),options=['a','b','c','d'].map(k=>String(r[k]||'').trim()).filter(Boolean);if(!String(r.cau_hoi||'').trim()||options.length<2)throw new Error(`BAI_TAP_KHO của ${g.entry_code} cần câu hỏi và ít nhất 2 lựa chọn.`);g.questions.push({prompt:String(r.cau_hoi).trim(),options,correct_index:correctIndex(r.dap_an,options),explanation:String(r.giai_thich||''),sort_order:Number(r.thu_tu||g.questions.length+1)})});
+  comparisons.sort((a,b)=>Number(a.thu_tu||0)-Number(b.thu_tu||0)).forEach(r=>{const g=get(r.ma_muc);g.comparisons.push({item:String(r.cau_truc||''),meaning:String(r.nghia||''),usage:String(r.cach_dung||''),example:String(r.vi_du||''),note:String(r.luu_y||'')})});
+  const entries=[...groups.values()];for(const x of entries)if(!x.title)throw new Error(`MA_MUC ${x.entry_code} có dữ liệu phụ nhưng thiếu dòng trong KHO_NGU_PHAP.`);return entries;
+}
+async function previewGrammarLibraryWorkbook(){
+  const file=$('grammarLibraryFile').files[0];if(!file){$('grammarLibraryStatus').textContent='Hãy chọn file XLSX kho ngữ pháp.';return}
+  try{const entries=await readGrammarLibraryWorkbook(file);grammarLibraryImportData=entries;$('grammarLibraryPreview').hidden=false;$('grammarLibraryPreview').innerHTML=`<table><thead><tr><th>Mã</th><th>Nhóm</th><th>Loại</th><th>Tiêu đề</th><th>Ví dụ</th><th>Bài tập</th><th>Dòng so sánh</th></tr></thead><tbody>${entries.slice(0,200).map(x=>`<tr><td>${esc(x.entry_code)}</td><td>${esc(x.free_group)}</td><td>${x.content_type==='comparison'?'<b>So sánh ngữ pháp</b>':'Ngữ pháp'}</td><td>${esc(x.title)}</td><td>${x.examples.length}</td><td>${x.questions.length}</td><td>${x.comparisons.length}</td></tr>`).join('')}</tbody></table>`;$('runGrammarLibrary').disabled=false;$('grammarLibraryStatus').textContent=`Sẵn sàng nhập ${entries.length} mục. Mã trùng sẽ được cập nhật, mã mới sẽ được thêm.`}catch(e){grammarLibraryImportData=null;$('runGrammarLibrary').disabled=true;$('grammarLibraryStatus').textContent=e.message}
+}
+async function runGrammarLibraryWorkbook(){
+  if(!grammarLibraryImportData)return;const btn=$('runGrammarLibrary');btn.disabled=true;try{let saved=0;for(let i=0;i<grammarLibraryImportData.length;i+=100){const entries=grammarLibraryImportData.slice(i,i+100);const j=await api('/admin/grammar/library/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({entries})});saved+=Number(j.saved_count||entries.length);$('grammarLibraryStatus').textContent=`Đang nhập ${Math.min(i+100,grammarLibraryImportData.length)}/${grammarLibraryImportData.length} mục...`}$('grammarLibraryStatus').textContent=`Đã nhập thành công ${saved} mục vào kho ngữ pháp độc lập. Ô tìm kiếm học viên có thể dùng ngay.`}catch(e){$('grammarLibraryStatus').textContent='Dừng nhập: '+e.message}finally{btn.disabled=false}
+}
+function downloadGrammarLibraryTemplate(){window.open('MAU_NHAP_KHO_NGU_PHAP_ALUNI.xlsx','_blank')}
 function grammarExamplesText(items){return (items||[]).map(x=>[x.hanzi||'',x.pinyin||'',x.vi||''].join(' | ')).join('\n')}
 function grammarQuestionsText(items){return (items||[]).map(q=>[q.prompt||'',...(q.options||[]),Number(q.correct_index||0)+1,q.explanation||''].join(' | ')).join('\n')}
 function parseGrammarExamples(text){return String(text||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map(line=>{const p=line.split('|').map(x=>x.trim());return{hanzi:p[0]||'',pinyin:p[1]||'',vi:p[2]||''}})}
@@ -1602,6 +1632,10 @@ $('openLearningFromWriting').onclick=()=>document.querySelector('[data-pane="lea
 $('grammarImportFile').onchange=()=>{grammarImportData=null;$('runGrammarImport').disabled=true;$('grammarImportPreview').hidden=true;$('grammarImportStatus').textContent='Bấm “Xem trước” để kiểm tra file.'};
 $('grammarImportCourse').onchange=()=>{grammarImportData=null;$('runGrammarImport').disabled=true;$('grammarImportPreview').hidden=true;$('grammarImportStatus').textContent=$('grammarImportCourse').value?'Đã chọn khóa học. Chọn file rồi bấm “Xem trước”.':'Hãy chọn khóa học đích đã tạo ở tab Khóa học.'};
 $('grammarImportScope').onchange=()=>{if(grammarImportData)previewGrammarWorkbook()};
+$('previewGrammarLibrary').onclick=previewGrammarLibraryWorkbook;
+$('runGrammarLibrary').onclick=runGrammarLibraryWorkbook;
+$('grammarLibraryTemplate').onclick=downloadGrammarLibraryTemplate;
+$('grammarLibraryFile').onchange=()=>{grammarLibraryImportData=null;$('runGrammarLibrary').disabled=true;$('grammarLibraryPreview').hidden=true;$('grammarLibraryStatus').textContent='Bấm “Xem trước kho” để kiểm tra file.'};
 $('grammarManageCourse').onchange=loadGrammarContent;
 $('refreshGrammarContent').onclick=loadGrammarContent;
 $('manageLearningCourse').onchange=async()=>{const id=$('manageLearningCourse').value;await selectLearningCourseEverywhere(id);await loadAccessSettings(id)};
