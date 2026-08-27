@@ -149,6 +149,7 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
       <button class="tab active" data-pane="codesPane">🔑 Mã kích hoạt</button>
       <button class="tab" data-pane="learnersPane">👥 Học viên & Tiến độ</button>
       <button class="tab" data-pane="learningPane">🎓 Khóa học</button>
+      <button class="tab" data-pane="readingPane">📖 Luyện đọc</button>
       <button class="tab" data-pane="contentPane">🗂️ Kho từ vựng</button>
       <button class="tab" data-pane="grammarPane">📚 Ngữ pháp & Bài tập</button>
       <button class="tab" data-pane="shadowPane">🎥 Shadowing</button>
@@ -212,6 +213,26 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
       <div class="learner-detail" id="learnerDetailBody"><div class="learner-empty">Đang tải dữ liệu...</div></div>
     </div>
   </div>
+
+  <section class="pane" id="readingPane">
+    <div class="card">
+      <h2>📖 Nhập Luyện đọc + Kho từ dùng chung</h2>
+      <p class="muted">Chọn khóa một lần rồi tải <b>một file XLSX tổng hợp</b>. Hệ thống đọc câu luyện đọc và từ tra cứu, gắn đúng từng bài rồi dùng kho từ đó cho <b>Luyện đọc, Game và Viết chữ</b>.</p>
+      <div class="grid2">
+        <div><label>Khóa học đích</label><select id="readingImportCourse"></select></div>
+        <div><label>File Luyện đọc tổng hợp — XLSX</label><input id="readingCombinedFile" type="file" accept=".xlsx,.xls"></div>
+      </div>
+      <p class="muted">Nhận mẫu <b>CAU_LUYEN_DOC + TU_VUNG</b> hoặc <b>BAI_DOC + TU_VUNG</b>. Tiêu đề có thể ở dòng 1 hoặc dòng 4; hệ thống nhận LessonCode, LessonNo hoặc lesson_number.</p>
+      <div class="row" style="margin-top:10px"><button class="ghost" id="previewReadingImport">👁 Kiểm tra trước</button><button class="primary" id="runReadingImport" disabled>⬆ Nhập và bật cả 3 chức năng</button><button class="ghost" id="readingTemplateBtn">⬇ Tải file mẫu</button></div>
+      <div class="status" id="readingImportStatus">Chọn khóa và file, sau đó bấm “Kiểm tra trước”.</div>
+      <div class="tablewrap" id="readingImportPreview" hidden></div>
+    </div>
+    <div class="card">
+      <div class="row"><h2 style="margin-right:auto">Trạng thái Luyện đọc trong khóa</h2><button class="ghost" id="refreshReadingStatus">Làm mới</button></div>
+      <p class="muted">Nhập lại cùng file sẽ cập nhật các bài có trong file. Những bài không có trong file được giữ nguyên.</p>
+      <div class="tablewrap"><table><thead><tr><th>Bài</th><th>Tên bài</th><th>Câu đọc</th><th>Từ tra cứu</th><th>Kho dùng chung</th><th>Xem</th></tr></thead><tbody id="readingLessonBody"></tbody></table></div>
+    </div>
+  </section>
 
   <section class="pane" id="contentPane">
     <div class="card">
@@ -767,6 +788,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   b.classList.add('active');
   $(b.dataset.pane).classList.add('active');
   if(b.dataset.pane==='contentPane') loadCourses();
+  if(b.dataset.pane==='readingPane') loadCourses(false).then(loadReadingStatus);
   if(b.dataset.pane==='learnersPane') loadLearners();
   if(b.dataset.pane==='learningPane') loadLearningCourses();
   if(b.dataset.pane==='grammarPane') loadGrammarCourses();
@@ -922,18 +944,21 @@ async function loadCourses(loadDetails=true){
     const selectedWriting=$('writingManageCourse')?.value||'';
     const selectedImport=$('importCourse')?.value||'';
     const selectedCode=$('codeCourse')?.value||'';
+    const selectedReading=$('readingImportCourse')?.value||'';
     const j=await api('/admin/learning/courses');
     courses=(j.courses||[]).map(c=>({...c,name:c.title,free_lessons:Number(c.free_lessons||0)}));
     $('importCourse').innerHTML='';
     $('shadowAdminCourse').innerHTML='';
     $('codeCourse').innerHTML='';
     if($('writingManageCourse'))$('writingManageCourse').innerHTML='';
+    if($('readingImportCourse'))$('readingImportCourse').innerHTML='';
     courses.forEach(c=>{
       $('codeCourse').add(new Option(c.name,c.id));
       if(String(c.id)!==SHADOWING_PASS_ID){
         $('importCourse').add(new Option(c.name,c.id));
         $('shadowAdminCourse').add(new Option(c.name,c.id));
         if($('writingManageCourse'))$('writingManageCourse').add(new Option(`${c.name} (${c.lesson_count||0} bài)`,c.id));
+        if($('readingImportCourse'))$('readingImportCourse').add(new Option(`${c.name} (${c.lesson_count||0} bài)`,c.id));
       }
     });
     $('codeCourse').add(new Option('🧸 Aluni Kids — mã riêng',KIDS_PASS_ID));
@@ -941,6 +966,7 @@ async function loadCourses(loadDetails=true){
     if(selectedWriting&&courses.some(c=>String(c.id)===String(selectedWriting)))$('writingManageCourse').value=selectedWriting;
     if(selectedImport&&courses.some(c=>String(c.id)===String(selectedImport)))$('importCourse').value=selectedImport;
     if(selectedCode&&courses.some(c=>String(c.id)===String(selectedCode)))$('codeCourse').value=selectedCode;
+    if(selectedReading&&courses.some(c=>String(c.id)===String(selectedReading)))$('readingImportCourse').value=selectedReading;
     syncCodeType(false);
     $('contentStatus').textContent=`Có ${courses.filter(c=>String(c.id)!==SHADOWING_PASS_ID).length} khóa được tạo từ tab Khóa học.`;
     if(loadDetails&&$('writingManageCourse')&&courses.length){await loadWritingContent();await previewExistingVocabulary()}
@@ -957,6 +983,42 @@ async function parseFile(file){
   const wb=XLSX.read(buf,{type:'array'});
   return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
 }
+let readingImportDraft={reading:[],vocab:[]};
+function sheetRowsAtHeader(wb,patterns,required=[]){
+  const name=(wb.SheetNames||[]).find(x=>patterns.some(p=>p.test(x)));if(!name)return[];
+  const sheet=wb.Sheets[name],matrix=XLSX.utils.sheet_to_json(sheet,{header:1,defval:''});
+  const headerIndex=matrix.findIndex(row=>{const cells=(row||[]).map(x=>String(x).trim().toLowerCase());return required.every(group=>group.some(x=>cells.includes(String(x).toLowerCase()))) });
+  if(headerIndex<0)return[];return XLSX.utils.sheet_to_json(sheet,{range:headerIndex,defval:''});
+}
+function rowValue(row,names){const entries=Object.entries(row||{}),wanted=names.map(x=>String(x).trim().toLowerCase()),found=entries.find(([k])=>wanted.includes(String(k).trim().toLowerCase()));return found?found[1]:''}
+function lessonNumberFromCode(code){const m=String(code||'').match(/(?:B|BAI|LESSON)[-_ ]*0*(\d+)$/i)||String(code||'').match(/(\d+)$/);return m?Number(m[1]):NaN}
+async function parseCombinedReadingFile(file){
+  const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
+  const lessonRows=sheetRowsAtHeader(wb,[/^BAI_HOC$/i,/danh.?sach.?bai/i],[['LessonCode','lesson_code'],['LessonNo','lesson_number']]);
+  const lessonMap=new Map();for(const x of lessonRows){const code=String(rowValue(x,['LessonCode','lesson_code'])).trim(),n=Number(rowValue(x,['LessonNo','lesson_number']));if(code&&Number.isInteger(n))lessonMap.set(code,{number:n,title:String(rowValue(x,['LessonTitle','lesson_title'])).trim()})}
+  const sourceReading=sheetRowsAtHeader(wb,[/^CAU_LUYEN_DOC$/i,/cau.?luyen.?doc/i,/^BAI_DOC$/i,/reading/i],[['Hanzi','hanzi'],['SentenceNo','sentence_number','seq']]);
+  const sourceVocab=sheetRowsAtHeader(wb,[/^TU_VUNG$/i,/tu.?vung/i,/tra.?cuu/i,/vocab/i],[['Hanzi','hanzi'],['LessonCode','lesson_number','LessonNo']]);
+  const normalNumber=x=>{const code=String(rowValue(x,['LessonCode','lesson_code'])).trim(),raw=rowValue(x,['lesson_number','LessonNo','Số bài','Bài']),direct=String(raw).trim()===''?NaN:Number(raw);return Number.isInteger(direct)&&direct>=0?direct:(lessonMap.get(code)?.number??lessonNumberFromCode(code))};
+  const reading=sourceReading.map((x,i)=>{const code=String(rowValue(x,['LessonCode','lesson_code'])).trim(),lesson=lessonMap.get(code);return{lesson_number:normalNumber(x),reading_title:String(rowValue(x,['reading_title','PassageTitle','Tên bài đọc'])||lesson?.title||'').trim(),sentence_number:Number(rowValue(x,['sentence_number','SentenceNo','seq','Số câu'])||i+1),hanzi:String(rowValue(x,['hanzi','Hanzi','Câu tiếng Trung','Hán tự'])).trim(),pinyin:String(rowValue(x,['pinyin','Pinyin'])).trim(),vi:String(rowValue(x,['vi','Vietnamese','Nghĩa Việt','Nghĩa'])).trim()}}).filter(x=>Number.isInteger(x.lesson_number)&&x.hanzi);
+  const vocab=sourceVocab.map((x,i)=>{const raw=String(rowValue(x,['highlight_mode','HighlightMode'])).trim().toLowerCase(),mode=/không|none/.test(raw)?'none':/đầu|first/.test(raw)?'first':'all';return{lesson_number:normalNumber(x),hanzi:String(rowValue(x,['hanzi','Hanzi','Từ vựng','Hán tự'])).trim(),pinyin:String(rowValue(x,['pinyin','Pinyin'])).trim(),vi:String(rowValue(x,['vi','Vietnamese','Nghĩa Việt','Nghĩa'])).trim(),highlight_mode:mode,sort_order:Number(rowValue(x,['sort_order','VocabNo','STT'])||i+1)}}).filter(x=>Number.isInteger(x.lesson_number)&&x.hanzi);
+  return{reading,vocab,sheetNames:wb.SheetNames||[]};
+}
+function readingLessonNumbers(rows){return [...new Set((rows||[]).map(x=>Number(x.lesson_number)).filter(x=>Number.isInteger(x)&&x>=0))].sort((a,b)=>a-b)}
+async function previewReadingImport(){
+  const courseId=$('readingImportCourse').value,file=$('readingCombinedFile').files[0];if(!courseId){$('readingImportStatus').textContent='Hãy chọn khóa học.';return}if(!file){$('readingImportStatus').textContent='Hãy chọn file XLSX tổng hợp.';return}
+  $('readingImportStatus').textContent='Đang kiểm tra và ghép theo số bài...';$('runReadingImport').disabled=true;
+  try{const {reading,vocab,sheetNames}=await parseCombinedReadingFile(file);readingImportDraft={reading,vocab};const a=readingLessonNumbers(reading),b=readingLessonNumbers(vocab),all=[...new Set([...a,...b])].sort((x,y)=>x-y);if(!reading.length)throw new Error(`Không đọc được câu luyện đọc. Các sheet hiện có: ${sheetNames.join(', ')}.`);if(!vocab.length)throw new Error(`Không đọc được từ tra cứu. Các sheet hiện có: ${sheetNames.join(', ')}.`);$('readingImportPreview').hidden=false;$('readingImportPreview').innerHTML=`<table><thead><tr><th>Khóa</th><th>Bài nhận diện</th><th>Câu đọc</th><th>Từ dùng chung</th></tr></thead><tbody><tr><td>${esc($('readingImportCourse').selectedOptions[0]?.textContent||courseId)}</td><td>${all.map(x=>String(x).padStart(2,'0')).join(', ')}</td><td>${reading.length} dòng · ${a.length} bài</td><td>${vocab.length} dòng · ${b.length} bài</td></tr></tbody></table>`;$('readingImportStatus').textContent=`Sẵn sàng gắn ${all.length} bài. Khi nhập, kho từ sẽ được dùng cho Luyện đọc + Game + Viết chữ.`;$('runReadingImport').disabled=false}catch(e){$('readingImportStatus').textContent=e.message}
+}
+async function runReadingImport(){
+  const courseId=$('readingImportCourse').value;if(!courseId)return;$('runReadingImport').disabled=true;
+  const numbers=[...new Set([...readingImportDraft.reading,...readingImportDraft.vocab].map(x=>Number(x.lesson_number)).filter(Number.isInteger))].sort((a,b)=>a-b),totals={passages:0,sentences:0,vocab:0,shared:0};
+  try{for(let i=0;i<numbers.length;i++){const n=numbers[i],readingRows=readingImportDraft.reading.filter(x=>Number(x.lesson_number)===n),vocabRows=readingImportDraft.vocab.filter(x=>Number(x.lesson_number)===n);$('readingImportStatus').textContent=`Đang nhập Bài ${String(n).padStart(2,'0')} · ${i+1}/${numbers.length}...`;const j=await api('/admin/reading/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:courseId,reading_rows:readingRows,vocab_rows:vocabRows,sync_shared_vocab:true})});totals.passages+=Number(j.passage_count||0);totals.sentences+=Number(j.sentence_count||0);totals.vocab+=Number(j.vocab_count||0);totals.shared+=Number(j.shared_vocab_count||0)}$('readingImportStatus').textContent=`Đã gắn ${totals.passages} bài: ${totals.sentences} câu đọc, ${totals.vocab} từ tra cứu và ${totals.shared} từ dùng chung cho Game + Viết chữ.`;await loadReadingStatus()}catch(e){$('readingImportStatus').textContent=`Đã dừng để bảo toàn dữ liệu: ${e.message}. Có thể bấm nhập lại; các bài đã xong sẽ được cập nhật lại, không tạo trùng.`}finally{$('runReadingImport').disabled=false}
+}
+async function loadReadingStatus(){
+  const courseId=$('readingImportCourse')?.value;if(!courseId){$('readingLessonBody').innerHTML='';return}
+  try{const j=await api('/admin/reading/course?course_id='+encodeURIComponent(courseId)),lessons=j.lessons||[];$('readingLessonBody').innerHTML=lessons.map(x=>`<tr><td>${String(x.lesson_number).padStart(2,'0')}</td><td>${esc(x.title||'')}</td><td>${Number(x.sentence_count||0)}</td><td>${Number(x.vocab_count||0)}</td><td>${Number(x.shared_vocab_count||0)} từ · ${Number(x.shared_enabled)?'Đã bật':'Chưa bật'}</td><td>${Number(x.sentence_count||0)?`<a class="ghost" style="display:inline-block;text-decoration:none" target="_blank" rel="noopener" href="https://xuong-luyen-doc-aluni.tiengtrungphanxa.chatgpt.site/?course_id=${encodeURIComponent(courseId)}&lesson_number=${Number(x.lesson_number)}">Mở bài</a>`:'—'}</td></tr>`).join('')||'<tr><td colspan="6" class="muted">Khóa chưa có bài học.</td></tr>'}catch(e){$('readingImportStatus').textContent=e.message}
+}
+function readingTemplate(){const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([{lesson_number:1,reading_title:'Chào hỏi',sentence_number:1,hanzi:'你好！',pinyin:'Nǐ hǎo!',vi:'Xin chào!'}]),'BAI_DOC');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([{lesson_number:1,hanzi:'你好',pinyin:'nǐ hǎo',vi:'xin chào',highlight_mode:'all'}]),'TU_VUNG');XLSX.writeFile(wb,'mau-luyen-doc-kho-tu-aluni.xlsx')}
 async function doImport(){
   const f=$('importFile').files[0];
   if(!f){$('contentStatus').textContent='Chọn file CSV/XLSX.';return}
@@ -1119,17 +1181,17 @@ function openSelectedLearningCourse(){$('oldCoursePicker').hidden=false;$('editC
 function lessonListValue(text){return [...new Set(String(text||'').split(/[^0-9]+/).filter(Boolean).map(Number).filter(Number.isInteger))].sort((a,b)=>a-b)}
 async function selectLearningCourseEverywhere(id){
   const c=learningCourses.find(x=>x.id===id);if(!c)return;
-  for(const name of ['manageLearningCourse','learningImportCourse','lessonListImportCourse','grammarImportCourse','grammarManageCourse','writingManageCourse','shadowAdminCourse']){const el=$(name);if(el&&[...el.options].some(o=>o.value===id))el.value=id}
+  for(const name of ['manageLearningCourse','learningImportCourse','lessonListImportCourse','grammarImportCourse','grammarManageCourse','writingManageCourse','readingImportCourse','shadowAdminCourse']){const el=$(name);if(el&&[...el.options].some(o=>o.value===id))el.value=id}
   $('editCoursePicker').value=id;localStorage.setItem('aluni_admin_active_course',id);$('statActiveCourse').textContent=c.title;$('activeCourseNotice').textContent=`Đang chọn: ${c.title} · ${c.id} · ${c.lesson_count||0} bài`;
   await loadLearningContent();
 }
 async function loadAccessSettings(id){
-  try{const j=await api('/admin/learning/access-settings?course_id='+encodeURIComponent(id)),s=j.settings||{};$('globalCourseAccess').value=s.course_access||'free';$('globalFreeLessons').value=(s.global_free_lessons||[]).join(', ');$('globalFreeLessons').disabled=$('globalCourseAccess').value==='free';for(const module of ['video','shadowing','writing','grammar','resource']){const r=s.modules?.[module]||{};document.querySelector(`.moduleAccessMode[data-module="${module}"]`).value=r.mode||'inherit';const input=document.querySelector(`.moduleFreeLessons[data-module="${module}"]`);input.value=(r.free_lessons||[]).join(', ');input.disabled=(r.mode||'inherit')==='inherit'}$('accessSettingsStatus').textContent='Đã tải quyền của khóa đang chọn.'}catch(e){$('accessSettingsStatus').textContent=e.message}
+  try{const j=await api('/admin/learning/access-settings?course_id='+encodeURIComponent(id)),s=j.settings||{};$('globalCourseAccess').value=s.course_access||'free';$('globalFreeLessons').value=(s.global_free_lessons||[]).join(', ');$('globalFreeLessons').disabled=$('globalCourseAccess').value==='free';for(const module of ['video','shadowing','reading','writing','grammar','resource']){const r=s.modules?.[module]||{};document.querySelector(`.moduleAccessMode[data-module="${module}"]`).value=r.mode||'inherit';const input=document.querySelector(`.moduleFreeLessons[data-module="${module}"]`);input.value=(r.free_lessons||[]).join(', ');input.disabled=(r.mode||'inherit')==='inherit'}$('accessSettingsStatus').textContent='Đã tải quyền của khóa đang chọn.'}catch(e){$('accessSettingsStatus').textContent=e.message}
 }
 async function saveAccessSettings(){
   const id=$('manageLearningCourse').value;if(!id){$('accessSettingsStatus').textContent='Hãy chọn khóa học trước.';return}
   const selectedCourse=learningCourses.find(c=>String(c.id)===String(id));
-  const modules={};for(const module of ['video','shadowing','writing','grammar','resource'])modules[module]={mode:document.querySelector(`.moduleAccessMode[data-module="${module}"]`).value,free_lessons:lessonListValue(document.querySelector(`.moduleFreeLessons[data-module="${module}"]`).value)};
+  const modules={};for(const module of ['video','shadowing','reading','writing','grammar','resource'])modules[module]={mode:document.querySelector(`.moduleAccessMode[data-module="${module}"]`).value,free_lessons:lessonListValue(document.querySelector(`.moduleFreeLessons[data-module="${module}"]`).value)};
   try{
     const globalFree=lessonListValue($('globalFreeLessons').value),courseFree=$('globalCourseAccess').value==='free';
     await api('/admin/learning/access-settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:id,course_access:$('globalCourseAccess').value,global_free_lessons:globalFree,modules})});
@@ -1139,7 +1201,7 @@ async function saveAccessSettings(){
     // Chỉ thay đổi quyền nên không tải lại toàn bộ danh sách khóa. Việc tải lại ở đây
     // có thể chạy chồng với lần tải khác và làm select tự nhảy về khóa đầu tiên.
     if(selectedCourse)selectedCourse.access=courseFree?'free':'paid';
-    for(const name of ['manageLearningCourse','learningImportCourse','lessonListImportCourse','grammarImportCourse','grammarManageCourse','writingManageCourse','shadowAdminCourse']){
+    for(const name of ['manageLearningCourse','learningImportCourse','lessonListImportCourse','grammarImportCourse','grammarManageCourse','writingManageCourse','readingImportCourse','shadowAdminCourse']){
       const el=$(name);if(el&&[...el.options].some(o=>o.value===id))el.value=id;
     }
     $('editCoursePicker').value=id;
@@ -1594,6 +1656,12 @@ $('downloadCodes').onclick=downloadCodes;
 $('refreshLearners').onclick=loadLearners;
 $('importBtn').onclick=doImport;
 $('templateBtn').onclick=template;
+$('previewReadingImport').onclick=previewReadingImport;
+$('runReadingImport').onclick=runReadingImport;
+$('readingTemplateBtn').onclick=readingTemplate;
+$('refreshReadingStatus').onclick=loadReadingStatus;
+$('readingImportCourse').onchange=()=>{readingImportDraft={reading:[],vocab:[]};$('runReadingImport').disabled=true;$('readingImportPreview').hidden=true;loadReadingStatus()};
+$('readingCombinedFile').onchange=()=>{readingImportDraft={reading:[],vocab:[]};$('runReadingImport').disabled=true;$('readingImportPreview').hidden=true;$('readingImportStatus').textContent='Đã chọn file. Bấm “Kiểm tra trước”.'};
 $('saveLearningGroup').onclick=saveLearningGroup;
 $('newLearningGroup').onclick=clearLearningGroup;
 $('writingManageCourse').onchange=async()=>{await loadWritingContent();await previewExistingVocabulary()};
