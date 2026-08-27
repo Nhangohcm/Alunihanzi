@@ -1173,11 +1173,12 @@ async function manageLearningCourseById(id){
 }
 async function editLearningCourse(id){
   const c=learningCourses.find(x=>x.id===id);if(!c)return;
-  await selectLearningCourseEverywhere(id);
   $('learningCourseFormCard').classList.add('open');$('learningCourseFormTitle').textContent='Chỉnh sửa khóa học';$('learningCourseFormMode').textContent='CHẾ ĐỘ CHỈNH SỬA';
   $('learningId').value=c.id;$('learningId').readOnly=true;$('learningTitle').value=c.title||'';$('learningIcon').value=c.icon||'课';$('learningAccess').value=c.access||'free';$('learningGroup').value=c.group_id||'';$('learningGrammarAccess').value=c.grammar_access||'course';$('learningSort').value=Number(c.sort_order||0);$('learningPublished').value=Number(c.published)?'1':'0';$('learningDescription').value=c.description||'';
+  $('learningStatus').textContent=`Đang sửa “${c.title}” · mã ${c.id} · ${c.lesson_count||0} bài.`;$('activeCourseNotice').textContent=$('learningStatus').textContent;$('learningCourseFormCard').scrollIntoView({behavior:'smooth',block:'start'});
+  await selectLearningCourseEverywhere(id);
   try{const j=await api('/admin/shadowing/rule?course_id='+encodeURIComponent(c.id));const rule=j.rule||{};$('learningShadowAccess').value=rule.access_mode||'paid_all';$('learningShadowFreeLessons').value=Number(rule.free_lessons||0)}catch(e){$('learningShadowAccess').value='paid_all';$('learningShadowFreeLessons').value=0}
-  $('learningStatus').textContent=`Đang sửa “${c.title}” · mã ${c.id} · ${c.lesson_count||0} bài.`;$('activeCourseNotice').textContent=$('learningStatus').textContent;await loadAccessSettings(id);$('learningCourseFormCard').scrollIntoView({behavior:'smooth',block:'start'});
+  await loadAccessSettings(id);
 }
 function clearLearningForm(){
   $('learningId').value='';$('learningId').readOnly=false;$('learningTitle').value='';$('learningIcon').value='拼';$('learningAccess').value='paid';$('learningGroup').value='';$('learningGrammarAccess').value='course';$('learningSort').value='0';$('learningPublished').value='0';$('learningDescription').value='';$('learningShadowAccess').value='free_first';$('learningShadowFreeLessons').value=10;
@@ -1193,12 +1194,12 @@ async function selectLearningCourseEverywhere(id){
   await loadLearningContent();
 }
 async function loadAccessSettings(id){
-  try{const j=await api('/admin/learning/access-settings?course_id='+encodeURIComponent(id)),s=j.settings||{};$('globalCourseAccess').value=s.course_access||'free';$('globalFreeLessons').value=(s.global_free_lessons||[]).join(', ');$('globalFreeLessons').disabled=$('globalCourseAccess').value==='free';for(const module of ['video','shadowing','reading','writing','grammar','resource']){const r=s.modules?.[module]||{};document.querySelector(`.moduleAccessMode[data-module="${module}"]`).value=r.mode||'inherit';const input=document.querySelector(`.moduleFreeLessons[data-module="${module}"]`);input.value=(r.free_lessons||[]).join(', ');input.disabled=(r.mode||'inherit')==='inherit'}$('accessSettingsStatus').textContent='Đã tải quyền của khóa đang chọn.'}catch(e){$('accessSettingsStatus').textContent=e.message}
+  try{const j=await api('/admin/learning/access-settings?course_id='+encodeURIComponent(id)),s=j.settings||{};$('globalCourseAccess').value=s.course_access||'free';$('globalFreeLessons').value=(s.global_free_lessons||[]).join(', ');$('globalFreeLessons').disabled=$('globalCourseAccess').value==='free';for(const module of ['video','shadowing','reading','writing','grammar','resource']){const mode=document.querySelector(`.moduleAccessMode[data-module="${module}"]`),input=document.querySelector(`.moduleFreeLessons[data-module="${module}"]`);if(!mode||!input)continue;const r=s.modules?.[module]||{};mode.value=r.mode||'inherit';input.value=(r.free_lessons||[]).join(', ');input.disabled=(r.mode||'inherit')==='inherit'}$('accessSettingsStatus').textContent='Đã tải quyền của khóa đang chọn.'}catch(e){$('accessSettingsStatus').textContent=e.message}
 }
 async function saveAccessSettings(){
   const id=$('manageLearningCourse').value;if(!id){$('accessSettingsStatus').textContent='Hãy chọn khóa học trước.';return}
   const selectedCourse=learningCourses.find(c=>String(c.id)===String(id));
-  const modules={};for(const module of ['video','shadowing','reading','writing','grammar','resource'])modules[module]={mode:document.querySelector(`.moduleAccessMode[data-module="${module}"]`).value,free_lessons:lessonListValue(document.querySelector(`.moduleFreeLessons[data-module="${module}"]`).value)};
+  const modules={};for(const module of ['video','shadowing','reading','writing','grammar','resource']){const mode=document.querySelector(`.moduleAccessMode[data-module="${module}"]`),input=document.querySelector(`.moduleFreeLessons[data-module="${module}"]`);if(!mode||!input)continue;modules[module]={mode:mode.value,free_lessons:lessonListValue(input.value)}}
   try{
     const globalFree=lessonListValue($('globalFreeLessons').value),courseFree=$('globalCourseAccess').value==='free';
     await api('/admin/learning/access-settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:id,course_access:$('globalCourseAccess').value,global_free_lessons:globalFree,modules})});
