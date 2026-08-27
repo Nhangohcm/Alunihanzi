@@ -1176,9 +1176,9 @@ async function editLearningCourse(id){
   $('learningCourseFormCard').classList.add('open');$('learningCourseFormTitle').textContent='Chỉnh sửa khóa học';$('learningCourseFormMode').textContent='CHẾ ĐỘ CHỈNH SỬA';
   $('learningId').value=c.id;$('learningId').readOnly=true;$('learningTitle').value=c.title||'';$('learningIcon').value=c.icon||'课';$('learningAccess').value=c.access||'free';$('learningGroup').value=c.group_id||'';$('learningGrammarAccess').value=c.grammar_access||'course';$('learningSort').value=Number(c.sort_order||0);$('learningPublished').value=Number(c.published)?'1':'0';$('learningDescription').value=c.description||'';
   $('learningStatus').textContent=`Đang sửa “${c.title}” · mã ${c.id} · ${c.lesson_count||0} bài.`;$('activeCourseNotice').textContent=$('learningStatus').textContent;$('learningCourseFormCard').scrollIntoView({behavior:'smooth',block:'start'});
-  await selectLearningCourseEverywhere(id);
-  try{const j=await api('/admin/shadowing/rule?course_id='+encodeURIComponent(c.id));const rule=j.rule||{};$('learningShadowAccess').value=rule.access_mode||'paid_all';$('learningShadowFreeLessons').value=Number(rule.free_lessons||0)}catch(e){$('learningShadowAccess').value='paid_all';$('learningShadowFreeLessons').value=0}
-  await loadAccessSettings(id);
+  await selectLearningCourseEverywhere(id,false);
+  const shadowRule=api('/admin/shadowing/rule?course_id='+encodeURIComponent(c.id)).then(j=>{const rule=j.rule||{};$('learningShadowAccess').value=rule.access_mode||'paid_all';$('learningShadowFreeLessons').value=Number(rule.free_lessons||0)}).catch(()=>{$('learningShadowAccess').value='paid_all';$('learningShadowFreeLessons').value=0});
+  await Promise.all([shadowRule,loadAccessSettings(id)]);
 }
 function clearLearningForm(){
   $('learningId').value='';$('learningId').readOnly=false;$('learningTitle').value='';$('learningIcon').value='拼';$('learningAccess').value='paid';$('learningGroup').value='';$('learningGrammarAccess').value='course';$('learningSort').value='0';$('learningPublished').value='0';$('learningDescription').value='';$('learningShadowAccess').value='free_first';$('learningShadowFreeLessons').value=10;
@@ -1187,11 +1187,11 @@ function clearLearningForm(){
 function openNewLearningCourse(){clearLearningForm();$('learningCourseFormCard').classList.add('open');$('learningCourseFormTitle').textContent='Tạo khóa học mới';$('learningCourseFormMode').textContent='CHẾ ĐỘ TẠO MỚI';$('learningId').focus()}
 function openSelectedLearningCourse(){$('oldCoursePicker').hidden=false;$('editCoursePicker').focus()}
 function lessonListValue(text){return [...new Set(String(text||'').split(/[^0-9]+/).filter(Boolean).map(Number).filter(Number.isInteger))].sort((a,b)=>a-b)}
-async function selectLearningCourseEverywhere(id){
+async function selectLearningCourseEverywhere(id,loadContent=true){
   const c=learningCourses.find(x=>x.id===id);if(!c)return;
   for(const name of ['manageLearningCourse','learningImportCourse','lessonListImportCourse','grammarImportCourse','grammarManageCourse','writingManageCourse','readingImportCourse','shadowAdminCourse']){const el=$(name);if(el&&[...el.options].some(o=>o.value===id))el.value=id}
   $('editCoursePicker').value=id;localStorage.setItem('aluni_admin_active_course',id);$('statActiveCourse').textContent=c.title;$('activeCourseNotice').textContent=`Đang chọn: ${c.title} · ${c.id} · ${c.lesson_count||0} bài`;
-  await loadLearningContent();
+  if(loadContent)await loadLearningContent();
 }
 async function loadAccessSettings(id){
   try{const j=await api('/admin/learning/access-settings?course_id='+encodeURIComponent(id)),s=j.settings||{};$('globalCourseAccess').value=s.course_access||'free';$('globalFreeLessons').value=(s.global_free_lessons||[]).join(', ');$('globalFreeLessons').disabled=$('globalCourseAccess').value==='free';for(const module of ['video','shadowing','reading','writing','grammar','resource']){const mode=document.querySelector(`.moduleAccessMode[data-module="${module}"]`),input=document.querySelector(`.moduleFreeLessons[data-module="${module}"]`);if(!mode||!input)continue;const r=s.modules?.[module]||{};mode.value=r.mode||'inherit';input.value=(r.free_lessons||[]).join(', ');input.disabled=(r.mode||'inherit')==='inherit'}$('accessSettingsStatus').textContent='Đã tải quyền của khóa đang chọn.'}catch(e){$('accessSettingsStatus').textContent=e.message}
@@ -1227,7 +1227,7 @@ async function saveLearningCourse(){
     const isFreeCourse=$('learningAccess').value==='free',shadowMode=isFreeCourse?'free_first':$('learningShadowAccess').value,shadowFree=isFreeCourse?9999:(shadowMode==='free_first'?Number($('learningShadowFreeLessons').value||0):0);
     const j=await api('/admin/learning/course',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,title,icon:$('learningIcon').value.trim(),access:$('learningAccess').value,group_id:$('learningGroup').value,grammar_access:$('learningGrammarAccess').value,free_lessons:isFreeCourse?9999:shadowFree,sort_order:Number($('learningSort').value||0),published:$('learningPublished').value==='1',description:$('learningDescription').value.trim()})});
     await api('/admin/shadowing/rule',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:j.id,access_mode:shadowMode,free_lessons:shadowFree})});
-    $('learningStatus').textContent=$('learningPublished').value==='1'?'Đã lưu và xuất bản khóa học.':'Đã lưu bản nháp.';$('learningId').value=j.id;await loadLearningCourses();$('manageLearningCourse').value=j.id;$('learningImportCourse').value=j.id;await loadLearningContent();$('learningCourseFormMode').textContent='CHẾ ĐỘ CHỈNH SỬA';$('learningCourseFormTitle').textContent='Chỉnh sửa khóa học';
+    $('learningStatus').textContent=$('learningPublished').value==='1'?'Đã lưu và xuất bản khóa học.':'Đã lưu bản nháp.';$('learningId').value=j.id;await loadLearningCourses(false);$('manageLearningCourse').value=j.id;$('learningImportCourse').value=j.id;$('learningCourseFormMode').textContent='CHẾ ĐỘ CHỈNH SỬA';$('learningCourseFormTitle').textContent='Chỉnh sửa khóa học';
   }catch(e){$('learningStatus').textContent=e.message}
 }
 let bulkCourseDraft=null;

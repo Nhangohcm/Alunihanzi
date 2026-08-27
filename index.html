@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#4f67e8">
-<link rel="preload" as="image" href="poster-gia-vuong.png" fetchpriority="high">
+<link rel="preload" as="image" href="poster-gia-vuong.webp" fetchpriority="high">
 <title>Tiếng Trung Aluni - Luyện viết chữ Hán</title>
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
 <script src="https://www.youtube.com/iframe_api"></script>
@@ -1123,7 +1123,7 @@ document.body.appendChild($('accessModal'));
 document.body.appendChild($('salesPopup'));
 $('accessActivateBtn').onclick=activate;$('accessCancelBtn').onclick=closeAccess;$('accessCloseBtn').onclick=closeAccess;$('accessModal').onclick=e=>{if(e.target===$('accessModal'))closeAccess()};
 function closeSalesPopup(){$('salesPopup').hidden=true;sessionStorage.setItem('aluni_sales_popup_seen','1');setActiveAppSection('learningSection');updateAppNavToggle()}
-function setupSalesPopup(){const url=String(window.ALUNI_SALES_PAGE_URL||'#'),image=String(window.ALUNI_SALES_POPUP_IMAGE||'poster-gia-vuong.png'),poster=$('salesPopupImage'),shouldOpen=!savedEntitlements()[ALL_ACCESS_ID];let opened=false;const openFast=()=>{if(!shouldOpen||opened)return;opened=true;$('salesPopup').hidden=false};$('salesBuyNow').href=url;$('salesBuyNow').onclick=e=>{if(url==='#'){e.preventDefault();closeSalesPopup();openAccess()}};if(image){poster.fetchPriority='high';poster.onload=()=>setTimeout(openFast,80);poster.onerror=()=>{poster.hidden=true;$('salesPopupContent').hidden=false;openFast()};poster.src=image;poster.hidden=false;$('salesPopupContent').hidden=true}else openFast();if(shouldOpen)setTimeout(openFast,350)}
+function setupSalesPopup(){const url=String(window.ALUNI_SALES_PAGE_URL||'#'),image=String(window.ALUNI_SALES_POPUP_IMAGE||'poster-gia-vuong.webp'),poster=$('salesPopupImage'),shouldOpen=!savedEntitlements()[ALL_ACCESS_ID];let opened=false;const openFast=()=>{if(!shouldOpen||opened)return;opened=true;$('salesPopup').hidden=false};$('salesBuyNow').href=url;$('salesBuyNow').onclick=e=>{if(url==='#'){e.preventDefault();closeSalesPopup();openAccess()}};if(image){poster.fetchPriority='high';poster.onload=()=>setTimeout(openFast,80);poster.onerror=()=>{poster.hidden=true;$('salesPopupContent').hidden=false;openFast()};poster.src=image;poster.hidden=false;$('salesPopupContent').hidden=true}else openFast();if(shouldOpen)setTimeout(openFast,350)}
 $('salesPopupClose').onclick=closeSalesPopup;$('salesUseFree').onclick=closeSalesPopup;$('salesPopup').onclick=e=>{if(e.target===$('salesPopup'))closeSalesPopup()};
 $('animateBtn').onclick=()=>writer&&writer.animateCharacter();$('quizBtn').onclick=()=>currentChars.length&&buildWriter(currentChars[currentCharIndex],true);$('resetBtn').onclick=()=>currentChars.length&&buildWriter(currentChars[currentCharIndex],true);$('nextCharBtn').onclick=nextPracticeChar;$('radicalBtn').onclick=()=>{radicalMode=!radicalMode;$('radicalBtn').textContent=`🎨 Tách bộ thủ: ${radicalMode?'BẬT':'TẮT'}`;if(currentChars.length)buildWriter(currentChars[currentCharIndex],false)};$('speakPractice').onclick=()=>currentItem&&speak(currentItem.hanzi);
 loadRemoteContent();
@@ -1428,7 +1428,7 @@ async function analyzeGrammarText(){const input=document.getElementById('grammar
 document.getElementById('grammarAnalyzeBtn')?.addEventListener('click',analyzeGrammarText);document.getElementById('grammarAnalyzeClear')?.addEventListener('click',()=>{document.getElementById('grammarAnalyzeInput').value='';document.getElementById('grammarAnalyzeResult').hidden=true;document.getElementById('grammarAnalyzeStatus').textContent='Mỗi thiết bị/mã kích hoạt có 10 lượt AI/ngày, dùng chung cho tra cứu mở rộng và phân tích câu. Kết quả đã lưu không trừ lượt.'});
 async function loadGrammarCatalog(){
   if(grammarCatalog.length)return;
-  try{const r=await fetch(shadowApi('/grammar/catalog'),{cache:'no-store'}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được bài tập.');grammarCatalog=Array.isArray(j.sets)?j.sets:[];renderGrammarSearch();renderGrammarLibrary();if(!grammarCatalog.length)document.getElementById('grammarLibraryList').innerHTML='<div class="grammar-empty">Kho Ngữ pháp free chưa có nội dung.</div>'}catch(e){document.getElementById('grammarLibraryList').innerHTML=`<div class="grammar-empty">${grammarEsc(e.message)}</div>`}
+  try{const r=await fetch(shadowApi('/grammar/catalog'),{cache:'default'}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được bài tập.');grammarCatalog=Array.isArray(j.sets)?j.sets:[];renderGrammarSearch();renderGrammarLibrary();if(!grammarCatalog.length)document.getElementById('grammarLibraryList').innerHTML='<div class="grammar-empty">Kho Ngữ pháp free chưa có nội dung.</div>'}catch(e){document.getElementById('grammarLibraryList').innerHTML=`<div class="grammar-empty">${grammarEsc(e.message)}</div>`}
 }
 async function openGrammarSet(id){
   document.querySelector('.app-nav-btn[data-section="grammarSection"]')?.click();await loadGrammarCatalog();
@@ -1470,7 +1470,7 @@ document.querySelector('.app-nav-btn[data-section="grammarSection"]')?.addEventL
 // ===== KHÓA HỌC THỐNG NHẤT R6 =====
 let publicLearningCourses=[],publicLearningGroups=[],selectedPublicCourse=null,currentPublicLesson=null,currentPublicLessonVideos=[];
 const LEARNING_CACHE_KEY='aluni_learning_catalog_v83_3';
-const LEARNING_CACHE_MAX_AGE=2*60*1000;
+const LEARNING_CACHE_MAX_AGE=10*60*1000;
 function readLearningCache(){try{const saved=JSON.parse(localStorage.getItem(LEARNING_CACHE_KEY)||'null');if(!saved||Date.now()-Number(saved.saved_at||0)>LEARNING_CACHE_MAX_AGE)return[];return Array.isArray(saved.courses)?dedupePublicCourses(saved.courses):[]}catch(e){return[]}}
 function writeLearningCache(list){try{localStorage.setItem(LEARNING_CACHE_KEY,JSON.stringify({saved_at:Date.now(),courses:list}))}catch(e){}}
 function cleanPublicLessonTitle(title,number){return String(title||'').replace(new RegExp('^\\s*Bài\\s*0*'+Number(number)+'\\s*[—–:.-]*\\s*','i'),'').trim()||`Bài ${number}`}
@@ -1523,7 +1523,7 @@ async function loadPublicLearningCourses(){
   if(cached.length){publicLearningCourses=cached;paintPublicLearningCourses();renderAllCoursesShowcase();renderMyCourses()}
   else{box.innerHTML='<div class="learning-empty">Đang tải khóa học…</div>';const mine=document.getElementById('myCoursesGrid');if(mine)mine.innerHTML='<div class="learning-empty">⏳ Đang tải khóa học của bạn…</div>'}
   try{
-    const r=await fetch(api('/learning-courses?refresh='+Date.now()),{cache:'no-store'}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được khóa học.');publicLearningGroups=Array.isArray(j.groups)?j.groups:[];
+    const r=await fetch(api('/learning-courses'),{cache:'default'}),j=await r.json();if(!r.ok)throw new Error(j.error||'Không tải được khóa học.');publicLearningGroups=Array.isArray(j.groups)?j.groups:[];
     const fresh=dedupePublicCourses(Array.isArray(j.courses)?j.courses:[]);
     publicLearningCourses=sortPublicCourses(fresh);writeLearningCache(publicLearningCourses);paintPublicLearningCourses();renderAllCoursesShowcase();renderMyCourses();
     if(!fresh.length)box.innerHTML='<div class="learning-empty">Chưa có khóa học nào được xuất bản.</div>';
