@@ -6,10 +6,13 @@ window.ALUNI_SALES_PAGE_URL =
 // Kho Viết chữ V2 được cô lập trong một khối để dễ thử nghiệm và hoàn tác qua PR.
 (function(){
   const groups={all:'Tất cả','50plus':'50+','npcr':'NPCR','hsk20_1':'HSK 1','hsk20_2':'HSK 2','hsk20_3':'HSK 3','hsk20_4':'HSK 4','hsk20_5':'HSK 5','hsk20_6':'HSK 6','hsk30_1':'HSK 1','hsk30_2':'HSK 2','hsk30_3':'HSK 3','hsk30_4':'HSK 4','hsk30_5':'HSK 5','hsk30_6':'HSK 6'};
+  // Lớp thẻ ảnh thử nghiệm luôn tắt mặc định; chỉ bật bằng cờ xem trước riêng.
+  const imageCardsPreview=window.ALUNI_WRITING_IMAGE_CARDS_PREVIEW===true||new URLSearchParams(location.search).get('writingImageCards')==='preview';
   let active='all',library,courseView,lessonBar,lessonList,courseTitle,resultsCard;
   const css=`
   #writingSection .writing-v2-header{margin-bottom:26px}#writingSection .writing-v2-header h1{margin:8px 0;font-size:clamp(2.2rem,5vw,3.7rem)}
   .writing-v2-library,.writing-v2-course,.writing-v2-lessonbar{margin-bottom:16px}.writing-v2-tabs{display:grid;gap:10px;margin-top:14px}.writing-v2-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.writing-v2-label{min-width:82px;color:#58627b;font-size:.85rem;font-weight:900}.writing-v2-tab{border:1px solid #dce2f5;border-radius:999px;background:#fff;color:#4d5874;padding:10px 15px;font-weight:850;cursor:pointer}.writing-v2-tab:hover{border-color:#7784ed;color:#4056c5}.writing-v2-tab.active{border-color:transparent;background:linear-gradient(135deg,#536ceb,#8065e8);color:#fff}.writing-v2-note{margin-top:12px;color:#737d94;font-size:.9rem}.writing-v2-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px}.writing-v2-head h2{margin:3px 0 0}.writing-v2-back{border:1px solid #d7ddef;border-radius:12px;background:#fff;padding:10px 13px;color:#4056c5;font-weight:900;cursor:pointer}.writing-v2-lessons{display:grid;gap:10px}.writing-v2-lesson{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:14px 16px;border:1px solid #dce2ef;border-radius:15px;background:#f9faff}.writing-v2-main{border:0;background:transparent;color:#1f2940;text-align:left;cursor:pointer}.writing-v2-main b,.writing-v2-main small{display:block}.writing-v2-main small{margin-top:5px;color:#788299}.writing-v2-actions{display:flex;gap:8px}.writing-v2-action{border:1px solid #cfd7ef;border-radius:11px;background:#fff;padding:9px 11px;color:#4056c5;font-weight:850;cursor:pointer}.writing-v2-action.game{background:#eef1ff}.writing-v2-empty{padding:24px;border:1px dashed #cfd7e8;border-radius:15px;text-align:center;color:#747e94;background:#fafbff}.writing-v2-course[hidden],.writing-v2-library[hidden],.writing-v2-lessonbar[hidden],.writing-v2-results[hidden]{display:none!important}
+  #words.writing-image-cards .word.has-writing-image{min-height:250px;padding:8px 10px 12px;justify-content:flex-start;text-align:left}.writing-card-image{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;margin-bottom:9px;background:#eef1f7}.word.has-writing-image .hanzi,.word.has-writing-image .pinyin,.word.has-writing-image .meaning{text-align:left;padding-right:38px}
   @media(max-width:700px){.writing-v2-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.writing-v2-row:first-child{grid-template-columns:repeat(3,minmax(0,1fr))}.writing-v2-label{grid-column:1/-1;min-width:0;margin-top:3px}.writing-v2-tab{padding:8px 5px;font-size:.78rem;white-space:nowrap}.writing-v2-lesson{grid-template-columns:1fr}.writing-v2-actions{width:100%}.writing-v2-action{flex:1}}
   `;
   function text(course){return norm([course?.id,course?.code,course?.slug,course?.name,course?.title,course?.group,course?.free_group].filter(Boolean).join(' '))}
@@ -28,6 +31,17 @@ window.ALUNI_SALES_PAGE_URL =
     box.querySelectorAll('button').forEach(b=>b.onclick=()=>openGroup(b.dataset.writingV2));
   }
   function displayName(group,course){return course?.name||course?.title||(group.startsWith('hsk20_')?`HSK 2.0 — Cấp ${group.at(-1)}`:group.startsWith('hsk30_')?`HSK 3.0 — Cấp ${group.at(-1)}`:groups[group])}
+  function writingImageUrl(item){
+    const raw=String(item?.image_url||item?.image||item?.photo_url||item?.thumbnail_url||'').trim();if(!raw)return'';
+    try{const url=new URL(raw,location.href);return /^https?:$/.test(url.protocol)?url.href:''}catch(e){return''}
+  }
+  function applyImageCards(){
+    if(!imageCardsPreview)return;const box=document.getElementById('words');if(!box)return;box.classList.add('writing-image-cards');
+    [...box.children].forEach((card,index)=>{if(!card.classList.contains('word')||card.querySelector('.writing-card-image'))return;const item=practiceItems?.[index],src=writingImageUrl(item);if(!src)return;const img=document.createElement('img');img.className='writing-card-image';img.src=src;img.alt=String(item?.vi||item?.hanzi||'Ảnh từ vựng');img.loading='lazy';img.decoding='async';img.onerror=()=>{img.remove();card.classList.remove('has-writing-image')};card.classList.add('has-writing-image');card.insertBefore(img,card.querySelector('.hanzi'))})
+  }
+  function startImageCardPreview(){
+    if(!imageCardsPreview)return;const box=document.getElementById('words');if(!box)return;new MutationObserver(()=>requestAnimationFrame(applyImageCards)).observe(box,{childList:true});applyImageCards();
+  }
   async function openGroup(group){
     active=group;renderTabs();
     if(group==='all'){showLibrary();return}
@@ -55,7 +69,7 @@ window.ALUNI_SALES_PAGE_URL =
     courseTitle=courseView.querySelector('h2');lessonList=courseView.querySelector('.writing-v2-lessons');resultsCard=document.getElementById('resultsTitle').closest('section.card');resultsCard.classList.add('writing-v2-results');resultsCard.hidden=true;
     // Giữ các điều khiển lõi ở chế độ ẩn vì hàm tải nội dung cũ vẫn cập nhật chúng.
     ['courseSelect','lessonSelect','lessonStrip'].forEach(id=>{const el=document.getElementById(id);if(el){el.hidden=true;library.appendChild(el)}});
-    old.replaceWith(library,courseView,lessonBar);courseView.querySelector('.writing-v2-back').onclick=showLibrary;lessonBar.querySelector('.writing-v2-back').onclick=backToLessons;renderTabs();
+    old.replaceWith(library,courseView,lessonBar);courseView.querySelector('.writing-v2-back').onclick=showLibrary;lessonBar.querySelector('.writing-v2-back').onclick=backToLessons;renderTabs();startImageCardPreview();
     document.getElementById('searchBtn').addEventListener('click',()=>{lessonBar.hidden=true;quick.after(resultsCard);resultsCard.hidden=false},true);
     document.getElementById('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter'){lessonBar.hidden=true;quick.after(resultsCard);resultsCard.hidden=false}},true);
     const base=window.renderCourseSelect;window.renderCourseSelect=function(){const value=base.apply(this,arguments);if(active!=='all')openGroup(active);return value};
