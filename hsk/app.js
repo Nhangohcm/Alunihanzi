@@ -3,6 +3,7 @@ const FALLBACK_LESSONS=["Làm quen với bài học","Từ và cấu trúc trọ
 const app=document.querySelector("#app"),banner=document.querySelector("#banner"),nav=document.querySelector("#mainNav"),menu=document.querySelector("#menuBtn");let state={tab:"hsk20",level:null,lesson:null,module:null,examVersion:"hsk20",examLevel:1,examId:null,hskkLevel:null,hskkId:null};
 let writingCourses=[],grammarSets=[],catalogReady=false,catalogLoading=false;
 menu.onclick=()=>{const open=nav.classList.toggle("open");menu.setAttribute("aria-expanded",open)};
+document.querySelector('#homeLink').onclick=e=>{e.preventDefault();navigate({tab:'hsk20',level:null,lesson:null,module:null,examId:null,hskkId:null});nav.classList.remove('open');scrollTo(0,0)};
 function historyState(){return{...state}}
 function navigate(patch){state={...state,...patch};history.pushState(historyState(),"",routeHash());render()}
 function routeHash(){return `#${state.tab}${state.level?`/level-${state.level}`:''}${state.lesson?`/lesson-${state.lesson}`:''}${state.module?`/${state.module}`:''}${state.examId?`/exam-${state.examId}`:''}${state.hskkId?`/hskk-${state.hskkId}`:''}`}
