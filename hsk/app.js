@@ -52,6 +52,7 @@ async function renderExamScreen(){
         const r=await fetch(api('/hsk/exam/submit'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({exam_id:state.examId,answers})}),data=await r.json();
         if(!r.ok)throw new Error(data.error||'Chưa chấm được bài.');
         result.textContent=`Kết quả: ${data.score}/${data.auto_graded_points} điểm tự động${data.pending_manual_points?` · ${data.pending_manual_points} điểm cần chấm thủ công`:''}`;
+        btn.textContent='Đã nộp bài và chấm điểm';
         data.results.forEach((x,i)=>{const el=document.querySelector('#feedback'+i);el.className='answer-feedback '+(x.correct===true?'correct':x.correct===false?'wrong':'pending');if(x.correct===true)el.textContent='✓ Đúng';else if(x.correct===false)el.innerHTML=`✕ Chưa đúng · Đáp án: <b>${esc(x.correct_answer)}</b>${x.explanation?`<br>${esc(x.explanation)}`:''}`;else el.textContent='Đã ghi nhận · Câu này cần chấm thủ công'});
         localStorage.setItem('aluni_hsk_exam_'+state.examId,JSON.stringify({type:'exam',title:set.title||'Đề luyện HSK',version:set.version,level:set.level,score:data.score,total:data.total_points,updated_at:Date.now()}));
       }catch(e){result.textContent=e.message;btn.disabled=false}
