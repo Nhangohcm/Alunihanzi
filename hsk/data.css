@@ -12,4 +12,18 @@
 .question{display:grid;gap:9px;border-bottom:1px solid var(--line);padding:13px 0}
 .question label{display:block;border:1px solid var(--line);border-radius:10px;padding:9px 10px;cursor:pointer}
 #scoreResult{margin-top:13px;color:var(--green);font-weight:900}
-@media(max-width:650px){.word-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.word-card{padding:13px}.word-card>b{font-size:1.7rem}}
+.course-lesson-list{gap:13px}
+.course-lesson-row{display:flex;align-items:center;gap:18px;min-height:104px;border:1px solid #d9e1ef;border-radius:20px;background:#f8faff;padding:16px 18px}
+.course-lesson-copy{min-width:0;flex:1}
+.course-lesson-copy strong{display:block;color:#17213b;font-size:1.08rem}
+.course-lesson-copy small{display:block;margin-top:7px;color:#7a8499;font-size:.92rem}
+.course-study-btn,.lesson-action button{flex:0 0 auto;min-width:142px;border:1px solid #d6dff0;border-radius:14px;background:#fff;padding:13px 18px;color:#4e5fc9;font-size:1rem;font-weight:900;cursor:pointer}
+.course-study-btn:hover{border-color:#6676e5;background:#f0f2ff}
+.lesson-overview{padding:28px 34px}
+.content-label{margin:22px 0 8px;color:#66718c;font-weight:900;letter-spacing:.04em}
+.lesson-actions{border-top:1px solid #e4e9f2}
+.lesson-action{display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:118px;border-bottom:1px solid #e4e9f2;padding:18px 4px;font-size:1.1rem}
+.lesson-action button{border:0;background:linear-gradient(135deg,#5668e9,#7763e7);color:#fff;box-shadow:0 8px 18px rgba(83,96,218,.2)}
+.lesson-action button.active{background:#253b9a}
+.module-detail{scroll-margin-top:92px;border-top:1px solid #e4e9f2;padding-top:8px}
+@media(max-width:650px){.word-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.word-card{padding:13px}.word-card>b{font-size:1.7rem}.course-lesson-row{align-items:flex-start;padding:14px}.course-study-btn{min-width:auto;padding:11px 13px}.course-lesson-copy strong{font-size:.98rem}.course-lesson-copy small{font-size:.82rem}.lesson-overview{padding:18px 15px}.lesson-action{min-height:92px}.lesson-action button{min-width:112px;padding:12px 13px}.content-label{font-size:.84rem}}
