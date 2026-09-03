@@ -11,3 +11,10 @@ Mô-đun HSK độc lập để phát triển và kiểm tra trước khi tích 
 - Tab Đăng ký học mở sale page Aluni.
 
 Không thay đổi `index.html`, `admin.html`, Worker hoặc dữ liệu production của Aluni.
+
+## Môi trường thử nghiệm
+
+- `config.js` trỏ riêng tới Worker `aluni-tts-staging`.
+- `admin.html` chỉ đọc catalog hiện có để kiểm tra liên kết.
+- Luyện đề HSK và HSKK chỉ được xem trước file; nút nhập bị khóa cho đến khi API staging hoàn thiện.
+- Không tạo khóa hoặc danh sách bài thứ hai trong module HSK.
