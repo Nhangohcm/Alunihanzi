@@ -896,8 +896,13 @@ function isFiftyPlusCourse(course){
   const text=[course?.id,course?.code,course?.slug,course?.title,course?.name].filter(Boolean).join(' ').toLowerCase();
   return text.includes('50plus')||text.includes('50+')||text.includes('50 plus');
 }
-// Pinyin miễn phí toàn bộ; riêng khóa 50+ mở 10 bài Viết chữ để học thử.
-function freeCount(course){return isCurrentFreeCourse(course)?9999:(isFiftyPlusCourse(course)?10:0)}
+function isNpcrCourse(course){
+  const text=[course?.id,course?.code,course?.slug,course?.title,course?.name].filter(Boolean).join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  return text.includes('npcr')||text.includes('tan giao trinh han ngu');
+}
+// Chỉ áp dụng cho tab Viết chữ: Pinyin, 50+ và NPCR mở miễn phí toàn bộ.
+// Quyền Khóa học của tôi vẫn do cấu hình riêng quyết định (hiện miễn phí 10 bài).
+function freeCount(course){return isCurrentFreeCourse(course)||isFiftyPlusCourse(course)||isNpcrCourse(course)?9999:0}
 function savedEntitlements(){
   try{
     const map=JSON.parse(localStorage.getItem(ACCESS_KEY)||'{}')||{},old=JSON.parse(localStorage.getItem('aluni_entitlement_50plus_v18')||'null');
