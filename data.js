@@ -4384,3 +4384,23 @@ window.ALUNI_DEFAULT_DATA = [
     window.addEventListener('popstate',event=>{if(lessonGrammarReturn!==null){event.stopImmediatePropagation();aluniHandlingPop=true;try{baseRestoreLessonGrammar()}finally{aluniHandlingPop=false}return}if(currentView==='closed')return;event.stopImmediatePropagation();aluniHandlingPop=true;try{if(event.state?.aluniLevel==='grammar-course-lesson'&&currentLesson)showLesson(currentLesson,false);else if(event.state?.aluniLevel==='grammar-course')showCourseList();else closeCourse()}finally{aluniHandlingPop=false}},true);
   });
 })();
+
+// Every writing card opens the same focused handwriting workspace. Returning
+// closes only the character view and restores the exact card list underneath.
+(function setupGlobalWritingCardWorkspace(){
+  window.addEventListener('DOMContentLoaded',()=>{
+    if(typeof openPractice!=='function'||!document.getElementById('practiceCard'))return;
+    const style=document.createElement('style');
+    style.textContent=`body.writing-practice-mode{overflow:hidden}.writing-practice-mode .app-topbar{display:none}.writing-practice-mode #writingSection{display:block!important;position:fixed;inset:0;z-index:1300;overflow:auto;background:linear-gradient(180deg,#f9fbff,#f2f5fc)}.writing-practice-mode #writingSection .wrap{padding-top:78px}.writing-practice-mode #writingSection .wrap>*:not(.practice){display:none!important}.writing-practice-mode #writingSection .practice{display:block!important}.writing-practice-mode .writing-study-bar{display:flex;position:fixed;z-index:1301;top:0;left:0;right:0;align-items:center;justify-content:space-between;gap:12px;padding:12px max(14px,calc((100vw - 1480px)/2));background:rgba(255,255,255,.96);border-bottom:1px solid #dde4f1;box-shadow:0 8px 22px rgba(45,59,102,.1)}@media(min-width:701px){.writing-practice-mode #writingSection .wrap{padding-top:62px}.writing-practice-mode .writing-study-bar{padding-top:7px;padding-bottom:7px}.writing-practice-mode .practice{padding-top:12px}}`;
+    document.head.appendChild(style);
+    const back=document.getElementById('writingStudyBack'),title=document.getElementById('writingStudyTitle'),baseOpenPractice=openPractice;
+    let returnScroll=0,returnTitle='Luyện viết',returnBack='← Quay lại bài học';
+    const enter=item=>{if(!document.body.classList.contains('writing-practice-mode')){returnScroll=window.scrollY;returnTitle=title?.textContent||'Luyện viết';returnBack=back?.textContent||'← Quay lại bài học';document.body.classList.add('writing-practice-mode');aluniPushView('writing-practice',{sectionId:aluniCurrentSection(),hanzi:String(item?.hanzi||'')})}if(back)back.textContent='← Quay lại danh sách thẻ';if(title)title.textContent=String(item?.hanzi||'Luyện viết');document.getElementById('writingSection')?.scrollTo({top:0,behavior:'auto'})};
+    const leave=()=>{if(!document.body.classList.contains('writing-practice-mode'))return;document.body.classList.remove('writing-practice-mode');document.getElementById('practiceCard')?.classList.remove('show');if(back)back.textContent=returnBack;if(title)title.textContent=returnTitle;requestAnimationFrame(()=>window.scrollTo({top:returnScroll,behavior:'auto'}))};
+    openPractice=function(item,scroll=true){baseOpenPractice(item,false);enter(item)};
+    back?.addEventListener('click',event=>{if(!document.body.classList.contains('writing-practice-mode'))return;event.preventDefault();event.stopImmediatePropagation();if(history.state?.aluniLevel==='writing-practice')history.back();else leave()},true);
+    window.addEventListener('popstate',event=>{if(!document.body.classList.contains('writing-practice-mode'))return;event.stopImmediatePropagation();aluniHandlingPop=true;try{leave()}finally{aluniHandlingPop=false}},true);
+    const params=new URLSearchParams(location.search),linkedHanzi=params.get('writing_hanzi');
+    if(linkedHanzi){const item={hanzi:linkedHanzi,pinyin:params.get('writing_pinyin')||'',vi:params.get('writing_vi')||''};practiceItems=[item];setActiveAppSection('writingSection');openPractice(item)}
+  });
+})();
