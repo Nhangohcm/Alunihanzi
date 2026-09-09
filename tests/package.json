@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "test": "node video-sentences.test.cjs && node writing-examples.test.cjs"
+    "test": "node video-sentences.test.cjs && node writing-examples.test.cjs && node writing-radicals.test.cjs"
   },
   "devDependencies": {
     "linkedom": "0.18.12"
