@@ -4425,3 +4425,10 @@ window.ALUNI_DEFAULT_DATA = [
   script.src = 'writing-radicals.js?v=1';
   document.head.appendChild(script);
 })();
+
+// Shared saved-vocabulary access from My Courses and the HSK return link.
+(() => {
+  const script = document.createElement('script');
+  script.src = 'saved-writing-access.js?v=1';
+  document.head.appendChild(script);
+})();
