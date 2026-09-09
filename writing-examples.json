@@ -338,6 +338,22 @@
       "hanzi": "我有两本书。",
       "pinyin": "Wǒ yǒu liǎng běn shū.",
       "vi": "Tôi có hai quyển sách."
+    },
+    {
+      "words": [
+        "恐龙"
+      ],
+      "hanzi": "我喜欢恐龙。",
+      "pinyin": "Wǒ xǐhuān kǒnglóng.",
+      "vi": "Tôi thích khủng long."
+    },
+    {
+      "words": [
+        "猪"
+      ],
+      "hanzi": "这是一头猪。",
+      "pinyin": "Zhè shì yì tóu zhū.",
+      "vi": "Đây là một con heo."
     }
   ]
 }
