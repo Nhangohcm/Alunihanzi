@@ -1,5 +1,9 @@
 {
   "private": true,
-  "scripts": {"test": "node video-sentences.test.cjs"},
-  "devDependencies": {"linkedom": "0.18.12"}
+  "scripts": {
+    "test": "node video-sentences.test.cjs && node writing-examples.test.cjs"
+  },
+  "devDependencies": {
+    "linkedom": "0.18.12"
+  }
 }
