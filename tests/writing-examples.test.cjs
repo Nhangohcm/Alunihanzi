@@ -1,0 +1,56 @@
+// Run from tests: node writing-examples.test.cjs (npm install first).
+const {parseHTML, Event} = require('linkedom');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const assert = require('node:assert/strict');
+const root = path.join(__dirname, '..');
+const source = fs.readFileSync(path.join(root, 'writing-examples.js'), 'utf8');
+const catalog = JSON.parse(fs.readFileSync(path.join(root, 'writing-examples.json'), 'utf8'));
+const fixture = '<html><head></head><body><div id="words">Original word cards</div><section id="practiceCard"><div id="writerTarget">Writer</div><div class="radical-info">Radicals</div></section></body></html>';
+function setup() {
+  const {document} = parseHTML(fixture);
+  let requests = 0, resolveData, spoken, opened = [];
+  const context = {document, currentItem: null, speak: text => { spoken = text; }, openPractice: (item, scroll) => { opened.push([item, scroll]); return 'original-result'; }, fetch: () => { requests++; return new Promise(resolve => { resolveData = resolve; }); }};
+  vm.createContext(context); vm.runInContext(source, context);
+  return {document, context, requests: () => requests, opened, spoken: () => spoken, complete: (data = catalog, ok = true) => resolveData({ok, json: async () => data})};
+}
+const tick = () => new Promise(setImmediate);
+(async () => {
+  const a = setup(); const box = a.document.getElementById('writingExample');
+  assert.equal(a.requests(), 0, 'no examples fetch at page initialization');
+  assert.equal(box.hidden, true);
+  assert.equal(box.nextElementSibling.className, 'radical-info');
+  assert.equal(a.context.openPractice({hanzi: '你好'}, false), 'original-result');
+  assert.equal(a.opened[0][1], false); assert.equal(a.requests(), 1);
+  a.complete(); await tick();
+  assert.equal(box.hidden, false); assert.equal(box.querySelector('mark').textContent, '你好');
+  box.querySelector('button').dispatchEvent(new Event('click', {bubbles: true}));
+  assert.equal(a.spoken(), '你好，很高兴认识你。');
+  a.context.openPractice({hanzi: '不存在的词'}); assert.equal(box.hidden, true); await tick(); assert.equal(box.hidden, true);
+  assert.equal(a.document.getElementById('words').innerHTML, 'Original word cards');
+  assert.equal(a.document.getElementById('writerTarget').textContent, 'Writer');
+  assert.equal(a.document.querySelector('.radical-info').textContent, 'Radicals');
+  const seen = new Set();
+  for (const entry of catalog.entries) for (const word of entry.words) {
+    assert(!seen.has(word), `duplicate word ${word}`); seen.add(word);
+    assert(entry.hanzi.includes(word)); assert(entry.pinyin.trim()); assert(entry.vi.trim());
+    a.context.openPractice({hanzi: word}); await tick();
+    assert.equal(box.hidden, false); assert.equal(box.querySelector('mark').textContent, word);
+  }
+  assert.equal(a.requests(), 1, 'catalog reused when switching words');
+  const b = setup(); b.context.openPractice({hanzi: '你好'});
+  b.context.openPractice({hanzi: '老师', example: {hanzi: '老师说：<img src=x onerror=bad()>', pinyin: 'Lǎoshī shuō', vi: 'Câu riêng của bài'}});
+  b.complete(); await tick();
+  const bBox = b.document.getElementById('writingExample');
+  assert.equal(bBox.querySelector('mark').textContent, '老师', 'old request cannot replace new word');
+  assert.equal(bBox.querySelector('img'), null, 'example text is not interpreted as HTML');
+  assert.match(bBox.textContent, /Câu riêng/);
+  b.context.openPractice({hanzi: 'không có', example: {hanzi: 'sai từ', pinyin: 'x', vi: 'x'}}); await tick();
+  assert.equal(bBox.hidden, true, 'mismatched example hidden');
+  const c = setup(); c.context.openPractice({hanzi: '你好'}); c.complete(null, false); await tick();
+  assert.equal(c.opened.length, 1, 'writer opens despite missing optional catalog');
+  assert.equal(c.document.getElementById('writingExample').hidden, true);
+  c.context.openPractice({hanzi: '你好'}); assert.equal(c.requests(), 2, 'failed fetch can retry');
+  console.log(`PASS: ${seen.size} word examples; insertion, highlighting, speech, unchanged writer/cards/radicals, explicit data, request race, XSS, missing data, retry and lazy caching.`);
+})().catch(e => { console.error(e); process.exitCode = 1; });
