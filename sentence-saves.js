@@ -24,6 +24,20 @@
     let shadowContext = null, kidsContext = null, filter = 'shadowing', replay = null, replayTimer = null, replayVersion = 0, lastFocus = null;
     const style = document.createElement('style');
     style.textContent = '.sentence-save,.sentence-library-link{padding:9px 14px;margin:8px 4px;border:1px solid #dce0fa;border-radius:12px;background:#fff;color:#424caf;font:inherit;font-weight:700;cursor:pointer}.sentence-save[aria-pressed="true"]{background:#eeeaff}.shadow-study-mode #shadowSection .sentence-save,.shadow-study-mode #shadowSection .sentence-library-link{display:none!important}.sentence-kids-row{display:flex;align-items:center;gap:8px}.sentence-kids-row>.kids-all-row{flex:1;min-width:0}.sentence-dialog{width:min(900px,94vw);max-height:90dvh;padding:20px;border:1px solid #dce0fa;border-radius:20px;color:#1e2843;background:#f8f9ff}.sentence-dialog::backdrop{background:#18213c99}.sentence-dialog article{padding:16px;margin:12px 0;border:1px solid #dce0fa;border-radius:14px;background:white;overflow-wrap:anywhere}.sentence-dialog h2{margin:12px 0}.sentence-dialog .sentence-zh{font-size:1.5rem}.sentence-dialog header{display:flex;justify-content:space-between;align-items:center;gap:10px}.sentence-dialog select{padding:10px;max-width:100%}.sentence-replay{aspect-ratio:16/9;width:100%;border:0}.sentence-status{padding:8px;color:#42518c}.sentence-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:10000;background:#26334f;color:white;padding:12px 18px;border-radius:12px;max-width:90vw}@media(max-width:500px){.sentence-kids-row{flex-wrap:wrap}.sentence-kids-row>.kids-all-row{flex-basis:100%}}';
+    // Keep the save control inside the existing card, without an extra content row.
+    style.textContent += `
+      .sentence-save-host{position:relative!important;padding-right:58px!important}
+      #shadowLive.sentence-save-host,#shadowTranscript .sentence-save-host,#kidsCurrentSentence.sentence-save-host{padding-right:58px!important}
+      .sentence-save-host>.sentence-save{position:absolute!important;top:6px;right:6px;
+        display:grid!important;place-items:center;width:44px!important;height:44px!important;
+        min-width:44px!important;padding:0!important;margin:0!important;border:0;
+        border-radius:50%;background:transparent;font-size:23px;line-height:1}
+      .sentence-save-host>.sentence-save[aria-pressed="true"]{background:#eeeaff;color:#584bc5}
+      .sentence-save-host>.sentence-save:focus-visible{outline:2px solid #6359dc;outline-offset:1px}
+      .sentence-kids-row.sentence-save-host{padding-right:0!important;display:block}
+      .sentence-kids-row>.kids-all-row{width:100%;padding-right:58px!important}
+      .sentence-kids-row.active>.kids-all-row{background:#eef0ff;border-color:#8a83d7}
+    `;
     document.head.appendChild(style);
     const toast = document.createElement('div');
     toast.className = 'sentence-toast'; toast.hidden = true; toast.setAttribute('role', 'status'); document.body.appendChild(toast);
@@ -56,16 +70,16 @@
     function refresh() {
       let rows; try { rows = read(); } catch { return; }
       const ids = new Set(rows.map(x => x.id));
-      document.querySelectorAll('.sentence-save').forEach(b => { const saved = ids.has(b.dataset.sentenceId); b.setAttribute('aria-pressed', String(saved)); b.textContent = saved ? '✓ Đã lưu' : '♡ Lưu câu'; });
+      document.querySelectorAll('.sentence-save').forEach(b => { const saved = ids.has(b.dataset.sentenceId); b.setAttribute('aria-pressed', String(saved)); b.textContent = saved ? '♥' : '♡'; b.setAttribute('aria-label', saved ? 'Bỏ lưu câu' : 'Lưu câu'); b.title = saved ? 'Bỏ lưu câu' : 'Lưu câu'; });
       document.querySelectorAll('[data-sentence-library]').forEach(b => { b.textContent = `♡ Câu đã lưu (${rows.filter(x => x.source === b.dataset.sentenceLibrary).length})`; });
     }
     function addSave(host, source, s) {
-      if (!host) return; const item = itemFor(source, s); if (!item) return;
-      const b = button('♡ Lưu câu', () => {
+      if (!host) return; const item = itemFor(source, s); if (!item) { host.classList.remove('sentence-save-host'); return; }
+      const b = button('♡', () => {
         try { const exists = read().some(x => x.id === item.id); mutate(item, exists); refresh(); notify(exists ? 'Đã bỏ lưu câu.' : 'Đã lưu câu.'); }
         catch { notify('Chưa lưu được câu. Kiểm tra dung lượng hoặc quyền lưu của trình duyệt; dữ liệu cũ được giữ nguyên.'); }
       }, 'sentence-save');
-      b.dataset.sentenceId = item.id; b.setAttribute('aria-pressed', 'false'); host.appendChild(b);
+      host.classList.add('sentence-save-host'); b.setAttribute('aria-label', 'Lưu câu'); b.title = 'Lưu câu'; b.dataset.sentenceId = item.id; b.setAttribute('aria-pressed', 'false'); host.appendChild(b);
     }
     function libraryLink(host, source) { if (!host) return; const b = button('♡ Câu đã lưu', () => openLibrary(source)); b.dataset.sentenceLibrary = source; host.appendChild(b); }
     function paintLibrary() {
@@ -99,6 +113,36 @@
         status.textContent = item.zh; dialog.scrollTop = 0;
       } catch (e) { if (version === replayVersion) status.textContent = e.message; }
     }
+    // Follow inside the transcript's own scroller, never scroll the page/video.
+    const manualUntil = new WeakMap();
+    function follow(box, row) {
+      if (!box || !row || box.hidden || Date.now() < (manualUntil.get(box) || 0)) return;
+      const outer = box.getBoundingClientRect(), inner = row.getBoundingClientRect();
+      if (!outer.height || box.scrollHeight <= box.clientHeight) return;
+      if (inner.top >= outer.top + 8 && inner.bottom <= outer.bottom - 8) return;
+      box.scrollTo({top: Math.max(0, box.scrollTop + inner.top - outer.top - 12),
+        behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+    }
+    for (const id of ['shadowTranscript', 'kidsAllSentenceList']) {
+      const box = $(id);
+      ['wheel', 'touchmove', 'pointerdown', 'keydown'].forEach(type => box?.addEventListener(type, () => manualUntil.set(box, Date.now() + 3000), {passive: true}));
+    }
+    function followShadow() {
+      if (document.body.classList.contains('shadow-study-mode')) return;
+      follow($('shadowTranscript'), $('shadowTranscript')?.querySelector('.transcript-line.active'));
+    }
+    const baseHighlight = highlightShadowLine;
+    highlightShadowLine = function(i) { baseHighlight(i); followShadow(); };
+    if (typeof setShadowTranscriptOpen === 'function') {
+      const baseOpenTranscript = setShadowTranscriptOpen;
+      setShadowTranscriptOpen = function(open) { baseOpenTranscript(open); if (open) followShadow(); };
+    }
+    function followKids() {
+      const list = $('kidsAllSentenceList');
+      list?.querySelectorAll('.sentence-kids-row').forEach((row, i) => row.classList.toggle('active', i === kidsStudyIndex));
+      if ($('kidsAllSentences')?.open) follow(list, list?.querySelector('.sentence-kids-row.active'));
+    }
+    $('kidsAllSentences')?.addEventListener('toggle', followKids);
     // Wrap renderers only; original player, access checks and repeat logic remain authoritative.
     const baseTranscript = renderShadowTranscript;
     renderShadowTranscript = function() { shadowRenderVersion++; baseTranscript(); $('shadowTranscript').querySelectorAll('.transcript-line').forEach((row, i) => addSave(row, 'shadowing', shadowSegments[i])); libraryLink($('shadowTranscript'), 'shadowing'); refresh(); };
@@ -109,9 +153,9 @@
     const baseVideo = loadShadowVideo;
     loadShadowVideo = async function(id) { shadowContext = null; const before = shadowRenderVersion; await baseVideo(id); const item = shadowVideos.find(x => String(x.id) === String(id)); if (!item || item.locked || before === shadowRenderVersion) return; shadowContext = {kind: 'shadow', videoId: String(id), title: item.title, courseId: item.course_id || $('shadowCourse').value}; renderShadowTranscript(); renderShadowLive(Math.max(0, shadowCurrentIndex)); };
     const baseKidsPaint = kidsPaintSegments;
-    kidsPaintSegments = function() { kidsRenderVersion++; baseKidsPaint(); $('kidsAllSentenceList').querySelectorAll('.kids-all-row').forEach((row, i) => { const wrap = document.createElement('div'); wrap.className = 'sentence-kids-row'; row.replaceWith(wrap); wrap.appendChild(row); addSave(wrap, 'kids', kidsStudySegments[i]); }); libraryLink($('kidsAllSentenceList'), 'kids'); refresh(); };
+    kidsPaintSegments = function() { kidsRenderVersion++; baseKidsPaint(); $('kidsAllSentenceList').querySelectorAll('.kids-all-row').forEach((row, i) => { const wrap = document.createElement('div'); wrap.className = 'sentence-kids-row'; row.replaceWith(wrap); wrap.appendChild(row); addSave(wrap, 'kids', kidsStudySegments[i]); }); libraryLink($('kidsAllSentenceList'), 'kids'); followKids(); refresh(); };
     const baseKidsCurrent = kidsSetCurrentSentence;
-    kidsSetCurrentSentence = function(i) { baseKidsCurrent(i); $('kidsCurrentSentence')?.querySelectorAll('.sentence-save').forEach(b => b.remove()); addSave($('kidsCurrentSentence'), 'kids', kidsStudySegments[i]); refresh(); };
+    kidsSetCurrentSentence = function(i) { baseKidsCurrent(i); $('kidsCurrentSentence')?.querySelectorAll('.sentence-save').forEach(b => b.remove()); addSave($('kidsCurrentSentence'), 'kids', kidsStudySegments[i]); followKids(); refresh(); };
     const baseKidsOpen = openKidsLesson;
     openKidsLesson = async function(si, li, mode) { kidsContext = null; const before = kidsRenderVersion; await baseKidsOpen(si, li, mode); const series = adultKidsData?.series?.[si], item = series?.lessons?.[li]; if (before === kidsRenderVersion || !item?.media_item_id || item.locked || $('kidsStudyPanel').hidden || kidsStudyLesson !== item || !$('kidsStudyTitle').textContent.startsWith(series.title + ' ·')) return; kidsContext = {kind: 'media', videoId: String(item.media_item_id), title: `${series.title} · ${item.title}`, courseId: item.product_course_id || series.product_course_id || ''}; kidsPaintSegments(); };
     libraryLink($('shadowSection').querySelector('.module-header'), 'shadowing');
