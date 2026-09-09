@@ -10,3 +10,20 @@ const context={document:{readyState:'complete'},localStorage:{getItem:()=>stored
  stored='[]';quota=true;fail=false;assert.equal((await context.translateVietnameseForWriting('quả táo')).hanzi,'苹果');
  console.log('PASS: Vietnamese aliases offline, saved vocabulary, successful cache reuse, failed requests and quota handling.');
 })().catch(e=>{console.error(e);process.exitCode=1});
+
+// Exercise actual button and Enter bindings, all three input forms, and lazy course data.
+(async()=>{
+ const {parseHTML}=require('linkedom');
+ const {document}=parseHTML('<html><body><input id="searchInput"><button id="searchBtn"></button><p id="writingSearchHint"></p></body></html>');
+ let results=[], external=0;
+ const c={document,localStorage:{getItem:()=>null,setItem:()=>{}},courses:[],ALUNI_DEFAULT_DATA:[{lessons:[{items:[{hanzi:'老师',pinyin:'Lǎoshī',vi:'Giáo viên'}]}]}],doSearch:()=>{},renderItems:items=>{results=items},translateVietnameseForWriting:async()=>{external++;throw Error('429')},translateChineseForWriting:async()=>{external++;throw Error('429')}};
+ c.window=c;vm.createContext(c);vm.runInContext(source,c);
+ for(const [hanzi,queries] of [['猪',['con heo','con lợn','heo','lon','猪','zhū','zhu','zhu1']],['恐龙',['con khủng long','恐龙','kǒnglóng','konglong','kong long','kong3 long2']],['老师',['老师','laoshi','lǎo shī','giáo viên']]]){
+   for(const query of queries){document.getElementById('searchInput').value=query;await document.getElementById('searchBtn').onclick();assert.equal(results[0].hanzi,hanzi,query)}
+ }
+ assert.equal(external,0);
+ document.getElementById('searchInput').value='con heo';document.getElementById('searchInput').onkeydown({key:'Enter'});assert.equal(results[0].hanzi,'猪');
+ const examples=JSON.parse(fs.readFileSync(require('node:path').join(__dirname,'../writing-examples.json'),'utf8')).entries;
+ for(const word of ['猪','恐龙']) assert(examples.some(e=>e.words.includes(word)&&e.hanzi.includes(word)&&e.pinyin&&e.vi));
+ console.log('PASS: search button/Enter for Hanzi, spaced/toned/numbered pinyin, Vietnamese aliases and shared examples.');
+})().catch(e=>{console.error(e);process.exitCode=1});
