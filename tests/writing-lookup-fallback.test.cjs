@@ -27,3 +27,19 @@ const context={document:{readyState:'complete'},localStorage:{getItem:()=>stored
  for(const word of ['猪','恐龙']) assert(examples.some(e=>e.words.includes(word)&&e.hanzi.includes(word)&&e.pinyin&&e.vi));
  console.log('PASS: search button/Enter for Hanzi, spaced/toned/numbered pinyin, Vietnamese aliases and shared examples.');
 })().catch(e=>{console.error(e);process.exitCode=1});
+
+(async()=>{
+ const {parseHTML}=require('linkedom');
+ const {document}=parseHTML('<html><body><input id="searchInput"><button id="searchBtn"></button><p id="writingSearchHint"></p></body></html>');
+ let worker,results=[];
+ class FakeWorker{constructor(){worker=this;this.requests=[]}postMessage(data){this.requests.push(data)}terminate(){}}
+ const c={document,Worker:FakeWorker,setTimeout,clearTimeout,localStorage:{getItem:()=>null,setItem:()=>{}},doSearch:()=>{},translateVietnameseForWriting:async()=>{throw Error('must not call translator')},renderItems:items=>{results=items}};
+ c.window=c;vm.createContext(c);vm.runInContext(source,c);
+ document.getElementById('searchInput').value='chim bồ câu';const first=c.doSearch();
+ document.getElementById('searchInput').value='điện áp';const second=c.doSearch();
+ worker.onmessage({data:{id:worker.requests[1].id,total:1,items:[{hanzi:'电压',pinyin:'diàn yā',vi:'điện áp',_dictionary:'CVDICT'}]}});await second;
+ worker.onmessage({data:{id:worker.requests[0].id,total:1,items:[{hanzi:'鸽子',pinyin:'gē zi',vi:'chim bồ câu',_dictionary:'CVDICT'}]}});await first;
+ assert.equal(results[0].hanzi,'电压');assert.equal(document.querySelectorAll('#writingDictionarySource').length,1);
+ document.getElementById('searchInput').value='con heo';const third=c.doSearch();worker.onmessage({data:{id:worker.requests[2].id,error:'offline'}});await third;assert.equal(results[0].hanzi,'猪');
+ console.log('PASS: async dictionary results, stale query protection, visible attribution and local results retained on load failure.');
+})().catch(e=>{console.error(e);process.exitCode=1});
