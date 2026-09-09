@@ -4418,3 +4418,10 @@ window.ALUNI_DEFAULT_DATA = [
   script.src = 'writing-examples.js?v=1';
   document.head.appendChild(script);
 })();
+
+// Shared stroke metadata corrections for Writing, My Courses and HSK entry points.
+(() => {
+  const script = document.createElement('script');
+  script.src = 'writing-radicals.js?v=1';
+  document.head.appendChild(script);
+})();
