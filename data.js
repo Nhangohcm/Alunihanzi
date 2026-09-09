@@ -4411,3 +4411,24 @@ window.ALUNI_DEFAULT_DATA = [
   script.src = 'sentence-saves.js?v=1';
   document.head.appendChild(script);
 })();
+
+// Optional word examples, displayed only in the final writing workspace.
+(() => {
+  const script = document.createElement('script');
+  script.src = 'writing-examples.js?v=1';
+  document.head.appendChild(script);
+})();
+
+// Shared stroke metadata corrections for Writing, My Courses and HSK entry points.
+(() => {
+  const script = document.createElement('script');
+  script.src = 'writing-radicals.js?v=1';
+  document.head.appendChild(script);
+})();
+
+// Shared saved-vocabulary access from My Courses and the HSK return link.
+(() => {
+  const script = document.createElement('script');
+  script.src = 'saved-writing-access.js?v=1';
+  document.head.appendChild(script);
+})();
