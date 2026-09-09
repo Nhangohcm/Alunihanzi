@@ -10,7 +10,7 @@
     box.innerHTML = '<div class="writing-example-head"><strong>Câu ví dụ</strong><button type="button" class="btn soft" aria-label="Nghe câu ví dụ">🔊 Nghe câu</button></div><p class="writing-example-zh"></p><p class="writing-example-py"></p><p class="writing-example-vi"></p>';
     radicals.before(box);
     const style = document.createElement('style');
-    style.textContent = '#practiceCard #writingExample{margin:14px 0;padding:14px;border:1px solid #e0e4f1;border-radius:14px;background:#f7f8ff;text-align:left;overflow-wrap:anywhere}#practiceCard #writingExample[hidden]{display:none!important}#writingExample .writing-example-head{display:flex;align-items:center;justify-content:space-between;gap:10px}#writingExample .writing-example-head button{min-height:44px;flex-shrink:0}#writingExample p{margin:8px 0 0;line-height:1.55}#writingExample .writing-example-zh{font-size:1.35rem;color:#26334f}#writingExample .writing-example-py{color:#5b64ca}#writingExample .writing-example-vi{color:#65708a}#writingExample mark{color:#453bb0;background:#e8e4ff;border-radius:4px;padding:0 2px}@media(max-width:480px){#practiceCard #writingExample{padding:11px}#writingExample .writing-example-zh{font-size:1.2rem}#writingExample .writing-example-head button{padding:7px 10px;font-size:.88rem}}';
+    style.textContent = '#practiceCard #writingExample{width:min(620px,94%);box-sizing:border-box;margin:14px auto 0;padding:14px 16px;border:1px solid #e0e4f1;border-radius:14px;background:#f7f8ff;text-align:left;overflow-wrap:anywhere}#practiceCard #writingExample[hidden]{display:none!important}#writingExample .writing-example-head{display:flex;align-items:center;justify-content:space-between;gap:10px}#writingExample .writing-example-head button{min-height:44px;flex-shrink:0}#writingExample p{margin:8px 0 0;line-height:1.55}#writingExample .writing-example-zh{font-size:1.35rem;color:#26334f}#writingExample .writing-example-py{color:#5b64ca}#writingExample .writing-example-vi{color:#65708a}#writingExample mark{color:#453bb0;background:#e8e4ff;border-radius:4px;padding:0 2px}@media(max-width:480px){#practiceCard #writingExample{padding:11px}#writingExample .writing-example-zh{font-size:1.2rem}#writingExample .writing-example-head button{padding:7px 10px;font-size:.88rem}}';
     // All entry points share practiceCard. Retain hidden metadata nodes for existing setters.
     style.textContent += `
       #practiceCard .practice-top>.brand,#practiceCard #practiceWord,#practiceCard .practice-meta{display:none!important}
@@ -24,6 +24,39 @@
         #practiceCard #speakPractice{font-size:.88rem;padding:8px 10px}}
     `;
     document.head.appendChild(style);
+    // Prefer existing local course vocabulary before external translation. Course catalogs can be lazy.
+    const localWords = new Map();
+    for (const course of window.ALUNI_DEFAULT_DATA || []) for (const lesson of course.lessons || []) {
+      for (const item of lesson.items || []) {
+        const key = String(item.hanzi || '').trim();
+        if (key && item.pinyin && item.vi && !localWords.has(key)) localWords.set(key, item);
+      }
+    }
+    function completeLocalWord(item) {
+      const known = localWords.get(String(item?.hanzi || '').trim());
+      if (!known) return item;
+      if (!String(item.pinyin || '').trim() || item.pinyin === 'Chưa có pinyin') item.pinyin = known.pinyin;
+      if (!String(item.vi || '').trim() || /^(Tra từ và luyện viết|Luyện viết chữ này)$/.test(item.vi)) item.vi = known.vi;
+      return item;
+    }
+    if (typeof createWritingWordCard === 'function') {
+      const originalCard = createWritingWordCard;
+      createWritingWordCard = function(item, onOpen) { return originalCard(completeLocalWord(item), onOpen); };
+    }
+    if (typeof translateChineseForWriting === 'function') {
+      const originalTranslate = translateChineseForWriting;
+      translateChineseForWriting = async function(raw) {
+        const known = localWords.get(String(raw || '').trim());
+        return known ? {hanzi: String(raw).trim(), pinyin: known.pinyin, vi: known.vi} : originalTranslate(raw);
+      };
+    }
+    if (typeof getWritingPinyin === 'function') {
+      const originalPinyin = getWritingPinyin;
+      getWritingPinyin = async function(hanzi) {
+        const known = localWords.get(String(hanzi || '').trim());
+        return known ? known.pinyin : originalPinyin(hanzi);
+      };
+    }
     let examplesPromise, requestId = 0, shown = null;
     function valid(example, word) {
       return example && typeof example.hanzi === 'string' && example.hanzi.length <= 300 &&
@@ -51,7 +84,7 @@
     }
     async function show(item) {
       const version = ++requestId; shown = null; box.hidden = true;
-      const word = String(item?.hanzi || '').trim(); if (!word) return;
+      const word = String(item?.hanzi || '').trim().replace(/\?/g, '？'); if (!word) return;
       // Explicit examples are word-level data, independent of the selected character/radical.
       if (valid(item.example, word)) { paint(item.example, word); return; }
       const entries = await loadExamples();
