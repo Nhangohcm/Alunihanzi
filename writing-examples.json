@@ -257,6 +257,87 @@
       "hanzi": "对不起，我来晚了。",
       "pinyin": "Duìbuqǐ, wǒ lái wǎn le.",
       "vi": "Xin lỗi, tôi đến muộn rồi."
+    },
+    {
+      "words": [
+        "点",
+        "两点"
+      ],
+      "hanzi": "现在两点。",
+      "pinyin": "Xiànzài liǎng diǎn.",
+      "vi": "Bây giờ là hai giờ."
+    },
+    {
+      "words": [
+        "分"
+      ],
+      "hanzi": "现在八点十分。",
+      "pinyin": "Xiànzài bā diǎn shí fēn.",
+      "vi": "Bây giờ là tám giờ mười phút."
+    },
+    {
+      "words": [
+        "一刻"
+      ],
+      "hanzi": "现在三点一刻。",
+      "pinyin": "Xiànzài sān diǎn yí kè.",
+      "vi": "Bây giờ là ba giờ mười lăm phút."
+    },
+    {
+      "words": [
+        "半"
+      ],
+      "hanzi": "我们八点半上课。",
+      "pinyin": "Wǒmen bā diǎn bàn shàng kè.",
+      "vi": "Chúng tôi vào học lúc tám giờ rưỡi."
+    },
+    {
+      "words": [
+        "几点了？"
+      ],
+      "hanzi": "现在几点了？",
+      "pinyin": "Xiànzài jǐ diǎn le?",
+      "vi": "Bây giờ là mấy giờ rồi?"
+    },
+    {
+      "words": [
+        "三刻"
+      ],
+      "hanzi": "现在四点三刻。",
+      "pinyin": "Xiànzài sì diǎn sān kè.",
+      "vi": "Bây giờ là bốn giờ bốn mươi lăm phút."
+    },
+    {
+      "words": [
+        "去"
+      ],
+      "hanzi": "我明天去学校。",
+      "pinyin": "Wǒ míngtiān qù xuéxiào.",
+      "vi": "Ngày mai tôi đi đến trường."
+    },
+    {
+      "words": [
+        "你几点去？"
+      ],
+      "hanzi": "你几点去？我九点去。",
+      "pinyin": "Nǐ jǐ diǎn qù? Wǒ jiǔ diǎn qù.",
+      "vi": "Bạn đi lúc mấy giờ? Tôi đi lúc chín giờ."
+    },
+    {
+      "words": [
+        "零"
+      ],
+      "hanzi": "现在九点零五分。",
+      "pinyin": "Xiànzài jiǔ diǎn líng wǔ fēn.",
+      "vi": "Bây giờ là chín giờ lẻ năm phút."
+    },
+    {
+      "words": [
+        "两"
+      ],
+      "hanzi": "我有两本书。",
+      "pinyin": "Wǒ yǒu liǎng běn shū.",
+      "vi": "Tôi có hai quyển sách."
     }
   ]
 }
