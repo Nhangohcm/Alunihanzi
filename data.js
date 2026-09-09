@@ -4404,3 +4404,10 @@ window.ALUNI_DEFAULT_DATA = [
     if(linkedHanzi){const item={hanzi:linkedHanzi,pinyin:params.get('writing_pinyin')||'',vi:params.get('writing_vi')||''};practiceItems=[item];setActiveAppSection('writingSection');openPractice(item)}
   });
 })();
+
+// Optional video sentence library: isolated from course progress and writing modules.
+(() => {
+  const script = document.createElement('script');
+  script.src = 'sentence-saves.js?v=1';
+  document.head.appendChild(script);
+})();
