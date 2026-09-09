@@ -8,10 +8,11 @@ const root = path.join(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'writing-examples.js'), 'utf8');
 const catalog = JSON.parse(fs.readFileSync(path.join(root, 'writing-examples.json'), 'utf8'));
 const fixture = '<html><head></head><body><div id="words">Original word cards</div><section id="practiceCard"><div id="writerTarget">Writer</div><div class="radical-info">Radicals</div></section></body></html>';
-function setup(initialItem = null) {
+function setup(initialItem = null, extra = {}) {
   const {document} = parseHTML(fixture);
   let requests = 0, resolveData, spoken, opened = [];
   const context = {document, currentItem: initialItem, speak: text => { spoken = text; }, openPractice: (item, scroll) => { opened.push([item, scroll]); return 'original-result'; }, fetch: () => { requests++; return new Promise(resolve => { resolveData = resolve; }); }};
+  Object.assign(context, extra); context.window = context;
   vm.createContext(context); vm.runInContext(source, context);
   return {document, context, requests: () => requests, opened, spoken: () => spoken, complete: (data = catalog, ok = true) => resolveData({ok, json: async () => data})};
 }
@@ -68,6 +69,24 @@ const tick = () => new Promise(setImmediate);
   course.context.renderItems([{hanzi: '老师', pinyin: 'lǎoshī', vi: 'giáo viên'}], 'Bài học');
   course.document.querySelector('#words .word').onclick(); course.complete(); await tick();
   assert.equal(course.document.querySelector('#writingExample mark').textContent, '老师', 'course cards reach shared examples');
+  let externalCalls = 0, rendered;
+  const local = setup(null, {
+    ALUNI_DEFAULT_DATA: [{lessons: [{items: [{hanzi: '老师', pinyin: 'lǎoshī', vi: 'giáo viên'}]}]}],
+    createWritingWordCard: item => { rendered = item; return item; },
+    translateChineseForWriting: async () => {externalCalls++; return {hanzi: '外'};},
+    getWritingPinyin: async () => {externalCalls++; return 'wài';}
+  });
+  assert.equal((await local.context.translateChineseForWriting('老师')).vi, 'giáo viên');
+  assert.equal(await local.context.getWritingPinyin('老师'), 'lǎoshī');
+  const missing = {hanzi: '老师', pinyin: '', vi: 'Tra từ và luyện viết'};
+  local.context.createWritingWordCard(missing);
+  assert.equal(rendered.pinyin, 'lǎoshī'); assert.equal(missing.vi, 'giáo viên'); assert.equal(externalCalls, 0);
+  local.context.createWritingWordCard({hanzi: '老师', pinyin: 'Custom', vi: 'Nghĩa trong bài'});
+  assert.equal(rendered.pinyin, 'Custom'); assert.equal(rendered.vi, 'Nghĩa trong bài');
+  await local.context.translateChineseForWriting('外'); assert.equal(externalCalls, 1);
+  a.context.openPractice({hanzi: '几点了?'}); await tick(); assert.equal(box.hidden, false);
+  a.context.openPractice({hanzi: '一刻'}); await tick(); assert.equal(box.querySelector('mark').textContent, '一刻');
+  console.log('PASS: local vocabulary restores missing fields, preserves lesson data, external fallback, time lesson and punctuation.');
   console.log('PASS: course card click and already-open HSK word use shared examples.');
   console.log(`PASS: ${seen.size} word examples; insertion, highlighting, speech, unchanged writer/cards/radicals, explicit data, request race, XSS, missing data, retry and lazy caching.`);
 })().catch(e => { console.error(e); process.exitCode = 1; });
