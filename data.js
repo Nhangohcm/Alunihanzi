@@ -4411,3 +4411,10 @@ window.ALUNI_DEFAULT_DATA = [
   script.src = 'sentence-saves.js?v=1';
   document.head.appendChild(script);
 })();
+
+// Optional word examples, displayed only in the final writing workspace.
+(() => {
+  const script = document.createElement('script');
+  script.src = 'writing-examples.js?v=1';
+  document.head.appendChild(script);
+})();
