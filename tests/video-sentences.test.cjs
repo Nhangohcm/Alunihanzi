@@ -37,12 +37,12 @@ const ctx = {
 ctx.window = ctx;
 vm.createContext(ctx);
 // Extract unchanged production renderers and segment accessors instead of copying their behavior.
-for (const name of ['kidsSegmentStart', 'kidsSegmentEnd', 'kidsSegmentZh', 'kidsSegmentPy', 'kidsSegmentVi', 'kidsSetCurrentSentence', 'kidsSeekSentence', 'kidsPaintSegments', 'renderShadowTranscript', 'renderShadowLive']) {
+for (const name of ['kidsSegmentStart', 'kidsSegmentEnd', 'kidsSegmentZh', 'kidsSegmentPy', 'kidsSegmentVi', 'kidsSetCurrentSentence', 'kidsSeekSentence', 'kidsPaintSegments', 'renderShadowTranscript', 'renderShadowLive', 'highlightShadowLine', 'syncShadow']) {
   const begin = html.indexOf('function ' + name + '(');
   const next = html.indexOf('\nfunction ', begin + 1);
   vm.runInContext(html.slice(begin, next), ctx);
 }
-ctx.highlightShadowLine = i => ctx.renderShadowLive(i);
+ctx.repeatCurrentLine = false;
 ctx.loadMediaVideo = async id => { if (id === 'fail') return; ctx.shadowSegments = [segment, {...segment, start_sec: 5, end_sec: 7, hanzi: '再见'}]; ctx.renderShadowTranscript(); ctx.renderShadowLive(0); };
 ctx.loadShadowVideo = async () => { ctx.shadowSegments = [segment]; ctx.renderShadowTranscript(); ctx.renderShadowLive(0); };
 ctx.openKidsLesson = async (si, li) => { const series = ctx.adultKidsData.series[si]; const item = series?.lessons[li]; if (!item || item.locked) return; ctx.kidsStudyLesson = item; ctx.kidsStudySegments = [segment]; $('kidsStudyPanel').hidden = false; $('kidsStudyTitle').textContent = series.title + ' · Tập 01'; ctx.kidsPaintSegments(); };
@@ -56,6 +56,8 @@ const rows = () => JSON.parse(storage.get('aluni.video-sentences.v1') || '[]');
   await ctx.loadMediaVideo('v');
   assert.equal($('shadowTranscript').querySelectorAll('.sentence-save').length, 2);
   click($('shadowLive').querySelector('.sentence-save'));
+  assert.equal($('shadowLive').querySelector('.sentence-save').textContent, '♥');
+  assert.equal($('shadowLive').querySelector('.sentence-save').getAttribute('aria-label'), 'Bỏ lưu câu');
   assert.equal(rows().length, 1); assert.equal(rows()[0].start, 1.25); assert.equal(rows()[0].videoId, 'v'); assert.equal(seeks, 0, 'save does not seek video');
   assert.equal($('shadowTranscript').querySelector('.sentence-save').getAttribute('aria-pressed'), 'true');
   click($('shadowTranscript').querySelector('.sentence-save'));
@@ -75,5 +77,23 @@ const rows = () => JSON.parse(storage.get('aluni.video-sentences.v1') || '[]');
   deny = true; click(dialog.querySelector('article button')); await new Promise(setImmediate); assert.equal(playback, 1, 'locked response never creates a player'); assert.match(dialog.querySelector('.sentence-status').textContent, /kích hoạt/);
   click(dialog.querySelector('[data-close]')); assert.equal(dialog.open, false); assert.equal(ctx.history.state.aluniLevel, 'kids-study');
   await ctx.loadShadowVideo('legacy'); click($('shadowLive').querySelector('.sentence-save')); assert.equal(rows().length, 3); assert.equal(rows()[0].kind, 'shadow');
+  // Playback sync follows the highlighted row without seeking or moving the page.
+  await ctx.loadMediaVideo('v');
+  const transcript = $('shadowTranscript'); transcript.hidden = false;
+  transcript.getBoundingClientRect = () => ({top: 100, bottom: 400, height: 300});
+  Object.defineProperty(transcript, 'scrollHeight', {value: 900});
+  Object.defineProperty(transcript, 'clientHeight', {value: 300});
+  transcript.scrollTop = 0; let scrolls = 0;
+  transcript.scrollTo = opts => { scrolls++; assert.equal(opts.top, 488); };
+  transcript.querySelectorAll('.transcript-line').forEach(row => { row.getBoundingClientRect = () => ({top: 600, bottom: 700}); });
+  const beforeSeeks = seeks, beforePlays = playback;
+  ctx.shadowPlayer.getCurrentTime = () => 6;
+  ctx.syncShadow();
+  assert.equal(transcript.querySelector('.active').dataset.index, '1');
+  assert.equal(scrolls, 1); assert.equal(seeks, beforeSeeks); assert.equal(playback, beforePlays);
+  transcript.dispatchEvent(new Event('wheel')); ctx.highlightShadowLine(0);
+  assert.equal(scrolls, 1, 'manual scrolling temporarily suspends following');
+  assert.ok(document.querySelector('.sentence-save-host'));
+  console.log('PASS: compact accessible save icons and transcript auto-follow/manual-scroll pause; ');
   console.log('PASS: real-renderer DOM integration — sentence controls, no playback bubbling/nested buttons, persistence, duplicates, corrupt/quota storage, source filtering, course exclusion, authenticated replay, locked replay, Back.');
 })().catch(e => { console.error(e); process.exitCode = 1; });
