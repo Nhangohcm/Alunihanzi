@@ -11,6 +11,18 @@
     radicals.before(box);
     const style = document.createElement('style');
     style.textContent = '#practiceCard #writingExample{margin:14px 0;padding:14px;border:1px solid #e0e4f1;border-radius:14px;background:#f7f8ff;text-align:left;overflow-wrap:anywhere}#practiceCard #writingExample[hidden]{display:none!important}#writingExample .writing-example-head{display:flex;align-items:center;justify-content:space-between;gap:10px}#writingExample .writing-example-head button{min-height:44px;flex-shrink:0}#writingExample p{margin:8px 0 0;line-height:1.55}#writingExample .writing-example-zh{font-size:1.35rem;color:#26334f}#writingExample .writing-example-py{color:#5b64ca}#writingExample .writing-example-vi{color:#65708a}#writingExample mark{color:#453bb0;background:#e8e4ff;border-radius:4px;padding:0 2px}@media(max-width:480px){#practiceCard #writingExample{padding:11px}#writingExample .writing-example-zh{font-size:1.2rem}#writingExample .writing-example-head button{padding:7px 10px;font-size:.88rem}}';
+    // All entry points share practiceCard. Retain hidden metadata nodes for existing setters.
+    style.textContent += `
+      #practiceCard .practice-top>.brand,#practiceCard #practiceWord,#practiceCard .practice-meta{display:none!important}
+      #practiceCard .practice-top{display:flex!important;align-items:center;justify-content:center;
+        flex-wrap:nowrap;gap:10px;min-width:0;margin:0 0 10px;padding:0}
+      #practiceCard #charPills{display:flex;flex:0 1 auto;min-width:0;max-width:100%;
+        flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;gap:6px;margin:0;padding:2px;grid-area:auto}
+      #practiceCard #charPills .char-pill{flex:0 0 auto;min-width:44px;min-height:44px}
+      #practiceCard #speakPractice{flex:0 0 auto;min-height:44px;margin:0;white-space:nowrap;grid-area:auto}
+      @media(max-width:480px){#practiceCard .practice-top{gap:6px}
+        #practiceCard #speakPractice{font-size:.88rem;padding:8px 10px}}
+    `;
     document.head.appendChild(style);
     let examplesPromise, requestId = 0, shown = null;
     function valid(example, word) {
