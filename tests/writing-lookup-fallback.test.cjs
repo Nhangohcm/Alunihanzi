@@ -43,3 +43,19 @@ const context={document:{readyState:'complete'},localStorage:{getItem:()=>stored
  document.getElementById('searchInput').value='con heo';const third=c.doSearch();worker.onmessage({data:{id:worker.requests[2].id,error:'offline'}});await third;assert.equal(results[0].hanzi,'猪');
  console.log('PASS: async dictionary results, stale query protection, visible attribution and local results retained on load failure.');
 })().catch(e=>{console.error(e);process.exitCode=1});
+
+(async()=>{
+ const {parseHTML}=require('linkedom');
+ const {document}=parseHTML('<html><body><input id="searchInput"><button id="searchBtn"></button><p id="writingSearchHint"></p></body></html>');
+ let worker,results=[],translated=[],fail=false;
+ class FakeWorker{constructor(){worker=this;this.requests=[]}postMessage(data){this.requests.push(data)}terminate(){}}
+ const c={document,Worker:FakeWorker,setTimeout,clearTimeout,localStorage:{getItem:()=>null,setItem:()=>{}},doSearch:()=>{},translateVietnameseForWriting:async raw=>{translated.push(raw);if(fail)throw Error('429');return{hanzi:raw==='Quả đào'?'桃':'蚂蚁',pinyin:'test',vi:raw}},translateChineseForWriting:async raw=>({hanzi:raw,pinyin:'mǎ yǐ',vi:'Con kiến'}),renderItems:items=>{results=items}};
+ c.window=c;vm.createContext(c);vm.runInContext(source,c);
+ for(const [query,error] of [['Quả đào',false],['Con kiến',true]]){
+ document.getElementById('searchInput').value=query;const pending=c.doSearch();const id=worker.requests.at(-1).id;worker.onmessage({data:error?{id,error:'network'}:{id,total:0,items:[]}});await pending;
+ assert.equal(translated.at(-1),query);assert.equal(results.length,1);assert(document.getElementById('writingSearchHint').textContent.includes('Kết quả dịch'));
+ }
+ document.getElementById('searchInput').value='bạch tuột';const pending=c.doSearch();assert.equal(worker.requests.at(-1).query,'bạch tuộc');worker.onmessage({data:{id:worker.requests.at(-1).id,total:1,items:[{hanzi:'章鱼',pinyin:'zhāng yú',vi:'bạch tuộc',_dictionary:'CVDICT'}]}});await pending;assert.equal(results[0].hanzi,'章鱼');assert(document.getElementById('writingSearchHint').textContent.includes('bạch tuộc'));
+ fail=true;document.getElementById('searchInput').value='không có kết quả';const empty=c.doSearch();worker.onmessage({data:{id:worker.requests.at(-1).id,total:0,items:[]}});await empty;assert.equal(results.length,0);assert(!document.getElementById('writingSearchHint').textContent.includes('Chọn thẻ'));
+ console.log('PASS: production translation fallback after dictionary miss/error, spelling correction, truthful empty state.');
+})().catch(e=>{console.error(e);process.exitCode=1});
