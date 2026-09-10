@@ -4408,7 +4408,7 @@ window.ALUNI_DEFAULT_DATA = [
 // Optional video sentence library: isolated from course progress and writing modules.
 (() => {
   const script = document.createElement('script');
-  script.src = 'sentence-saves.js?v=20260910-2';
+  script.src = 'sentence-saves.js?v=1';
   document.head.appendChild(script);
 })();
 
