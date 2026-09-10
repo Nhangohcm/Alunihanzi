@@ -41,7 +41,7 @@ window.ALUNI_SALES_PAGE_URL =
     selectedCourseObj=course;const full=await hasFullAccess(course.id),limit=freeCount(course),lessons=course.lessons||[];lessonList.innerHTML='';
     if(!lessons.length){lessonList.innerHTML='<div class="writing-v2-empty"><b>Khóa học đã được đồng bộ.</b><br>Chưa có nội dung viết chữ trong khóa này.</div>';return}
     lessons.forEach((lesson,index)=>{const locked=!full&&(index+1)>limit,hasGame=Array.isArray(lesson.games)&&lesson.games.length,row=document.createElement('div'),itemCount=Number(lesson.items?.length||lesson.writing_count||0),lessonStatus=itemCount?`${itemCount} từ luyện viết`:lesson.remote_lazy?'Nhấn Học bài để tải từ vựng':'Nội dung viết chữ đang cập nhật';row.className='writing-v2-lesson';row.innerHTML=`<button class="writing-v2-main" type="button"><b>${locked?'🔒 ':''}Bài ${String(lesson.number??index+1).padStart(2,'0')} · ${esc(lesson.title||lesson.name||`Bài ${index+1}`)}</b><small>${lessonStatus}${hasGame?' · Có game':''}</small></button><div class="writing-v2-actions"><button class="writing-v2-action learn" type="button">✍ Học bài</button>${hasGame?'<button class="writing-v2-action game" type="button">🎮 Game</button>':''}</div>`;
-      const open=async()=>{await selectLesson(course,lesson,index,full);if(!locked){courseView.hidden=true;lessonBar.hidden=false;lessonBar.querySelector('.writing-v2-context').textContent=displayName(active,course);lessonBar.querySelector('h2').textContent=lesson.title||lesson.name||`Bài ${index+1}`;lessonBar.after(resultsCard);resultsCard.hidden=false;resultsCard.scrollIntoView({behavior:'smooth',block:'start'})}};
+      const open=async()=>{const selected=await selectLesson(course,lesson,index,full);if(selected&&!locked){courseView.hidden=true;lessonBar.hidden=false;lessonBar.querySelector('.writing-v2-context').textContent=displayName(active,course);lessonBar.querySelector('h2').textContent=lesson.title||lesson.name||`Bài ${index+1}`;lessonBar.after(resultsCard);resultsCard.hidden=false;resultsCard.scrollIntoView({behavior:'smooth',block:'start'})}};
       row.onclick=e=>{if(e.target.closest('.game'))return;open()};row.querySelector('.writing-v2-main').onclick=e=>{e.stopPropagation();open()};row.querySelector('.learn').onclick=e=>{e.stopPropagation();open()};row.querySelector('.game')?.addEventListener('click',e=>{e.stopPropagation();openLearningGame(String(lesson.id),'adult',lesson.games.join(','))});lessonList.appendChild(row);
     });
   }
@@ -63,10 +63,13 @@ window.ALUNI_SALES_PAGE_URL =
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 
-// Isolated opt-in account-sync preview; production behavior is unchanged.
-if(location.hostname.endsWith('.pages.dev')&&new URLSearchParams(location.search).get('saved_sync')==='1'){
- window.ALUNI_API_BASE='https://aluni-tts-staging.nhangohcm.workers.dev';
- window.ALUNI_SAVED_SYNC_CONFIG={enabled:true,freeAccounts:new URLSearchParams(location.search).get('free_accounts')==='1',apiBase:window.ALUNI_API_BASE};
+// Isolated opt-in account-sync preview. The production domain only enables it
+// for an explicit private test URL; ordinary visitors keep the current UI.
+const aluniSyncParams=new URLSearchParams(location.search);
+const aluniSyncPreviewHost=location.hostname.endsWith('.pages.dev')||['tiengtrungaluni.com','www.tiengtrungaluni.com'].includes(location.hostname);
+if(aluniSyncPreviewHost&&aluniSyncParams.get('saved_sync')==='1'){
+ window.ALUNI_API_BASE=location.hostname.endsWith('.pages.dev')?'https://aluni-tts-staging.nhangohcm.workers.dev':'https://aluni-tts.nhangohcm.workers.dev';
+ window.ALUNI_SAVED_SYNC_CONFIG={enabled:true,freeAccounts:aluniSyncParams.get('free_accounts')==='1',apiBase:window.ALUNI_API_BASE};
  const load=()=>{const script=document.createElement('script');script.type='module';script.src='saved-account-sync.js?v=1';document.head.appendChild(script);};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load,{once:true});else load();
 }
