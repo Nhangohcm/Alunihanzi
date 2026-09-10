@@ -30,3 +30,7 @@ Download the pinned CVDICT.u8 from the source repository, then run
 `CVDICT_PATH=/absolute/path/CVDICT.u8 node tests/dictionary.test.cjs`.
 The normal npm test suite uses a small fixture; the optional full-file test checks
 count, checksum, real multi-topic results, Hanzi/traditional and pinyin.
+
+## Compact lookup behavior
+
+The uploaded V94 and Alunihanzi production backups use a single translated card for Vietnamese words outside the course pool. The search wrapper now prioritizes that production translator over Vietnamese dictionary hits. Exact local matches return immediately. Exact Hanzi/pinyin matches use the dictionary without Vietnamese translation. If translation fails, the dictionary supplies a compact fallback (one Vietnamese headword, up to three Hanzi/pinyin entries). Accented Vietnamese retains its marks so mèo does not match mẹo. Known classifier prefixes are handled without broad substring matching. No worker or SQL backup is imported into production.
