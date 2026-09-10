@@ -6,9 +6,9 @@ if(config?.enabled) init();
 function init(){
  const read=key=>{const v=JSON.parse(localStorage.getItem(key)||'[]');if(!Array.isArray(v))throw Error('Kho trên máy chưa đọc được.');return v;};
  const current=()=>({words:read(WORDS_KEY),sentences:read(SENTENCES_KEY)});
- let active=null,running=false,timer,sequence=0;
+ let active=null,running=false,timer,sequence=0,awaitingActivation=false;
  const ui=document.createElement('section');ui.className='card';ui.id='savedAccountSync';
- ui.innerHTML='<strong>Đồng bộ từ và câu đã lưu</strong><p data-status role="status">Chưa bật đồng bộ. Kho hiện tại vẫn lưu trên trình duyệt.</p><select aria-label="Chọn hồ sơ khóa học"></select> <button type="button" class="btn soft" data-connect>Kết nối hồ sơ</button> <button type="button" class="btn soft" data-import hidden>Thêm kho trên máy vào hồ sơ</button> <button type="button" class="btn soft" data-sync hidden>Đồng bộ lại</button> <button type="button" class="btn soft" data-disconnect hidden>Ngắt đồng bộ</button><p class="hint">Dùng cùng mã kích hoạt trên thiết bị khác để mở cùng kho. Các mã khác nhau chưa tự gộp kho.</p>';
+ ui.innerHTML='<strong>Đồng bộ từ và câu đã lưu</strong><p data-status role="status">Bạn vẫn có thể lưu và ôn miễn phí trên máy này. Có mã kích hoạt? Bấm bên dưới để đồng bộ hoặc khôi phục kho.</p><select aria-label="Chọn hồ sơ khóa học"></select> <button type="button" class="btn soft" data-connect>Bật đồng bộ / Khôi phục kho</button> <button type="button" class="btn soft" data-import hidden>Thêm kho trên máy vào hồ sơ</button> <button type="button" class="btn soft" data-sync hidden>Đồng bộ lại</button> <button type="button" class="btn soft" data-disconnect hidden>Ngắt đồng bộ</button><p class="hint">Dùng cùng mã kích hoạt trên thiết bị khác để mở cùng kho. Các mã khác nhau chưa tự gộp kho.</p>';
  const host=document.getElementById('writingSection');host?.querySelector('.writing-quick-card')?.after(ui);
  const status=message=>{ui.querySelector('[data-status]').textContent=message;const note=document.querySelector('[data-sentence-storage-note]');if(note)note.textContent=active?message:'Lưu trên trình duyệt này. Xóa dữ liệu trình duyệt sẽ xóa các câu đã lưu.';};
  const selected=()=>JSON.parse(localStorage.getItem(ACTIVE)||'null');
@@ -22,8 +22,8 @@ function init(){
   localStorage.setItem(WORDS_KEY,JSON.stringify(state.words));localStorage.setItem(SENTENCES_KEY,JSON.stringify(state.sentences));
   if(typeof renderSavedWritingVocabulary==='function')renderSavedWritingVocabulary();if(typeof refreshWritingSaveButtons==='function')refreshWritingSaveButtons();window.dispatchEvent(new Event('aluni-saved-library-updated'));
  };
- const buttons=()=>{ui.querySelector('[data-connect]').hidden=!!active;ui.querySelector('select').hidden=!!active;for(const name of ['import','sync','disconnect'])ui.querySelector('[data-'+name+']').hidden=!active;};
- function choices(){const select=ui.querySelector('select');select.replaceChildren();for(const [key,ent] of Object.entries(typeof savedEntitlements==='function'?savedEntitlements():{})){if(!ent?.token)continue;const option=document.createElement('option');option.value=key;option.textContent=ent.course_name||ent.course_id||key;select.append(option);}}
+ const buttons=()=>{ui.querySelector('[data-connect]').hidden=!!active;ui.querySelector('select').hidden=!!active||ui.querySelector('select').children.length<2;for(const name of ['import','sync','disconnect'])ui.querySelector('[data-'+name+']').hidden=!active;};
+ function choices(){const select=ui.querySelector('select');select.replaceChildren();for(const [key,ent] of Object.entries(typeof savedEntitlements==='function'?savedEntitlements():{})){if(!ent?.token)continue;const option=document.createElement('option');option.value=key;option.textContent=ent.course_name||ent.course_id||key;select.append(option);}buttons();}
  async function apiRequest(method,body,session=active){
   const bearer=typeof savedEntitlements==='function'?savedEntitlements()[session?.course]?.token:null;if(!bearer)throw Error('Vui lòng kích hoạt lại hồ sơ trên thiết bị này.');
   const ctrl=new AbortController(),timeout=setTimeout(()=>ctrl.abort(),12000);
@@ -56,8 +56,22 @@ function init(){
    });
   }catch(e){status(e.message||'Chưa kết nối được. Kho trên máy vẫn được giữ nguyên.');}finally{running=false;}
  }
- ui.querySelector('[data-connect]').onclick=async()=>{
-  const course=ui.querySelector('select').value;if(!course){status('Hãy kích hoạt khóa học trước để kết nối hồ sơ.');return;}
+ function requestActivation(){
+  awaitingActivation=true;
+  status('Nhập mã trong khung kích hoạt để mở lại kho của bạn. Chưa có mã thì đóng khung và tiếp tục lưu trên máy.');
+  if(typeof openAccess==='function')openAccess();
+ }
+ window.ALUNI_SAVED_SYNC.afterActivation=async item=>{
+  if(!awaitingActivation)return false;
+  awaitingActivation=false;
+  if(typeof closeAccess==='function')closeAccess();
+  choices();await connect(item.course_id);
+  if(typeof setActiveAppSection==='function')setActiveAppSection('writingSection');
+  ui.scrollIntoView?.({block:'center',behavior:'smooth'});return true;
+ };
+ document.getElementById('accessModal')?.addEventListener('click',e=>{if(e.target.id==='accessModal'||e.target.closest?.('#accessCancelBtn, #accessCloseBtn'))awaitingActivation=false;});
+ async function connect(course){
+  if(!course||!savedEntitlements()[course]?.token){requestActivation();return;}
   const button=ui.querySelector('[data-connect]');button.disabled=true;
   try{
    const previous=localStorage.getItem(ACTIVE);
@@ -67,8 +81,9 @@ function init(){
    if(!localStorage.getItem(GUEST))localStorage.setItem(GUEST,JSON.stringify(current()));
    active={course,account:String(remote.account_id)};localStorage.setItem(ACTIVE,JSON.stringify(active));
    paint(rebase(remote,pending()));buttons();status('Đã mở kho của hồ sơ. Có thể thêm kho cũ trên máy bằng nút bên cạnh.');await sync();
-  }catch(e){status(e.message);}finally{button.disabled=false;}
- };
+  }catch(e){if(e.status===401)requestActivation();else status(e.message);}finally{button.disabled=false;}
+ }
+ ui.querySelector('[data-connect]').onclick=()=>connect(ui.querySelector('select').value);
  ui.querySelector('[data-import]').onclick=()=>{try{if(!same())throw Error('Hãy tải lại trang.');const guest=JSON.parse(localStorage.getItem(GUEST)||'null');if(!guest)return;const before=current(),after=rebase(before,[...guest.words.map(item=>({kind:'words',key:item.hanzi,item})),...guest.sentences.map(item=>({kind:'sentences',key:item.id,item}))]);record('words',before.words,after.words);record('sentences',before.sentences,after.sentences);paint(after);}catch(e){status(e.message);}};
  ui.querySelector('[data-sync]').onclick=sync;
  ui.querySelector('[data-disconnect]').onclick=()=>{try{if(!same())throw Error('Hãy tải lại trang.');localStorage.setItem('aluni.sync.v1.'+active.account+'.cache',JSON.stringify(current()));active=null;localStorage.removeItem(ACTIVE);paint(JSON.parse(localStorage.getItem(GUEST)||'{"words":[],"sentences":[]}'));localStorage.removeItem(GUEST);buttons();choices();status('Đã ngắt đồng bộ và mở lại kho trên trình duyệt.');}catch(e){status(e.message);}};

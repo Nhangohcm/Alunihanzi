@@ -20,5 +20,12 @@ document.querySelector('[data-import]').onclick();assert.equal(JSON.parse(storag
 c.ALUNI_SAVED_SYNC.record('words',[word],[]);storage.setItem(core.WORDS_KEY,'[]');await document.querySelector('[data-sync]').onclick();assert.equal(remote.words.length,0);
 document.querySelector('[data-disconnect]').onclick();assert.equal(JSON.parse(storage.getItem(core.WORDS_KEY))[0].hanzi,'猫','guest data restored');assert.equal(storage.getItem('aluni.sync.v1.active'),null);
 await document.querySelector('[data-connect]').onclick();ents={'50plus':{token:token(2),course_id:'50plus'}};c.saveEntitlement();assert.equal(storage.getItem('aluni.sync.v1.active'),null,'different identity detaches');assert.equal(JSON.parse(storage.getItem(core.WORDS_KEY)).length,0,'old account not exposed to newly activated identity');
+// Starting sync as a guest opens activation, then successful activation continues automatically.
+ents={};let opened=0,closed=0;c.openAccess=()=>opened++;c.closeAccess=()=>closed++;
+await document.querySelector('[data-connect]').onclick();assert.equal(opened,1);
+ents={'50plus':{token:token(1),course_id:'50plus'}};
+assert.equal(await c.ALUNI_SAVED_SYNC.afterActivation(ents['50plus']),true);
+assert.equal(closed,1);assert.equal(JSON.parse(storage.getItem('aluni.sync.v1.active')).account,'1');
+assert.equal(await c.ALUNI_SAVED_SYNC.afterActivation(ents['50plus']),false,'ordinary activation does not opt in');
 const disabled={document:{},ALUNI_SAVED_SYNC_CONFIG:{enabled:false}};disabled.window=disabled;vm.createContext(disabled);vm.runInContext(source,disabled);assert.equal(disabled.ALUNI_SAVED_SYNC,undefined);
 console.log('PASS: opt-in, no silent import, explicit guest migration, sync/delete, guest restoration, account switch isolation, feature disabled.');
