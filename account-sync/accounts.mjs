@@ -22,8 +22,14 @@ export async function accountsRoute(req,env,headers={}){
   if(!env.ADMIN_SECRET||req.headers.get('X-Admin-Key')!==env.ADMIN_SECRET)return reply({error:'Unauthorized'},401);
   if(req.method!=='GET')return reply({error:'Method not allowed'},405);
   const cursor=Math.max(0,Number(url.searchParams.get('after'))||0);
-  const rows=await db.prepare("SELECT a.id,a.username,a.display_name,a.status,a.created_at,a.last_login_at,COALESCE(json_array_length(l.words_json),0) AS words,COALESCE(json_array_length(l.sentences_json),0) AS sentences FROM sync_accounts a LEFT JOIN saved_libraries l ON l.code_id=-a.id WHERE a.id>? ORDER BY a.id LIMIT 51").bind(cursor).all();
-  const list=rows.results||[];return reply({accounts:list.slice(0,50),next:list.length>50?list[49].id:null});
+  const query=String(url.searchParams.get('q')||'').trim().toLowerCase().slice(0,100),pattern='%'+query+'%';
+  const requestedStatus=String(url.searchParams.get('status')||'all');
+  const status=['active','pending','blocked'].includes(requestedStatus)?requestedStatus:'all';
+  const [rows,summary]=await Promise.all([
+   db.prepare("SELECT a.id,a.username,a.display_name,a.status,a.created_at,a.last_login_at,CASE WHEN instr(a.username,'@')>0 THEN 'email' ELSE 'legacy' END AS account_type,COALESCE(json_array_length(l.words_json),0) AS words,COALESCE(json_array_length(l.sentences_json),0) AS sentences FROM sync_accounts a LEFT JOIN saved_libraries l ON l.code_id=-a.id WHERE a.id>? AND (?='' OR lower(a.username) LIKE ? OR lower(a.display_name) LIKE ?) AND (?='all' OR a.status=?) ORDER BY a.id LIMIT 51").bind(cursor,query,pattern,pattern,status,status).all(),
+   db.prepare("SELECT COUNT(*) AS total,SUM(CASE WHEN status='active' THEN 1 ELSE 0 END) AS active,SUM(CASE WHEN status='pending' THEN 1 ELSE 0 END) AS pending FROM sync_accounts").first()
+  ]);
+  const list=rows.results||[];return reply({accounts:list.slice(0,50),next:list.length>50?list[49].id:null,summary:{total:Number(summary?.total||0),active:Number(summary?.active||0),pending:Number(summary?.pending||0)}});
  }
  if(req.method!=='POST')return reply({error:'Method not allowed'},405);
  if(!['/account/register','/account/login','/account/recover','/account/logout'].includes(path))return reply({error:'Not found'},404);

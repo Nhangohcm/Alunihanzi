@@ -24,6 +24,8 @@ r=await savedLibraryRoute(req(b.token),env,deps);assert.equal((await r.json()).w
 const other=await call('/account/register',{username:'bobby',display_name:'Bob'});r=await savedLibraryRoute(req(other.token),env,deps);assert.equal((await r.json()).words.length,0,'separate account');
 assert.equal((await call('/admin/sync-accounts',{}, {},'GET')).status,401);
 const admin=await call('/admin/sync-accounts',{}, {'X-Admin-Key':'test-admin'},'GET');assert.equal(admin.accounts.length,2);assert.equal(admin.accounts[0].words,1);assert(!JSON.stringify(admin).includes(a.login_key));assert(!JSON.stringify(admin).includes('login_hash'));
+assert.deepEqual(admin.summary,{total:2,active:2,pending:0});assert.equal(admin.accounts[0].account_type,'legacy');
+const searched=await call('/admin/sync-accounts?q=ali&status=active',{}, {'X-Admin-Key':'test-admin'},'GET');assert.equal(searched.accounts.length,1);assert.equal(searched.accounts[0].username,'alice');
 const recovered=await call('/account/recover',{username:'alice',key:a.recovery_key});assert.equal(recovered.status,200);assert.equal(await accountSession(req(a.token),env),null);assert.equal(await accountSession(req(b.token),env),null);
 assert.equal((await call('/account/recover',{username:'alice',key:a.recovery_key})).status,401);
 assert.equal((await call('/account/login',{username:'alice',key:a.login_key})).status,401);
