@@ -40,7 +40,7 @@ const context={document:{readyState:'complete'},localStorage:{getItem:()=>stored
  worker.onmessage({data:{id:worker.requests[1].id,total:1,items:[{hanzi:'电压',pinyin:'diàn yā',vi:'điện áp',_dictionary:'CVDICT'}]}});await second;
  worker.onmessage({data:{id:worker.requests[0].id,total:1,items:[{hanzi:'鸽子',pinyin:'gē zi',vi:'chim bồ câu',_dictionary:'CVDICT'}]}});await first;
  assert.equal(results[0].hanzi,'电压');assert.equal(document.querySelectorAll('#writingDictionarySource').length,1);
- document.getElementById('searchInput').value='con heo';const third=c.doSearch();worker.onmessage({data:{id:worker.requests[2].id,error:'offline'}});await third;assert.equal(results[0].hanzi,'猪');
+ document.getElementById('searchInput').value='con heo';const third=c.doSearch();await third;assert.equal(results[0].hanzi,'猪');
  console.log('PASS: async dictionary results, stale query protection, visible attribution and local results retained on load failure.');
 })().catch(e=>{console.error(e);process.exitCode=1});
 
@@ -49,7 +49,7 @@ const context={document:{readyState:'complete'},localStorage:{getItem:()=>stored
  const {document}=parseHTML('<html><body><input id="searchInput"><button id="searchBtn"></button><p id="writingSearchHint"></p></body></html>');
  let worker,results=[],translated=[],fail=false;
  class FakeWorker{constructor(){worker=this;this.requests=[]}postMessage(data){this.requests.push(data)}terminate(){}}
- const c={document,Worker:FakeWorker,setTimeout,clearTimeout,localStorage:{getItem:()=>null,setItem:()=>{}},doSearch:()=>{},translateVietnameseForWriting:async raw=>{translated.push(raw);if(fail)throw Error('429');return{hanzi:raw==='Quả đào'?'桃':'蚂蚁',pinyin:'test',vi:raw}},translateChineseForWriting:async raw=>({hanzi:raw,pinyin:'mǎ yǐ',vi:'Con kiến'}),renderItems:items=>{results=items}};
+ const c={document,Worker:FakeWorker,setTimeout,clearTimeout,localStorage:{getItem:()=>null,setItem:()=>{}},doSearch:()=>{},translateVietnameseForWriting:async raw=>{translated.push(raw);if(fail)throw Error('429');return{hanzi:raw==='bạch tuộc'?'章鱼':raw==='Quả đào'?'桃':'蚂蚁',pinyin:'test',vi:raw}},translateChineseForWriting:async raw=>({hanzi:raw,pinyin:'mǎ yǐ',vi:'Con kiến'}),renderItems:items=>{results=items}};
  c.window=c;vm.createContext(c);vm.runInContext(source,c);
  for(const [query,error] of [['Quả đào',false],['Con kiến',true]]){
  document.getElementById('searchInput').value=query;const pending=c.doSearch();const id=worker.requests.at(-1).id;worker.onmessage({data:error?{id,error:'network'}:{id,total:0,items:[]}});await pending;
@@ -58,4 +58,18 @@ const context={document:{readyState:'complete'},localStorage:{getItem:()=>stored
  document.getElementById('searchInput').value='bạch tuột';const pending=c.doSearch();assert.equal(worker.requests.at(-1).query,'bạch tuộc');worker.onmessage({data:{id:worker.requests.at(-1).id,total:1,items:[{hanzi:'章鱼',pinyin:'zhāng yú',vi:'bạch tuộc',_dictionary:'CVDICT'}]}});await pending;assert.equal(results[0].hanzi,'章鱼');assert(document.getElementById('writingSearchHint').textContent.includes('bạch tuộc'));
  fail=true;document.getElementById('searchInput').value='không có kết quả';const empty=c.doSearch();worker.onmessage({data:{id:worker.requests.at(-1).id,total:0,items:[]}});await empty;assert.equal(results.length,0);assert(!document.getElementById('writingSearchHint').textContent.includes('Chọn thẻ'));
  console.log('PASS: production translation fallback after dictionary miss/error, spelling correction, truthful empty state.');
+})().catch(e=>{console.error(e);process.exitCode=1});
+
+// Vietnamese dictionary hits must not displace the production single-card translation.
+(async()=>{
+ const {parseHTML}=require('linkedom');
+ const {document}=parseHTML('<html><body><input id="searchInput"><button id="searchBtn"></button><p id="writingSearchHint"></p></body></html>');
+ let worker,results=[],calls=0;
+ class FakeWorker{constructor(){worker=this}postMessage(data){this.request=data}terminate(){}}
+ const c={document,Worker:FakeWorker,setTimeout,clearTimeout,localStorage:{getItem:()=>null,setItem:()=>{}},doSearch:()=>{},translateVietnameseForWriting:async raw=>{calls++;return{hanzi:raw==='con mèo'?'猫':'荷花',pinyin:'test',vi:raw}},renderItems:items=>results=items};c.window=c;vm.createContext(c);vm.runInContext(source,c);
+ for(const q of ['con mèo','hoa sen']){
+ document.getElementById('searchInput').value=q;const pending=c.doSearch();worker.onmessage({data:{id:worker.request.id,total:60,items:Array.from({length:60},()=>({hanzi:'荷',pinyin:'hé',vi:q,_dictionary:'CVDICT'}))}});await pending;assert.equal(results.length,1);assert.equal(results[0].hanzi,q==='con mèo'?'猫':'荷花');
+ }
+ document.getElementById('searchInput').value='ge1 zi5';const pending=c.doSearch();worker.onmessage({data:{id:worker.request.id,total:1,items:[{hanzi:'鸽子',pinyin:'gē zi',vi:'chim bồ câu',_dictionary:'CVDICT',_pinyinMatch:true}]}});await pending;assert.equal(results[0].hanzi,'鸽子');assert.equal(calls,2);
+ console.log('PASS: Vietnamese single-card translation takes priority over broad dictionary hits; pinyin does not invoke Vietnamese translation.');
 })().catch(e=>{console.error(e);process.exitCode=1});
