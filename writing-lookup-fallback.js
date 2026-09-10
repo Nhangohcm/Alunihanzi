@@ -64,28 +64,31 @@
       let requestId=0;
       doSearch = async function() {
         const id=++requestId, raw=document.getElementById('searchInput').value.trim();
+        const lookupRaw=normalize(raw)==='bach tuot'?'bạch tuộc':raw;
+        const correction=lookupRaw!==raw?'Đang tra theo cách viết “bạch tuộc”. ':'';
         const hint=document.getElementById('writingSearchHint');
         if (!raw) { hint.textContent='Nhập tiếng Việt, chữ Hán hoặc pinyin để tra từ.'; return renderItems([],'Kết quả tìm kiếm'); }
-        let results=matches(raw);
+        let results=matches(lookupRaw);
         hint.textContent=results.length?'Chọn thẻ từ để nghe và luyện viết.':'Đang tra cứu…';
         if(typeof Worker !== 'undefined') {
           sourceNote();
           if(results.length)renderItems(results,`Kết quả: ${raw}`);
           hint.textContent='Đang tra từ điển Trung–Việt… Lần đầu cần tải dữ liệu, các lần sau sẽ nhanh hơn.';
           try {
-            const data=await dictionarySearch(raw);if(id!==requestId)return;
+            const data=await dictionarySearch(lookupRaw);if(id!==requestId)return;
             const seen=new Set(results.map(x=>x.hanzi+'|'+pinyinKey(x.pinyin)));
             for(const item of data.items){const key=item.hanzi+'|'+pinyinKey(item.pinyin);if(!seen.has(key)){seen.add(key);results.push(item)}else{const existing=results.find(x=>x._dictionary&&x.hanzi===item.hanzi&&pinyinKey(x.pinyin)===pinyinKey(item.pinyin));if(existing&&!existing.vi.includes(item.vi))existing.vi+='; '+item.vi;}}
             hint.textContent=data.total>data.items.length?`Đang hiện các kết quả phù hợp nhất trong ${data.total} mục. Nhập cụ thể hơn để thu hẹp.`:'Chọn thẻ từ để nghe, lưu và luyện viết.';
           } catch(error) {if(id!==requestId)return;hint.textContent=error.message;}
-          if(id===requestId)renderItems(results,results.length?`Kết quả: ${raw}`:`Chưa có kết quả: ${raw}`);
-          return;
+          // Keep the production translator as fallback when dictionary is empty or unavailable.
+          if(results.length){hint.textContent=correction+hint.textContent;renderItems(results,`Kết quả: ${raw}`);return;}
         }
         if (!results.length) {
+          hint.textContent=correction+'Đang tra cứu bổ sung…';
           try {
-            const item=/\p{Script=Han}/u.test(raw) ? await translateChineseForWriting(raw) : await translateVietnameseForWriting(raw);
+            const item=/\p{Script=Han}/u.test(lookupRaw) ? await translateChineseForWriting(lookupRaw) : await translateVietnameseForWriting(lookupRaw);
             if(id!==requestId)return;
-            results=[item];hint.textContent='Kết quả dịch tham khảo ngoài kho Aluni. Hãy kiểm tra nghĩa trước khi luyện viết.';
+            results=[item];hint.textContent=correction+'Kết quả dịch tham khảo ngoài kho Aluni. Hãy kiểm tra nghĩa trước khi luyện viết.';
           } catch (_) {
             if(id!==requestId)return;
             hint.textContent='Chưa có kết quả trong kho; dịch vụ tra cứu bên ngoài hiện không phản hồi. Anh/chị có thể thử lại sau.';
