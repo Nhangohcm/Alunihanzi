@@ -21,11 +21,12 @@
     }
     function matches(raw) {
       const q=normalize(raw), py=pinyinKey(raw), found=new Map();
+      const accented=value=>String(value||'').normalize('NFC').toLowerCase().trim().replace(/\s+/g,' ');
+      const strict=accented(raw)!==q;
       for (const item of vocabulary()) {
-        const meanings=[item.vi,...(item.aliases||[]),...String(item.vi).split(/[;,/()]/)].map(normalize).filter(Boolean);
-        const exact=item.hanzi===raw || (py && pinyinKey(item.pinyin)===py) || meanings.includes(q);
-        const partial=item.hanzi.includes(raw) || meanings.some(v=>v.includes(q));
-        if ((exact||partial)&&!found.has(item.hanzi)) found.set(item.hanzi,{item,score:exact?2:1});
+        const meanings=[item.vi,...(item.aliases||[]),...String(item.vi).split(/[;,/()]/)].map(strict?accented:normalize).filter(Boolean);
+        const exact=item.hanzi===raw || (py && pinyinKey(item.pinyin)===py) || meanings.includes(strict?accented(raw):q);
+        if (exact&&!found.has(item.hanzi)) found.set(item.hanzi,{item,score:exact?2:1});
       }
       return [...found.values()].sort((a,b)=>b.score-a.score).map(x=>({...x.item}));
     }
@@ -68,7 +69,8 @@
         const correction=lookupRaw!==raw?'Đang tra theo cách viết “bạch tuộc”. ':'';
         const hint=document.getElementById('writingSearchHint');
         if (!raw) { hint.textContent='Nhập tiếng Việt, chữ Hán hoặc pinyin để tra từ.'; return renderItems([],'Kết quả tìm kiếm'); }
-        let results=matches(lookupRaw);
+        let results=matches(lookupRaw).slice(0,3),translationAttempted=false;
+        if(results.length){hint.textContent=correction+'Chọn thẻ từ để nghe, lưu và luyện viết.';renderItems(results,`Kết quả: ${raw}`);return;}
         hint.textContent=results.length?'Chọn thẻ từ để nghe và luyện viết.':'Đang tra cứu…';
         if(typeof Worker !== 'undefined') {
           sourceNote();
@@ -76,9 +78,15 @@
           hint.textContent='Đang tra từ điển Trung–Việt… Lần đầu cần tải dữ liệu, các lần sau sẽ nhanh hơn.';
           try {
             const data=await dictionarySearch(lookupRaw);if(id!==requestId)return;
-            const seen=new Set(results.map(x=>x.hanzi+'|'+pinyinKey(x.pinyin)));
-            for(const item of data.items){const key=item.hanzi+'|'+pinyinKey(item.pinyin);if(!seen.has(key)){seen.add(key);results.push(item)}else{const existing=results.find(x=>x._dictionary&&x.hanzi===item.hanzi&&pinyinKey(x.pinyin)===pinyinKey(item.pinyin));if(existing&&!existing.vi.includes(item.vi))existing.vi+='; '+item.vi;}}
-            hint.textContent=data.total>data.items.length?`Đang hiện các kết quả phù hợp nhất trong ${data.total} mục. Nhập cụ thể hơn để thu hẹp.`:'Chọn thẻ từ để nghe, lưu và luyện viết.';
+            results=data.items.slice(0,3);
+            // Match the production UX: one translated Vietnamese headword.
+            // Exact pinyin and Hanzi remain dictionary lookups, never Vietnamese translations.
+            if(!/\p{Script=Han}/u.test(lookupRaw)&&!results.some(x=>x._pinyinMatch)){
+              translationAttempted=true;
+              try{const item=await translateVietnameseForWriting(lookupRaw);if(id!==requestId)return;if(valid(item))results=[item];}catch(_){}
+            }
+            if(id!==requestId)return;
+            hint.textContent=results.some(x=>x._dictionary)?'Chọn thẻ từ để nghe, lưu và luyện viết.':'Kết quả dịch tham khảo ngoài kho Aluni. Hãy kiểm tra nghĩa trước khi luyện viết.';
           } catch(error) {if(id!==requestId)return;hint.textContent=error.message;}
           // Keep the production translator as fallback when dictionary is empty or unavailable.
           if(results.length){hint.textContent=correction+hint.textContent;renderItems(results,`Kết quả: ${raw}`);return;}
@@ -86,6 +94,7 @@
         if (!results.length) {
           hint.textContent=correction+'Đang tra cứu bổ sung…';
           try {
+            if(translationAttempted)throw Error('translation unavailable');
             const item=/\p{Script=Han}/u.test(lookupRaw) ? await translateChineseForWriting(lookupRaw) : await translateVietnameseForWriting(lookupRaw);
             if(id!==requestId)return;
             results=[item];hint.textContent=correction+'Kết quả dịch tham khảo ngoài kho Aluni. Hãy kiểm tra nghĩa trước khi luyện viết.';
