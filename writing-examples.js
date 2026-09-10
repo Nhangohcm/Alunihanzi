@@ -64,7 +64,7 @@
         typeof example.vi === 'string' && example.vi.trim();
     }
     function loadExamples() {
-      if (!examplesPromise) examplesPromise = fetch('writing-examples.json?v=1')
+      if (!examplesPromise) examplesPromise = fetch('writing-examples.json?v=2')
         .then(r => { if (!r.ok) throw Error('Examples unavailable'); return r.json(); })
         .then(data => { if (data.version !== 1 || !Array.isArray(data.entries)) throw Error('Invalid examples'); return data.entries; })
         .catch(() => { examplesPromise = null; return []; });
@@ -89,7 +89,8 @@
       if (valid(item.example, word)) { paint(item.example, word); return; }
       const entries = await loadExamples();
       if (version !== requestId) return;
-      const entry = entries.find(x => Array.isArray(x.words) && x.words.includes(word) && valid(x, word));
+      const entry = entries.find(x => Array.isArray(x.words) && x.words.includes(word) && valid(x, word))
+        || entries.filter(x => valid(x, word)).sort((a,b) => a.hanzi.length-b.hanzi.length)[0];
       if (entry) paint(entry, word);
     }
     box.querySelector('button').addEventListener('click', event => {

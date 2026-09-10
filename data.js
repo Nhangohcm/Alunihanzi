@@ -4432,3 +4432,10 @@ window.ALUNI_DEFAULT_DATA = [
   script.src = 'saved-writing-access.js?v=1';
   document.head.appendChild(script);
 })();
+
+// Reuse known Vietnamese translations during external translation outages.
+(() => {
+  const script = document.createElement('script');
+  script.src = 'writing-lookup-fallback.js?v=1';
+  document.head.appendChild(script);
+})();

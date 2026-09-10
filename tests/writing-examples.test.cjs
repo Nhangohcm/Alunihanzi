@@ -39,6 +39,14 @@ const tick = () => new Promise(setImmediate);
     a.context.openPractice({hanzi: word}); await tick();
     assert.equal(box.hidden, false); assert.equal(box.querySelector('mark').textContent, word);
   }
+  for (const word of ['突','突然','猫','荷花','章鱼','桃子','蚂蚁']) {
+    a.context.openPractice({hanzi:word,pinyin:'',vi:'',_dictionary:'CVDICT'}); await tick();
+    assert.equal(box.hidden,false,`dictionary word ${word} has an example`);
+    assert.equal(box.querySelector('mark').textContent,word);
+  }
+  // Reuse a reviewed sentence for a contained word even without an explicit words tag.
+  a.context.openPractice({hanzi:'池塘'}); await tick();
+  assert.equal(box.hidden,false); assert.equal(box.querySelector('mark').textContent,'池塘');
   assert.equal(a.requests(), 1, 'catalog reused when switching words');
   const b = setup(); b.context.openPractice({hanzi: '你好'});
   b.context.openPractice({hanzi: '老师', example: {hanzi: '老师说：<img src=x onerror=bad()>', pinyin: 'Lǎoshī shuō', vi: 'Câu riêng của bài'}});
