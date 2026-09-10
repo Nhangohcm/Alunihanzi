@@ -1,3 +1,4 @@
+import {emailAccountsRoute} from './email-accounts.mjs';
 // Free sync accounts use generated 256-bit secrets, never user-selected passwords.
 export const accountSecret=()=>Array.from(crypto.getRandomValues(new Uint8Array(32)),x=>x.toString(16).padStart(2,'0')).join('');
 export async function secretHash(value){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),x=>x.toString(16).padStart(2,'0')).join('');}
@@ -10,6 +11,7 @@ export async function accountSession(req,env){
  return row?{id:row.id,username:row.username}:null;
 }
 export async function accountsRoute(req,env,headers={}){
+ const emailResponse=await emailAccountsRoute(req,env,headers);if(emailResponse)return emailResponse;
  const url=new URL(req.url),path=url.pathname;
  if(!path.startsWith('/account/')&&path!=='/admin/sync-accounts')return null;
  const reply=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{...headers,'Content-Type':'application/json','Cache-Control':'no-store'}});

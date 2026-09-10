@@ -1,0 +1,9 @@
+// Tokens stay in the URL fragment and are removed before any request.
+const params=new URLSearchParams(location.hash.slice(1)),token=params.get('token'),action=params.get('action');
+history.replaceState(null,'',location.pathname);
+const form=document.getElementById('form'),message=document.getElementById('message');
+if(!location.hostname.endsWith('.pages.dev')||!['verify','reset'].includes(action)||! /^[a-f0-9]{64}$/.test(token||'')){form.hidden=true;message.textContent='Liên kết không hợp lệ. Vui lòng quay lại và yêu cầu gửi email mới.';}
+else{
+ const reset=action==='reset';document.getElementById('title').textContent=reset?'Đặt lại mật khẩu':'Xác thực email';document.getElementById('label').textContent=reset?'Mật khẩu mới (từ 10 ký tự)':'Mật khẩu bạn đã đặt khi đăng ký';document.getElementById('password').autocomplete=reset?'new-password':'current-password';document.getElementById('submit').textContent=reset?'Lưu mật khẩu mới':'Xác thực email';document.getElementById('intro').textContent=reset?'Sau khi đổi mật khẩu, hãy quay lại đăng nhập.':'Nhập mật khẩu đã đặt để hoàn tất xác thực, sau đó quay lại đăng nhập.';
+ form.onsubmit=async e=>{e.preventDefault();const button=document.getElementById('submit');button.disabled=true;message.textContent='Đang xử lý…';try{const r=await fetch('https://aluni-tts-staging.nhangohcm.workers.dev/account/email/'+action,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,password:document.getElementById('password').value}),signal:AbortSignal.timeout(12000)});const data=await r.json();if(!r.ok)throw Error(data.error||'Chưa xác thực được.');document.getElementById('password').value='';form.hidden=true;message.textContent=data.message;}catch(error){message.textContent=error.message||'Chưa kết nối được. Vui lòng thử lại.';}finally{button.disabled=false;}};
+}
