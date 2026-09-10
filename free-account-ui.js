@@ -9,7 +9,7 @@ export function installFreeAccounts(host,onReady){
  host.append(box);const form=box.querySelector('form'),field=n=>form.querySelector('[name="'+n+'"]'),message=t=>box.querySelector('[data-message]').textContent=t;
  async function call(path,body,token){const r=await fetch(config.apiBase+path,{method:'POST',headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify(body),signal:AbortSignal.timeout(12000)});const data=await r.json();if(!r.ok)throw Error(data.error||'Chưa kết nối được.');return data;}
  let pending=null;
- function open(){box.hidden=false;form.hidden=false;box.querySelector('[data-credentials]').hidden=true;message('');field('key').value='';pending=null;box.scrollIntoView?.({block:'center',behavior:'smooth'});}
+ function open(){box.hidden=false;form.hidden=false;box.querySelector('[data-credentials]').hidden=true;message('');field('key').value='';pending=null;}
  field('mode').onchange=()=>{const mode=field('mode').value;box.querySelector('[data-name]').hidden=mode!=='register';box.querySelector('[data-key]').hidden=mode==='register';box.querySelector('[data-register-note]').hidden=mode!=='register';box.querySelector('[data-key-label]').textContent=mode==='recover'?'Mã khôi phục dự phòng':'Mã đăng nhập';field('key').value='';};
  async function finish(data){if(data.draftKey)sessionStorage.removeItem(data.draftKey);localStorage.setItem(KEY,JSON.stringify({token:data.token,username:data.username,account_id:data.account_id,expires_at:data.expires_at}));pending=null;box.querySelector('[data-login]').value='';box.querySelector('[data-recovery]').value='';box.hidden=true;await onReady('free:'+data.username);}
  form.onsubmit=async e=>{e.preventDefault();const submit=form.querySelector('[type="submit"]');submit.disabled=true;message('Đang xử lý…');try{
@@ -20,6 +20,6 @@ export function installFreeAccounts(host,onReady){
  }catch(e){message(e.message||'Chưa kết nối được. Vui lòng thử lại.');}finally{submit.disabled=false;}};
  box.querySelector('[data-copy]').onclick=async()=>{if(!pending)return;try{await navigator.clipboard.writeText('Tài khoản Aluni: '+pending.username+'\nMã đăng nhập: '+pending.login_key+'\nMã khôi phục: '+pending.recovery_key);message('Đã sao chép. Hãy lưu ở nơi riêng tư.');}catch{message('Hãy chọn và sao chép thủ công hai mã.');}};
  box.querySelector('[data-continue]').onclick=async()=>{if(pending){try{await finish(pending);}catch(e){message(e.message);}}};
- box.querySelector('[data-close]').onclick=()=>{box.hidden=true;field('key').value='';};
+ box.querySelector('[data-close]').onclick=()=>{box.closest('details')?.removeAttribute('open');field('key').value='';};
  return {open,read,tokenFor:session=>session?.course==='free:'+read()?.username?read()?.token:null,async logout(){const current=read();if(current)await call('/account/logout',{},current.token);localStorage.removeItem(KEY);}};
 }
