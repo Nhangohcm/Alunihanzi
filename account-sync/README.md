@@ -46,3 +46,15 @@ D1 transaction semantics: https://developers.cloudflare.com/d1/worker-api/d1-dat
 ## Hoàn tác
 
 Tắt `SAVED_LIBRARY_SYNC` và bỏ `?saved_sync=1`; frontend production không bị tác động. Giữ hai bảng mới và local outbox/cache để tránh mất dữ liệu, không DROP bảng. Có thể triển khai lại Worker backup nếu bản staging có vấn đề.
+
+
+## Tài khoản miễn phí (staging, 10/09/2026)
+
+Bật thêm FREE_ACCOUNT_SYNC=true trên Worker, chạy accounts-schema.sql sau schema.sql.
+Pages học viên và Admin phải có ?saved_sync=1&free_accounts=1. Mặc định vẫn tắt.
+Tên tài khoản 4–32 ký tự, tên hiển thị tối đa 80. Giao diện tạo ngẫu nhiên mã đăng nhập và mã khôi phục 256 bit; không dùng tên/SĐT/email làm bằng chứng sở hữu. Người dùng lưu mã trước khi mở kho. Mã không phải mã khóa học.
+Mã chỉ lưu dạng SHA-256 trên D1; phiên đăng nhập 30 ngày, đăng xuất thu hồi phiên hiện tại; khôi phục xoay mã và vô hiệu hóa mọi phiên cũ bằng auth_version. Bản nháp mã ở sessionStorage giúp thử lại khi mất phản hồi; xóa khi đã lưu mã và mở kho.
+Kho miễn phí dùng ID âm trong saved_libraries, tách khỏi code_id dương; không cấp quyền xem khóa học. Không tự gộp kho cũ theo mã vào tài khoản mới.
+Admin tab Tài khoản đồng bộ dùng X-Admin-Key cũ, phân trang 50 dòng: tên, ngày tạo/đăng nhập, trạng thái, số từ/câu. Không trả hashes hay secrets. Tên hiển thị render bằng textContent.
+Giới hạn thử: 1000 tài khoản, 30 lần đăng ký/đăng nhập/khôi phục mỗi IP mỗi giờ; cần đánh giá chống abuse mạnh hơn trước khi mở đăng ký rộng rãi.
+Chưa có gửi email, đổi username, quản lý tài khoản miễn phí qua điện thoại hay tự khôi phục khi mất cả hai mã. Chưa kiểm thử đăng ký trên Cloudflare thực tế.

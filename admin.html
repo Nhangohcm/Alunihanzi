@@ -149,6 +149,7 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
     </div>
     <div class="tabs">
       <button class="tab active" data-pane="codesPane">🔑 Mã kích hoạt</button>
+      <button class="tab" data-pane="syncAccountsPane" id="syncAccountsTab" hidden>Tài khoản đồng bộ</button>
       <button class="tab" data-pane="learnersPane">👥 Học viên & Tiến độ</button>
       <button class="tab" data-pane="analyticsPane">📊 Thống kê</button>
       <button class="tab" data-pane="learningPane">🎓 Khóa học</button>
@@ -160,6 +161,7 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
     </div>
   </div>
 
+  <section class="pane" id="syncAccountsPane"><div class="card"><h2>Tài khoản đồng bộ miễn phí</h2><p>Danh sách tài khoản tự đăng ký. Không hiển thị mã đăng nhập hoặc mã khôi phục.</p><button class="btn" id="syncAccountsRefresh">Tải lại</button><p id="syncAccountsStatus" role="status"></p><div class="tablewrap"><table><thead><tr><th>Tài khoản</th><th>Tên hiển thị</th><th>Trạng thái</th><th>Ngày tạo</th><th>Đăng nhập gần nhất</th><th>Từ</th><th>Câu</th></tr></thead><tbody id="syncAccountsBody"></tbody></table></div><button class="btn" id="syncAccountsMore" hidden>Xem thêm</button></div></section>
   <section class="pane active" id="codesPane">
     <div class="card">
       <h2>Mã kích hoạt</h2>
@@ -752,6 +754,18 @@ let editingKidsSeries='';
 let editingKidsLesson=0;
 let kidsLessons=[];
 
+let syncAccountsNext=null;
+async function loadSyncAccounts(more=false){
+ if(!window.ALUNI_SAVED_SYNC_CONFIG?.freeAccounts)return;
+ $('syncAccountsStatus').textContent='Đang tải…';
+ if(!more)$('syncAccountsBody').replaceChildren();
+ try{const data=await api('/admin/sync-accounts?after='+(more?syncAccountsNext||0:0));
+ for(const item of data.accounts){const tr=document.createElement('tr');for(const value of [item.username,item.display_name,item.status,fmt(item.created_at),fmt(item.last_login_at),item.words,item.sentences]){const td=document.createElement('td');td.textContent=String(value);tr.append(td);}$('syncAccountsBody').append(tr);}
+ syncAccountsNext=data.next;$('syncAccountsMore').hidden=!data.next;$('syncAccountsStatus').textContent=$('syncAccountsBody').children.length+' tài khoản';
+ }catch(e){$('syncAccountsStatus').textContent=e.message;}
+}
+$('syncAccountsTab').hidden=!window.ALUNI_SAVED_SYNC_CONFIG?.freeAccounts;
+$('syncAccountsRefresh').onclick=()=>loadSyncAccounts();$('syncAccountsMore').onclick=()=>loadSyncAccounts(true);
 function fmt(v){return v?new Date(v).toLocaleString('vi-VN'):'—'}
 async function api(path,opts={}){
   opts.headers={...(opts.headers||{}),'X-Admin-Key':adminSecret};
@@ -814,6 +828,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   if(b.dataset.pane==='contentPane') loadCourses();
   if(b.dataset.pane==='readingPane') loadCourses(false).then(loadReadingStatus);
   if(b.dataset.pane==='learnersPane') loadLearners();
+  if(b.dataset.pane==='syncAccountsPane') loadSyncAccounts();
   if(b.dataset.pane==='analyticsPane') loadAnalytics();
   if(b.dataset.pane==='learningPane') loadLearningCourses();
   if(b.dataset.pane==='grammarPane') loadGrammarCourses();

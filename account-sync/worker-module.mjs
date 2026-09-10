@@ -21,18 +21,22 @@ async function bodyJSON(req){
  while(true){const {value,done}=await reader.read();if(done)break;bytes+=value.length;if(bytes>MAX_BYTES){await reader.cancel();throw Error('Body too large');}chunks.push(value);}
  const all=new Uint8Array(bytes);let n=0;for(const c of chunks){all.set(c,n);n+=c.length;}return JSON.parse(new TextDecoder().decode(all));
 }
-export async function savedLibraryRoute(req,env,{getBearerPayload,headers={}}){
+export async function savedLibraryRoute(req,env,{getBearerPayload,accountSession=async()=>null,headers={}}){
  if(new URL(req.url).pathname!==PATH)return null;
  const reply=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{...headers,'Content-Type':'application/json','Cache-Control':'no-store'}});
  if(env.SAVED_LIBRARY_SYNC!=='true')return reply({error:'Sync disabled'},404);
  if(!['GET','POST'].includes(req.method))return reply({error:'Method not allowed'},405);
+ const free=await accountSession(req,env);
+ const db=env.DB.withSession?env.DB.withSession('first-primary'):env.DB;
+ let owner;
+ if(free){owner=-Number(free.id);}else{
  const payload=await getBearerPayload(req,env),device=req.headers.get('X-Aluni-Device');
  if(!payload?.code_id||!payload.device_id||device!==payload.device_id)return reply({error:'Please activate on this device'},401);
- const db=env.DB.withSession?env.DB.withSession('first-primary'):env.DB;
- const owner=Number(payload.code_id);if(!Number.isSafeInteger(owner)||owner<=0)return reply({error:'Invalid session'},401);
+ owner=Number(payload.code_id);if(!Number.isSafeInteger(owner)||owner<=0)return reply({error:'Invalid session'},401);
  const row=await db.prepare('SELECT status,expires_at FROM activation_codes WHERE id=?').bind(owner).first();
  const registration=await db.prepare('SELECT id FROM access_devices WHERE code_id=? AND device_id=?').bind(owner,device).first();
  if(!row||row.status!=='active'||!Number.isFinite(Date.parse(row.expires_at))||Date.parse(row.expires_at)<=Date.now()||!registration)return reply({error:'Session expired or device revoked'},401);
+ }
  try{
   await db.prepare('INSERT OR IGNORE INTO saved_libraries(code_id) VALUES(?)').bind(owner).run();
   const read=async()=>{const r=await db.prepare('SELECT revision,words_json,sentences_json FROM saved_libraries WHERE code_id=?').bind(owner).first();return {account_id:String(owner),revision:r.revision,words:JSON.parse(r.words_json),sentences:JSON.parse(r.sentences_json)}};
