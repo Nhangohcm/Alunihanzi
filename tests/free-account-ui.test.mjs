@@ -1,0 +1,18 @@
+import {parseHTML} from 'linkedom';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+const {document}=parseHTML('<html><body><details id="host"><div id="guest"></div></details></body></html>');
+const values=new Map(),localStorage={getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,v),removeItem:k=>values.delete(k)};
+let requests=[],ready=[],failure=false;
+const c={document,localStorage,AbortSignal,window:{ALUNI_SAVED_SYNC_CONFIG:{freeAccounts:true,apiBase:'https://test'}},fetch:async(url,options)=>{requests.push({url,body:JSON.parse(options.body)});return{ok:!failure,json:async()=>failure?{error:'Mail unavailable'}:url.endsWith('/login')?{token:'token',username:'a@example.org',account_id:'-1'}:{ok:true,message:'Vui lòng mở email để xác thực tài khoản, sau đó quay lại đăng nhập.'}};}};
+vm.createContext(c);vm.runInContext(readFileSync(new URL('../free-account-ui.js',import.meta.url),'utf8').replace('export function','function')+'\nthis.install=installFreeAccounts;',c);
+const ui=c.install(document.getElementById('guest'),async id=>ready.push(id));ui.open();assert.equal(requests.length,0);assert.equal(values.size,0,'opening form does not register or change local saves');
+const form=document.querySelector('form'),field=n=>form.querySelector('[name='+n+']');field('email').value='a@example.org';
+document.querySelector('[data-mode=register]').onclick();assert.equal(document.querySelector('[data-name]').hidden,false);field('display_name').value='A';field('password').value='my-password-123';
+await form.onsubmit({preventDefault(){}});assert.equal(requests.at(-1).body.password,'my-password-123');assert.equal(ready.length,0);assert.equal(values.size,0,'registration does not login');assert.match(document.querySelector('[data-message]').textContent,/mở email/);assert.equal(field('password').value,'');
+field('password').value='my-password-123';await form.onsubmit({preventDefault(){}});assert.deepEqual(ready,['free:a@example.org']);
+document.querySelector('[data-mode=forgot]').onclick();assert.equal(document.querySelector('[data-password]').hidden,true);await form.onsubmit({preventDefault(){}});assert(requests.at(-1).url.endsWith('/forgot'));assert(!('password' in requests.at(-1).body));
+document.querySelector('[data-mode=resend]').onclick();failure=true;await form.onsubmit({preventDefault(){}});assert.match(document.querySelector('[data-message]').textContent,/unavailable/);
+document.getElementById('host').setAttribute('open','');const before=requests.length;document.querySelector('[data-close]').onclick();assert.equal(document.getElementById('host').hasAttribute('open'),false);assert.equal(requests.length,before,'continue without registering makes no request');
+console.log('PASS email UI: optional local use, register then email reminder without login, password clearing, login, resend and provider error.');

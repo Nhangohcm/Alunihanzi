@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "test": "node video-sentences.test.cjs && node writing-examples.test.cjs && node writing-radicals.test.cjs && node saved-writing-access.test.cjs"
+    "test": "node video-sentences.test.cjs && node writing-examples.test.cjs && node writing-radicals.test.cjs && node saved-writing-access.test.cjs && node account-sync.test.mjs && node account-sync-ui.test.mjs && node free-accounts.test.mjs && node free-account-ui.test.mjs && node email-accounts.test.mjs"
   },
   "devDependencies": {
     "linkedom": "0.18.12"

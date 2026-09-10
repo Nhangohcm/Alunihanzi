@@ -15,6 +15,7 @@
   function mutate(item, remove = false) {
     const rows = read().filter(x => x.id !== item.id);
     if (!remove) rows.unshift(item);
+    window.ALUNI_SAVED_SYNC?.record('sentences',read(),rows);
     localStorage.setItem(KEY, JSON.stringify(rows));
   }
   function ready() {
@@ -44,7 +45,7 @@
     let toastTimer;
     function notify(message) { toast.textContent = message; toast.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.hidden = true; }, 3500); }
     const dialog = document.createElement('dialog'); dialog.className = 'sentence-dialog';
-    dialog.innerHTML = '<header><h2 id="sentenceLibraryTitle">Câu đã lưu</h2><button type="button" class="sentence-library-link" data-close>← Quay lại</button></header><p>Lưu trên trình duyệt này. Xóa dữ liệu trình duyệt sẽ xóa các câu đã lưu.</p><label>Kho câu <select aria-label="Chọn kho câu"><option value="shadowing">Shadowing</option><option value="kids">Hoạt hình & Truyện</option><option value="all">Tất cả</option></select></label><div class="sentence-status" role="status"></div><div data-replay></div><div data-rows></div>';
+    dialog.innerHTML = '<header><h2 id="sentenceLibraryTitle">Câu đã lưu</h2><button type="button" class="sentence-library-link" data-close>← Quay lại</button></header><p data-sentence-storage-note>Lưu trên trình duyệt này. Xóa dữ liệu trình duyệt sẽ xóa các câu đã lưu.</p><label>Kho câu <select aria-label="Chọn kho câu"><option value="shadowing">Shadowing</option><option value="kids">Hoạt hình & Truyện</option><option value="all">Tất cả</option></select></label><div class="sentence-status" role="status"></div><div data-replay></div><div data-rows></div>';
     dialog.setAttribute('aria-labelledby', 'sentenceLibraryTitle'); document.body.appendChild(dialog);
     function stopReplay() { replayVersion++; clearInterval(replayTimer); replayTimer = null; try { replay?.destroy(); } catch {} replay = null; dialog.querySelector('[data-replay]').replaceChildren(); }
     function close() { stopReplay(); dialog.close(); lastFocus?.focus(); }
@@ -161,6 +162,7 @@
     libraryLink($('shadowSection').querySelector('.module-header'), 'shadowing');
     libraryLink($('kidsPublicSection').querySelector('.module-header') || $('adultKidsSeries').parentElement, 'kids');
     libraryLink($('kidsCurrentSentence')?.parentElement, 'kids');
+    window.addEventListener('aluni-saved-library-updated', () => {refresh(); if(dialog.open)paintLibrary();});
     window.addEventListener('storage', e => { if (e.key !== KEY) return; refresh(); if (dialog.open) paintLibrary(); });
     refresh();
   }

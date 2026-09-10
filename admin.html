@@ -29,6 +29,7 @@ button{padding:11px 14px;border-radius:12px;border:0;font-weight:850;cursor:poin
 .pane{display:none}.pane.active{display:block}
 table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
 .tablewrap{overflow:auto}
+.sync-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.sync-kpi{padding:14px;border:1px solid #e0e6f3;border-radius:15px;background:#f9faff}.sync-kpi b,.sync-kpi small{display:block}.sync-kpi b{font-size:1.45rem}.sync-kpi small{margin-top:3px;color:var(--muted);font-weight:750}.sync-tools{display:grid;grid-template-columns:minmax(240px,1fr) 220px auto;gap:10px;align-items:end;margin:14px 0}.sync-state{display:inline-flex;padding:4px 8px;border-radius:99px;background:#e8f8f1;color:#167451;font-size:.78rem;font-weight:850}.sync-state.pending{background:#fff7dc;color:#956900}.sync-state.blocked{background:#fff0ef;color:#b34b55}@media(max-width:700px){.sync-kpis,.sync-tools{grid-template-columns:1fr}}
 .sample{background:#f7f3eb;border:1px dashed var(--line);padding:12px;border-radius:12px;font-family:ui-monospace,monospace;font-size:.82rem;white-space:pre-wrap}
 .login-box{width:min(620px,100%);margin:0 auto}.login-row{display:grid;grid-template-columns:1fr auto;gap:8px}
 .badge{display:inline-block;background:var(--soft);padding:5px 9px;border-radius:999px;font-size:.82rem;font-weight:800}
@@ -149,6 +150,7 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
     </div>
     <div class="tabs">
       <button class="tab active" data-pane="codesPane">🔑 Mã kích hoạt</button>
+      <button class="tab" data-pane="syncAccountsPane" id="syncAccountsTab" hidden>👤 Tài khoản đồng bộ</button>
       <button class="tab" data-pane="learnersPane">👥 Học viên & Tiến độ</button>
       <button class="tab" data-pane="analyticsPane">📊 Thống kê</button>
       <button class="tab" data-pane="learningPane">🎓 Khóa học</button>
@@ -160,6 +162,7 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
     </div>
   </div>
 
+  <section class="pane" id="syncAccountsPane"><div class="card"><h2>Tài khoản đồng bộ miễn phí</h2><p class="muted">Theo dõi tài khoản khách tự đăng ký và dữ liệu ôn tập đã đồng bộ. Mật khẩu, mã đăng nhập và mã khôi phục không bao giờ được hiển thị.</p><div class="sync-kpis"><div class="sync-kpi"><b id="syncTotal">0</b><small>Tổng tài khoản</small></div><div class="sync-kpi"><b id="syncActive">0</b><small>Đã xác thực</small></div><div class="sync-kpi"><b id="syncPending">0</b><small>Chờ xác thực</small></div></div><div class="sync-tools"><div><label for="syncAccountsSearch">Tìm tài khoản</label><input id="syncAccountsSearch" type="search" placeholder="Email hoặc tên hiển thị"></div><div><label for="syncAccountsFilter">Trạng thái</label><select id="syncAccountsFilter"><option value="all">Tất cả</option><option value="active">Đã xác thực</option><option value="pending">Chờ xác thực</option><option value="blocked">Đã khóa</option></select></div><button class="ghost" id="syncAccountsRefresh">↻ Tải lại</button></div><p id="syncAccountsStatus" role="status"></p><div class="tablewrap"><table><thead><tr><th>Tài khoản</th><th>Tên hiển thị</th><th>Loại</th><th>Trạng thái</th><th>Ngày tạo</th><th>Đăng nhập gần nhất</th><th>Từ</th><th>Câu</th></tr></thead><tbody id="syncAccountsBody"></tbody></table></div><button class="ghost" id="syncAccountsMore" hidden>Xem thêm</button></div></section>
   <section class="pane active" id="codesPane">
     <div class="card">
       <h2>Mã kích hoạt</h2>
@@ -752,6 +755,21 @@ let editingKidsSeries='';
 let editingKidsLesson=0;
 let kidsLessons=[];
 
+let syncAccountsNext=null;
+const syncAccountStatus={active:'Đã xác thực',pending:'Chờ xác thực',blocked:'Đã khóa'};
+async function loadSyncAccounts(more=false){
+ if(!window.ALUNI_SAVED_SYNC_CONFIG?.freeAccounts)return;
+ $('syncAccountsStatus').textContent='Đang tải…';
+ if(!more)$('syncAccountsBody').replaceChildren();
+ const params=new URLSearchParams({after:String(more?syncAccountsNext||0:0),q:$('syncAccountsSearch').value.trim(),status:$('syncAccountsFilter').value});
+ try{const data=await api('/admin/sync-accounts?'+params);
+ for(const item of data.accounts){const tr=document.createElement('tr');const values=[item.username,item.display_name,item.account_type==='email'?'Email':'Mã cũ',fmt(item.created_at),fmt(item.last_login_at),item.words,item.sentences];for(let i=0;i<8;i++){const td=document.createElement('td');if(i===3){const pill=document.createElement('span');pill.className='sync-state '+String(item.status||'');pill.textContent=syncAccountStatus[item.status]||item.status||'Không rõ';td.append(pill);}else{const value=i<3?values[i]:values[i-1];td.textContent=String(value??'—');}tr.append(td);}$('syncAccountsBody').append(tr);}
+ $('syncTotal').textContent=data.summary?.total??0;$('syncActive').textContent=data.summary?.active??0;$('syncPending').textContent=data.summary?.pending??0;
+ syncAccountsNext=data.next;$('syncAccountsMore').hidden=!data.next;const count=$('syncAccountsBody').children.length;$('syncAccountsStatus').textContent=count?`Đang hiển thị ${count} tài khoản.`:'Không tìm thấy tài khoản phù hợp.';
+ }catch(e){$('syncAccountsStatus').textContent=e.message;}
+}
+$('syncAccountsTab').hidden=!window.ALUNI_SAVED_SYNC_CONFIG?.freeAccounts;
+$('syncAccountsRefresh').onclick=()=>loadSyncAccounts();$('syncAccountsMore').onclick=()=>loadSyncAccounts(true);$('syncAccountsFilter').onchange=()=>loadSyncAccounts();let syncSearchTimer;$('syncAccountsSearch').oninput=()=>{clearTimeout(syncSearchTimer);syncSearchTimer=setTimeout(()=>loadSyncAccounts(),300)};
 function fmt(v){return v?new Date(v).toLocaleString('vi-VN'):'—'}
 async function api(path,opts={}){
   opts.headers={...(opts.headers||{}),'X-Admin-Key':adminSecret};
@@ -814,6 +832,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   if(b.dataset.pane==='contentPane') loadCourses();
   if(b.dataset.pane==='readingPane') loadCourses(false).then(loadReadingStatus);
   if(b.dataset.pane==='learnersPane') loadLearners();
+  if(b.dataset.pane==='syncAccountsPane') loadSyncAccounts();
   if(b.dataset.pane==='analyticsPane') loadAnalytics();
   if(b.dataset.pane==='learningPane') loadLearningCourses();
   if(b.dataset.pane==='grammarPane') loadGrammarCourses();
