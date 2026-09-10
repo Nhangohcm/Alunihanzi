@@ -18,16 +18,19 @@ function parseDictionary(text){
   if(!line||line.startsWith('#'))continue;
   const m=line.match(/^(\S+) (\S+) \[([^\]]+)\] \/(.*)\/$/);if(!m)continue;
   const meanings=m[4].split('/').filter(Boolean),vi=meanings.join('; ');
-  rows.push({traditional:m[1],hanzi:m[2],pinyin:tonePinyin(m[3]),vi,py:pyKey(m[3]),meanings:meanings.map(norm)});
+  rows.push({traditional:m[1],hanzi:m[2],pinyin:tonePinyin(m[3]),vi,py:pyKey(m[3]),meanings:meanings.map(norm),originalMeanings:meanings});
  }
  return rows;
 }
-function searchDictionary(rows,raw,limit=60){
+function searchDictionary(rows,raw,limit=3){
  const q=norm(raw),py=pyKey(raw),han=/\p{Script=Han}/u.test(raw);
  if(!q||q.length>150)return {items:[],total:0};
- const short=q.replace(/^(con|cai|chiec|cay)\s+/,''),queries=[q,...(short!==q?[short]:[])];
+ const short=q.replace(/^(con|cai|chiec|cay|qua|chim)\s+/,''),queries=[q,...(short!==q?[short]:[])];
  const hits=[];const seen=new Set();
- const common=new Set(['鸽子','猪','合同','光合作用','电脑','苹果','恐龙','和平','自行车','医生','医院','学校','工作','学习']);
+ const accented=value=>String(value).toLowerCase().normalize('NFC').trim().replace(/\s+/g,' ');
+ const strict=accented(raw)!==norm(raw);
+ const viQuery=accented(raw), viShort=viQuery.replace(/^(con|cái|chiếc|cây|quả|chim)\s+/,'');
+ const common=new Set(['猫','荷花','章鱼','鸽子','猪','合同','光合作用','电脑','苹果','恐龙','和平','自行车','医生','医院','学校','工作','学习']);
  const toneQuery=/[1-5āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/i.test(raw);
  const tones=value=>tonePinyin(value.toLowerCase()).replace(/[\s'’-]/g,'');
  for(const r of rows){
@@ -35,17 +38,21 @@ function searchDictionary(rows,raw,limit=60){
   if(han){if(r.hanzi===raw||r.traditional===raw)score=100;else if(r.hanzi.startsWith(raw)||r.traditional.startsWith(raw))score=70;else if(r.hanzi.includes(raw)||r.traditional.includes(raw))score=50}
   else {
    if(r.py===py)score=toneQuery?(tones(raw)===tones(r.pinyin)?99:80):95;
-   for(const term of queries)for(const meaning of r.meanings){
-    if(meaning===term)score=Math.max(score,90);
-    else if(meaning.startsWith(term+' ')||meaning.startsWith(term+';'))score=Math.max(score,75);
-    else if(term.length>=3&&(' '+meaning+' ').includes(' '+term+' '))score=Math.max(score,60);
+   const terms=strict?[viQuery,viShort]:queries;
+   const meanings=strict?r.originalMeanings.map(accented):r.meanings;
+   for(const term of terms)for(const originalMeaning of meanings){
+    const meaning=originalMeaning.replace(/^(\([^)]*\)\s*)+/,'');
+    if(meaning===term||meaning.replace(/^(con|cái|chiếc|cây|quả|chim|cai|chiec|cay|qua)\s+/,'')===term)score=Math.max(score,90);
+    else if(meaning.startsWith(term+' ('))score=Math.max(score,85);
    }
   }
   const key=r.hanzi+'|'+r.pinyin+'|'+r.vi;
-  if(score&&!seen.has(key)){seen.add(key);hits.push({r,score:score+(common.has(r.hanzi)?2:0)})}
+  if(score&&!seen.has(key)){seen.add(key);hits.push({r,score:score+(common.has(r.hanzi)?4:0)})}
  }
- hits.sort((a,b)=>b.score-a.score||a.r.hanzi.length-b.r.hanzi.length||a.r.vi.length-b.r.vi.length);
- return {total:hits.length,items:hits.slice(0,Math.min(limit,100)).map(({r})=>({hanzi:r.hanzi,traditional:r.traditional,pinyin:r.pinyin,vi:r.vi,_dictionary:'CVDICT'}))};
+ const best=Math.max(0,...hits.map(x=>x.score));
+ const selected=hits.filter(x=>x.score>=best-2);
+ selected.sort((a,b)=>b.score-a.score||a.r.hanzi.length-b.r.hanzi.length||a.r.vi.length-b.r.vi.length);
+ return {total:selected.length,items:selected.slice(0,Math.min(limit,han||selected.some(x=>x.r.py===py)?3:1)).map(({r})=>({hanzi:r.hanzi,traditional:r.traditional,pinyin:r.pinyin,vi:r.vi,_dictionary:'CVDICT',_pinyinMatch:!han&&r.py===py}))};
 }
 if(typeof module!=='undefined')module.exports={parseDictionary,searchDictionary,tonePinyin,pyKey};
 if(typeof self!=='undefined'&&typeof self.postMessage==='function'){
