@@ -62,3 +62,11 @@ window.ALUNI_SALES_PAGE_URL =
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
+
+// Isolated opt-in account-sync preview; production behavior is unchanged.
+if(location.hostname.endsWith('.pages.dev')&&new URLSearchParams(location.search).get('saved_sync')==='1'){
+ window.ALUNI_API_BASE='https://aluni-tts-staging.nhangohcm.workers.dev';
+ window.ALUNI_SAVED_SYNC_CONFIG={enabled:true,apiBase:window.ALUNI_API_BASE};
+ const load=()=>{const script=document.createElement('script');script.type='module';script.src='saved-account-sync.js?v=1';document.head.appendChild(script);};
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load,{once:true});else load();
+}
