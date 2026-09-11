@@ -1148,7 +1148,9 @@ async function previewRandom50Import(){
   if(!courseId){status.textContent='Chưa chọn được khóa 50+.';return}if(!isFiftyPlusCourse(selectedCourse('random50Course'))){status.textContent='Khóa đã chọn không được nhận diện là 50+.';return}if(!file){status.textContent='Hãy chọn file XLSX Random 50+.';return}
   status.textContent='Đang đối chiếu file với danh sách bài trong khóa...';
   try{
-    const parsed=await parseRandom50Workbook(file),content=await api('/admin/learning/course-content?course_id='+encodeURIComponent(courseId)),lessonMap=new Map((content.lessons||[]).map(l=>[Number(l.lesson_number),l])),numbers=[...new Set(parsed.rows.map(x=>x.lesson_number))].sort((a,b)=>a-b),missing=numbers.filter(n=>!lessonMap.has(n)),absent=[...lessonMap.keys()].filter(n=>!numbers.includes(n)).sort((a,b)=>a-b);
+    const parsed=await parseRandom50Workbook(file),catalog=await api('/content/catalog'),course=(catalog.courses||[]).find(c=>String(c.id)===String(courseId));
+    if(!course)throw new Error('Không tìm thấy khóa 50+ trong danh mục bài học.');
+    const lessonMap=new Map((course.lessons||[]).map(l=>[Number(l.number??l.lesson_number),l])),numbers=[...new Set(parsed.rows.map(x=>x.lesson_number))].sort((a,b)=>a-b),missing=numbers.filter(n=>!lessonMap.has(n)),absent=[...lessonMap.keys()].filter(n=>!numbers.includes(n)).sort((a,b)=>a-b);
     random50Draft={courseId,rows:parsed.rows,lessonMap,numbers,absent};
     $('random50Preview').hidden=false;$('random50Preview').innerHTML=`<table><thead><tr><th>Bài</th><th>Số từ Random</th><th>Đối chiếu khóa</th></tr></thead><tbody>${numbers.map(n=>`<tr><td>${String(n).padStart(2,'0')}</td><td>${parsed.rows.filter(x=>x.lesson_number===n).length}</td><td>${lessonMap.has(n)?'<span class="ok">Sẵn sàng</span>':'<span class="err">Chưa tạo bài</span>'}</td></tr>`).join('')}</tbody></table>`;
     const lesson1Count=parsed.rows.filter(x=>x.lesson_number===1).length;if(!lesson1Count)throw new Error('File không có dữ liệu Bài 01 để thử trước.');
