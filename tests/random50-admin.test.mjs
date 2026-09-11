@@ -18,6 +18,9 @@ const importer=html.match(/async function runRandom50Import\(\)\{[\s\S]*?\n\}/)?
 assert.match(importer,/\/admin\/vocabulary\/save/);
 assert.match(importer,/reading:false,games:true,writing:true/);
 assert.match(importer,/Không lấy từ Luyện đọc sang/);
+const preview=html.match(/async function previewRandom50Import\(\)\{[\s\S]*?\n\}/)?.[0]||'';
+assert.match(preview,/\/content\/catalog/,'preview uses the lightweight lesson catalog');
+assert.doesNotMatch(preview,/\/admin\/learning\/course-content/,'preview must not load every module of all 50 lessons');
 const saveUsage=html.match(/function vocabUsageForLesson\(lesson\)\{[^\n]+\}/)?.[0]||'';
 assert.match(saveUsage,/reading:false,games:true,writing:true/,'per-lesson saves enforce the same 50+ separation');
 console.log('PASS Random 50+ Admin: safe lesson-01 default, XLSX bulk path, and Game/Writing-only usage.');
