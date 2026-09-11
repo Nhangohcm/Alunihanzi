@@ -262,6 +262,21 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
   </section>
 
   <section class="pane" id="contentPane">
+    <div class="card" id="random50ImportCard">
+      <h2>🎲 Nhập Random 50+ hàng loạt</h2>
+      <p class="muted">Kho này chỉ dùng cho <b>Game phản xạ + Viết chữ Hán</b>. Luyện đọc 50+ được giữ nguyên và không nhận dữ liệu từ file này.</p>
+      <div class="grid2">
+        <div><label>Khóa 50+ đích</label><select id="random50Course"></select></div>
+        <div><label>File Random 50+ — XLSX</label><input id="random50File" type="file" accept=".xlsx,.xls"></div>
+      </div>
+      <div class="grid2" style="margin-top:10px">
+        <div><label>Phạm vi nhập</label><select id="random50Scope"><option value="lesson1">Chỉ Bài 01 — thử trước</option><option value="all">Tất cả bài có trong file</option></select></div>
+        <div><label>Sheet và cột được nhận</label><div class="sample">RANDOM_50PLUS · LessonNo · Hanzi · Pinyin · Vietnamese</div></div>
+      </div>
+      <div class="row" style="margin-top:10px"><button class="ghost" id="previewRandom50">👁 Kiểm tra trước</button><button class="primary" id="runRandom50" disabled>⬆ Nhập Random cho Game + Viết chữ</button></div>
+      <div class="status" id="random50Status">Chọn khóa 50+, file XLSX và kiểm tra trước. Mặc định chỉ thử Bài 01.</div>
+      <div class="tablewrap" id="random50Preview" hidden></div>
+    </div>
     <div class="card">
       <h2>Kho từ vựng dùng chung</h2>
       <p class="muted">Đây là nguồn dữ liệu chung của từng bài. Nhập một lần để dùng cho <b>Luyện đọc nhanh, Game phản xạ và Viết chữ Hán</b>.</p>
@@ -291,7 +306,7 @@ input[type=file]::file-selector-button{border:0;border-radius:9px;padding:8px 11
       <h2>Sửa kho từ vựng theo từng bài</h2>
       <div class="course-manager-head"><div><label>Chọn khóa học</label><select id="writingManageCourse"></select></div><button class="ghost" id="refreshWritingContent">Làm mới danh sách</button></div>
       <p class="muted">Mỗi dòng: <b>Hán tự | pinyin | nghĩa Việt</b>. Có thể sửa tại đây hoặc mở trực tiếp Kho từ vựng trong từng bài ở tab Khóa học.</p>
-      <div class="shadow-course-rule" style="margin-top:12px;background:#eef9f4;border-color:#cceadb">
+      <div class="shadow-course-rule" id="existingVocabularyCard" style="margin-top:12px;background:#eef9f4;border-color:#cceadb">
         <b>🔗 Dùng kho từ vựng hiện có cho cả 3 chức năng</b>
         <p class="muted" style="margin:6px 0">Dành cho NPCR và khóa cũ đã có Luyện đọc/Game. Hệ thống sẽ liên kết đúng theo số bài, giữ nguyên dữ liệu cũ và bật thêm Viết chữ Hán; không cần tải file lại.</p>
         <div class="row"><button class="ghost" id="previewExistingVocabulary">Kiểm tra kho hiện có</button><button class="primary" id="linkExistingVocabulary" disabled>Áp dụng cho Luyện đọc + Game + Viết chữ</button></div>
@@ -990,6 +1005,8 @@ async function setupShadowPass(){
 function csvEsc(v){return '"'+String(v??'').replace(/"/g,'""')+'"'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function cleanLessonTitle(title,number){return String(title||'').replace(new RegExp('^\\s*Bài\\s*0*'+Number(number)+'\\s*[—–:.-]*\\s*','i'),'').trim()||`Bài ${number}`}
+function isFiftyPlusCourse(course){const id=String(course?.id||'').toLowerCase(),title=String(course?.title||course?.name||'').toLowerCase();return id.includes('50plus')||title.includes('50+')||title.includes('50 plus')}
+function selectedCourse(selectId){const id=$(selectId)?.value;return courses.find(c=>String(c.id)===String(id))||learningCourses.find(c=>String(c.id)===String(id))}
 function downloadCodes(){
   if(!codes.length){$('codeStatus').textContent='Chưa có dữ liệu để tải.';return}
   const rows=[['Mã','Khóa','Trạng thái','Học viên','Điện thoại/email','Kích hoạt','Hết hạn'],...codes.map(x=>[x.code,x.course_id,x.status,x.student_name||'',x.identity||'',x.activated_at||'',x.expires_at||''])];
@@ -1004,6 +1021,7 @@ async function loadCourses(loadDetails=true){
     const selectedImport=$('importCourse')?.value||'';
     const selectedCode=$('codeCourse')?.value||'';
     const selectedReading=$('readingImportCourse')?.value||'';
+    const selectedRandom50=$('random50Course')?.value||'';
     const j=await api('/admin/learning/courses');
     courses=(j.courses||[]).map(c=>({...c,name:c.title,free_lessons:Number(c.free_lessons||0)}));
     $('importCourse').innerHTML='';
@@ -1011,6 +1029,7 @@ async function loadCourses(loadDetails=true){
     $('codeCourse').innerHTML='';
     if($('writingManageCourse'))$('writingManageCourse').innerHTML='';
     if($('readingImportCourse'))$('readingImportCourse').innerHTML='';
+    if($('random50Course'))$('random50Course').innerHTML='';
     courses.forEach(c=>{
       $('codeCourse').add(new Option(c.name,c.id));
       if(String(c.id)!==SHADOWING_PASS_ID){
@@ -1018,6 +1037,7 @@ async function loadCourses(loadDetails=true){
         $('shadowAdminCourse').add(new Option(c.name,c.id));
         if($('writingManageCourse'))$('writingManageCourse').add(new Option(`${c.name} (${c.lesson_count||0} bài)`,c.id));
         if($('readingImportCourse'))$('readingImportCourse').add(new Option(`${c.name} (${c.lesson_count||0} bài)`,c.id));
+        if($('random50Course')&&isFiftyPlusCourse(c))$('random50Course').add(new Option(`${c.name} (${c.lesson_count||0} bài)`,c.id));
       }
     });
     $('codeCourse').add(new Option('🧸 Aluni Kids — mã riêng',KIDS_PASS_ID));
@@ -1026,6 +1046,8 @@ async function loadCourses(loadDetails=true){
     if(selectedImport&&courses.some(c=>String(c.id)===String(selectedImport)))$('importCourse').value=selectedImport;
     if(selectedCode&&courses.some(c=>String(c.id)===String(selectedCode)))$('codeCourse').value=selectedCode;
     if(selectedReading&&courses.some(c=>String(c.id)===String(selectedReading)))$('readingImportCourse').value=selectedReading;
+    if(selectedRandom50&&courses.some(c=>String(c.id)===String(selectedRandom50)))$('random50Course').value=selectedRandom50;
+    if($('random50Course')&&!$('random50Course').options.length)$('random50Course').add(new Option('Chưa tìm thấy khóa 50+',''));
     syncCodeType(false);
     $('contentStatus').textContent=`Có ${courses.filter(c=>String(c.id)!==SHADOWING_PASS_ID).length} khóa được tạo từ tab Khóa học.`;
     if(loadDetails&&$('writingManageCourse')&&courses.length){await loadWritingContent();await previewExistingVocabulary()}
@@ -1089,6 +1111,7 @@ async function doImport(){
   const f=$('importFile').files[0];
   if(!f){$('contentStatus').textContent='Chọn file CSV/XLSX.';return}
   if(!$('importCourse').value){$('contentStatus').textContent='Chưa có khóa để nhập. Hãy tạo khóa và bài tại tab Khóa học trước.';return}
+  if(isFiftyPlusCourse(selectedCourse('importCourse'))){$('contentStatus').textContent='Khóa 50+ phải dùng khung “Nhập Random 50+ hàng loạt” để giữ riêng Luyện đọc.';return}
   try{
     const rows=await parseFile(f);
     await api('/admin/content/import',{
@@ -1104,21 +1127,67 @@ function template(){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download='mau-noi-dung-aluni.csv';a.click();
 }
 
+let random50Draft=null;
+async function parseRandom50Workbook(file){
+  const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
+  const rows=sheetRowsAtHeader(wb,[/^RANDOM_50PLUS$/i,/random.*50/i],[['LessonNo','lesson_number','Số bài','Bài'],['Hanzi','Hán tự','Tiếng Trung'],['Pinyin','Phiên âm']]);
+  if(!rows.length)throw new Error(`Không đọc được sheet RANDOM_50PLUS. Các sheet hiện có: ${(wb.SheetNames||[]).join(', ')}.`);
+  const clean=[],seen=new Set();
+  rows.forEach((row,index)=>{
+    const raw=rowValue(row,['LessonNo','lesson_number','Số bài','Bài']),lessonNumber=Number(raw||lessonNumberFromCode(rowValue(row,['LessonCode','lesson_code']))),hanzi=String(rowValue(row,['Hanzi','Hán tự','Tiếng Trung','Chinese'])).trim(),pinyin=String(rowValue(row,['Pinyin','Phiên âm'])).trim(),vi=String(rowValue(row,['Vietnamese','vi','Nghĩa Việt','Tiếng Việt','Nghĩa'])).trim();
+    if(!hanzi)return;
+    if(!Number.isInteger(lessonNumber)||lessonNumber<1)throw new Error(`Dòng ${index+2} có số bài không hợp lệ.`);
+    const key=`${lessonNumber}\u0000${hanzi}`;if(seen.has(key))return;seen.add(key);
+    clean.push({lesson_number:lessonNumber,hanzi,pinyin,vi});
+  });
+  if(!clean.length)throw new Error('File chưa có từ Random hợp lệ.');
+  return{rows:clean,sheetNames:wb.SheetNames||[]};
+}
+async function previewRandom50Import(){
+  const courseId=$('random50Course').value,file=$('random50File').files[0],status=$('random50Status');$('runRandom50').disabled=true;$('random50Preview').hidden=true;
+  if(!courseId){status.textContent='Chưa chọn được khóa 50+.';return}if(!isFiftyPlusCourse(selectedCourse('random50Course'))){status.textContent='Khóa đã chọn không được nhận diện là 50+.';return}if(!file){status.textContent='Hãy chọn file XLSX Random 50+.';return}
+  status.textContent='Đang đối chiếu file với danh sách bài trong khóa...';
+  try{
+    const parsed=await parseRandom50Workbook(file),content=await api('/admin/learning/course-content?course_id='+encodeURIComponent(courseId)),lessonMap=new Map((content.lessons||[]).map(l=>[Number(l.lesson_number),l])),numbers=[...new Set(parsed.rows.map(x=>x.lesson_number))].sort((a,b)=>a-b),missing=numbers.filter(n=>!lessonMap.has(n)),absent=[...lessonMap.keys()].filter(n=>!numbers.includes(n)).sort((a,b)=>a-b);
+    random50Draft={courseId,rows:parsed.rows,lessonMap,numbers,absent};
+    $('random50Preview').hidden=false;$('random50Preview').innerHTML=`<table><thead><tr><th>Bài</th><th>Số từ Random</th><th>Đối chiếu khóa</th></tr></thead><tbody>${numbers.map(n=>`<tr><td>${String(n).padStart(2,'0')}</td><td>${parsed.rows.filter(x=>x.lesson_number===n).length}</td><td>${lessonMap.has(n)?'<span class="ok">Sẵn sàng</span>':'<span class="err">Chưa tạo bài</span>'}</td></tr>`).join('')}</tbody></table>`;
+    const lesson1Count=parsed.rows.filter(x=>x.lesson_number===1).length;if(!lesson1Count)throw new Error('File không có dữ liệu Bài 01 để thử trước.');
+    if(missing.length)throw new Error(`Khóa còn thiếu các bài: ${missing.map(n=>String(n).padStart(2,'0')).join(', ')}.`);
+    $('runRandom50').disabled=false;status.textContent=`Đã đọc ${parsed.rows.length} từ của ${numbers.length} bài. Bài 01 có ${lesson1Count} từ.${absent.length?` File còn thiếu ${absent.length} bài trong khóa; chỉ có thể thử Bài 01 cho đến khi bổ sung đủ.`:''} Luyện đọc sẽ không bị thay đổi.`;
+  }catch(e){random50Draft=null;status.textContent=e.message}
+}
+async function runRandom50Import(){
+  if(!random50Draft)return;const status=$('random50Status'),button=$('runRandom50'),scope=$('random50Scope').value,numbers=scope==='lesson1'?[1]:random50Draft.numbers;
+  button.disabled=true;
+  try{
+    if(scope==='all'&&random50Draft.absent.length)throw new Error(`File thiếu Random của các bài: ${random50Draft.absent.map(n=>String(n).padStart(2,'0')).join(', ')}. Không lấy từ Luyện đọc sang.`);
+    let total=0;
+    for(let i=0;i<numbers.length;i++){
+      const number=numbers[i],lesson=random50Draft.lessonMap.get(number),items=random50Draft.rows.filter(x=>x.lesson_number===number).map(({hanzi,pinyin,vi})=>({hanzi,pinyin,vi}));
+      if(!lesson)throw new Error(`Không tìm thấy Bài ${String(number).padStart(2,'0')} trong khóa.`);if(!items.length)throw new Error(`Bài ${String(number).padStart(2,'0')} chưa có Random; đã dừng, không lấy từ Luyện đọc sang.`);
+      status.textContent=`Đang nhập Random Bài ${String(number).padStart(2,'0')} · ${i+1}/${numbers.length}...`;
+      await api('/admin/vocabulary/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lesson_id:lesson.id,items,usage:{reading:false,games:true,writing:true}})});total+=items.length;
+    }
+    status.textContent=`Đã nhập ${total} từ Random cho ${numbers.length} bài, chỉ dùng ở Game + Viết chữ. Luyện đọc 50+ được giữ nguyên.`;await loadWritingContent();
+  }catch(e){status.textContent=`Đã dừng: ${e.message}`}finally{button.disabled=false}
+}
+
 function writingItemsText(items){return (items||[]).map(x=>[x.hanzi||'',x.pinyin||'',x.vi||''].join(' | ')).join('\n')}
 function parseWritingItems(text){return String(text||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map((line,row)=>{const p=line.split('|').map(x=>x.trim());if(!p[0])throw new Error(`Dòng ${row+1} thiếu Hán tự.`);return{hanzi:p[0],pinyin:p[1]||'',vi:p.slice(2).join(' | ')||''}})}
 function vocabValue(row,names){for(const name of names){if(row[name]!==undefined&&String(row[name]).trim())return String(row[name]).trim()}const keys=Object.keys(row);for(const key of keys){const clean=String(key).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');if(names.some(name=>clean===String(name).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'')))return String(row[key]||'').trim()}return''}
 function normalizeVocabRows(rows){return (rows||[]).map(row=>({hanzi:vocabValue(row,['hanzi','hán tự','汉字','chinese','từ vựng']),pinyin:vocabValue(row,['pinyin','phiên âm']),vi:vocabValue(row,['vi','nghĩa việt','nghĩa','tiếng việt','vietnamese'])})).filter(x=>x.hanzi)}
-function vocabUsageForLesson(lesson){const box=document.querySelector(`.vocab-usage[data-lesson="${CSS.escape(lesson)}"]`),checked=new Set([...box.querySelectorAll('input:checked')].map(x=>x.value));return{reading:checked.has('reading'),games:checked.has('games'),writing:checked.has('writing')}}
+function vocabUsageForLesson(lesson){const course=selectedCourse('manageLearningCourse');if(isFiftyPlusCourse(course))return{reading:false,games:true,writing:true};const box=document.querySelector(`.vocab-usage[data-lesson="${CSS.escape(lesson)}"]`),checked=new Set([...box.querySelectorAll('input:checked')].map(x=>x.value));return{reading:checked.has('reading'),games:checked.has('games'),writing:checked.has('writing')}}
 async function previewLessonVocabFile(lesson){const file=document.querySelector(`.lessonVocabFile[data-lesson="${CSS.escape(lesson)}"]`).files[0],status=document.querySelector(`.lessonVocabStatus[data-lesson="${CSS.escape(lesson)}"]`);if(!file){status.textContent='Hãy chọn file CSV/XLSX.';return}try{const incoming=normalizeVocabRows(await parseFile(file));if(!incoming.length)throw new Error('Không tìm thấy cột Hán tự trong file.');const area=document.querySelector(`.lessonVocabItems[data-lesson="${CSS.escape(lesson)}"]`),mode=document.querySelector(`.lessonVocabMode[data-lesson="${CSS.escape(lesson)}"]`).value;let items=incoming;if(mode==='append'){const current=parseWritingItems(area.value),seen=new Set(current.map(x=>x.hanzi));items=current.concat(incoming.filter(x=>!seen.has(x.hanzi)))}area.value=writingItemsText(items);status.textContent=`Đã đọc ${incoming.length} từ từ file; khung hiện có ${items.length} từ. Kiểm tra rồi bấm Lưu.`}catch(e){status.textContent=e.message}}
 async function saveLessonVocabulary(lesson){const status=document.querySelector(`.lessonVocabStatus[data-lesson="${CSS.escape(lesson)}"]`);try{const items=parseWritingItems(document.querySelector(`.lessonVocabItems[data-lesson="${CSS.escape(lesson)}"]`).value),usage=vocabUsageForLesson(lesson);const result=await api('/admin/vocabulary/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lesson_id:lesson,items,usage})});status.textContent=`Đã lưu ${result.item_count||items.length} từ và đồng bộ: ${[usage.reading?'Luyện đọc nhanh':'',usage.games?'Game phản xạ':'',usage.writing?'Viết chữ Hán':''].filter(Boolean).join(' · ')||'chưa bật chức năng nào'}.`;await loadLearningContent()}catch(e){status.textContent=e.message}}
 async function loadWritingContent(){
   const courseId=$('writingManageCourse')?.value;
   if(!courseId){if($('writingLessonList'))$('writingLessonList').innerHTML='';return}
+  const is50plus=isFiftyPlusCourse(selectedCourse('writingManageCourse'));
   $('writingContentStatus').textContent='Đang tải nội dung viết chữ...';
   try{
     const j=await api('/admin/learning/course-content?course_id='+encodeURIComponent(courseId)),lessons=j.lessons||[];
-    $('writingLessonList').innerHTML=lessons.map(l=>`<details class="lesson-admin writing-lesson" data-id="${esc(l.id)}"><summary><span>Bài ${String(l.lesson_number).padStart(2,'0')} — ${esc(cleanLessonTitle(l.title,l.lesson_number))}</span><span>${(l.writing||[]).length} từ</span></summary><div class="lesson-admin-body"><label>Mỗi dòng: Hán tự | pinyin | nghĩa Việt</label><textarea class="writingItems" data-lesson="${esc(l.id)}" placeholder="你好 | nǐ hǎo | xin chào">${esc(writingItemsText(l.writing))}</textarea><div class="row" style="margin-top:8px"><button class="primary saveWriting" data-lesson="${esc(l.id)}">✍ Lưu nội dung viết chữ</button><button class="ghost backToLearning" data-course="${esc(courseId)}" data-lesson="${esc(l.id)}">🎓 Sửa bài tại Khóa học</button></div></div></details>`).join('')||'<div class="empty-manager"><b>Khóa này chưa có bài học</b><span class="muted">Hãy sang tab Khóa học để tạo bài trước, sau đó quay lại đây nhập từ luyện viết.</span></div>';
-    document.querySelectorAll('#writingLessonList .saveWriting').forEach(b=>b.onclick=async()=>{try{const lesson=b.dataset.lesson,items=parseWritingItems(document.querySelector(`.writingItems[data-lesson="${CSS.escape(lesson)}"]`).value);await api('/admin/writing/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lesson_id:lesson,items})});$('writingContentStatus').textContent=`Đã lưu ${items.length} từ và đồng bộ vào Khóa học.`;await loadWritingContent()}catch(e){$('writingContentStatus').textContent=e.message}});
+    $('writingLessonList').innerHTML=lessons.map(l=>`<details class="lesson-admin writing-lesson" data-id="${esc(l.id)}"><summary><span>Bài ${String(l.lesson_number).padStart(2,'0')} — ${esc(cleanLessonTitle(l.title,l.lesson_number))}</span><span>${(l.writing||[]).length} từ</span></summary><div class="lesson-admin-body"><label>Mỗi dòng: Hán tự | pinyin | nghĩa Việt${is50plus?' — Random riêng cho Game + Viết chữ; Luyện đọc giữ nguyên':''}</label><textarea class="writingItems" data-lesson="${esc(l.id)}" placeholder="你好 | nǐ hǎo | xin chào">${esc(writingItemsText(l.writing))}</textarea><div class="row" style="margin-top:8px"><button class="primary saveWriting" data-lesson="${esc(l.id)}">${is50plus?'🎲 Lưu Random Game + Viết chữ':'✍ Lưu nội dung viết chữ'}</button><button class="ghost backToLearning" data-course="${esc(courseId)}" data-lesson="${esc(l.id)}">🎓 Sửa bài tại Khóa học</button></div></div></details>`).join('')||'<div class="empty-manager"><b>Khóa này chưa có bài học</b><span class="muted">Hãy sang tab Khóa học để tạo bài trước, sau đó quay lại đây nhập từ luyện viết.</span></div>';
+    document.querySelectorAll('#writingLessonList .saveWriting').forEach(b=>b.onclick=async()=>{try{const lesson=b.dataset.lesson,items=parseWritingItems(document.querySelector(`.writingItems[data-lesson="${CSS.escape(lesson)}"]`).value),path=is50plus?'/admin/vocabulary/save':'/admin/writing/save',body=is50plus?{lesson_id:lesson,items,usage:{reading:false,games:true,writing:true}}:{lesson_id:lesson,items};await api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});$('writingContentStatus').textContent=is50plus?`Đã lưu ${items.length} từ Random cho Game + Viết chữ; Luyện đọc giữ nguyên.`:`Đã lưu ${items.length} từ và đồng bộ vào Khóa học.`;await loadWritingContent()}catch(e){$('writingContentStatus').textContent=e.message}});
     document.querySelectorAll('#writingLessonList .backToLearning').forEach(b=>b.onclick=()=>openLearningLesson(b.dataset.course,b.dataset.lesson));
     $('writingContentStatus').textContent=`Có ${lessons.length} bài. Bấm vào một bài để sửa từ vựng.`;
   }catch(e){$('writingContentStatus').textContent=e.message}
@@ -1126,11 +1195,13 @@ async function loadWritingContent(){
 async function previewExistingVocabulary(){
   const courseId=$('writingManageCourse')?.value,status=$('existingVocabularyStatus'),button=$('linkExistingVocabulary');
   if(!courseId){status.textContent='Hãy chọn khóa học.';button.disabled=true;return}
+  if(isFiftyPlusCourse(selectedCourse('writingManageCourse'))){status.textContent='Khóa 50+ dùng kho Random riêng cho Game + Viết chữ. Hãy dùng khung “Nhập Random 50+ hàng loạt” ở phía trên.';button.disabled=true;return}
   status.textContent='Đang kiểm tra kho từ vựng hiện có...';button.disabled=true;
   try{const j=await api('/admin/vocabulary/reconcile?course_id='+encodeURIComponent(courseId));const withData=(j.lessons||[]).filter(x=>x.available_count>0||x.current_count>0).length;status.textContent=`Khóa có ${j.lessons?.length||0} bài; tìm thấy dữ liệu từ vựng ở ${withData} bài, tổng ${Math.max(Number(j.total_available||0),Number(j.total_current||0))} mục. ${j.can_link?`Có ${j.can_link} bài cần nối dữ liệu cũ sang kho chung.`:'Dữ liệu đã nằm trong kho chung; có thể bật thêm Viết chữ Hán ngay.'}`;button.disabled=withData===0}catch(e){status.textContent=e.message;button.disabled=true}
 }
 async function linkExistingVocabulary(){
   const courseId=$('writingManageCourse')?.value,status=$('existingVocabularyStatus'),button=$('linkExistingVocabulary');if(!courseId)return;
+  if(isFiftyPlusCourse(selectedCourse('writingManageCourse'))){status.textContent='Không áp dụng đồng bộ 3 chức năng cho khóa 50+.';button.disabled=true;return}
   button.disabled=true;status.textContent='Đang liên kết theo đúng số bài và bật cả 3 chức năng...';
   try{const j=await api('/admin/vocabulary/reconcile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:courseId})});status.textContent=`Hoàn tất: đã nối ${j.linked_items||0} từ của ${j.linked_lessons||0} bài và bật Luyện đọc nhanh + Game phản xạ + Viết chữ Hán cho ${j.enabled_lessons||0} bài.`;await loadWritingContent()}catch(e){status.textContent=e.message}finally{button.disabled=false}
 }
@@ -1505,6 +1576,7 @@ function bindGrammarActions(){
 async function loadLearningContent(){
   const courseId=$('manageLearningCourse').value;
   const activeCourse=learningCourses.find(c=>String(c.id)===String(courseId));
+  const is50plus=isFiftyPlusCourse(activeCourse);
   $('statActiveCourse').textContent=activeCourse?activeCourse.title:'—';
   $('statActiveCourse').title=activeCourse?activeCourse.title:'';
   if(!courseId){$('learningLessonList').innerHTML='<div class="empty-manager"><b>Chưa có khóa học</b><span class="muted">Tạo khóa ở khung phía trên, sau đó quay lại đây để thêm từng bài.</span></div>';$('learningContentStatus').textContent='';return}
@@ -1533,14 +1605,14 @@ async function loadLearningContent(){
         <div class="lesson-content-hub">
           <button class="lesson-tool ${l.videos.length?'ready':''}" type="button" onclick="this.closest('.lesson-admin-body').querySelector('.video-editor').open=true"><b>▶ Video bài giảng</b><small>${l.videos.length} video · mở để nhập link và sắp xếp</small></button>
           <button class="lesson-tool ${l.shadowing?'ready':''} openLinkedShadow" data-course="${esc(courseId)}" data-number="${Number(l.lesson_number)}" data-title="${esc(l.title)}"><b>🎥 Video Shadowing</b><small>${(l.shadowing_videos||[]).length} video · mở trình nhập SRT/XLSX</small></button>
-          <button class="lesson-tool ${(l.writing||[]).length?'ready':''}" type="button" onclick="this.closest('.lesson-admin-body').querySelector('.vocab-editor').open=true"><b>📖 Luyện đọc nhanh</b><small>${(l.writing||[]).length} từ trong kho dùng chung</small></button>
+          <button class="lesson-tool ${(l.reading?.sentence_count||0)?'ready':''}" type="button" ${is50plus?'disabled':''} onclick="this.closest('.lesson-admin-body').querySelector('.vocab-editor').open=true"><b>📖 Luyện đọc nhanh</b><small>${is50plus?'Giữ nguồn Luyện đọc riêng, không dùng Random':`${(l.writing||[]).length} từ trong kho dùng chung`}</small></button>
           <button class="lesson-tool ${(l.games||[]).length?'ready':''}" type="button" onclick="this.closest('.lesson-admin-body').querySelector('.game-editor').open=true"><b>🎮 Game phản xạ</b><small>${(l.games||[]).length} game · tùy chỉnh cách dùng kho từ</small></button>
-          <button class="lesson-tool ${(l.writing||[]).length?'ready':''}" type="button" onclick="this.closest('.lesson-admin-body').querySelector('.vocab-editor').open=true"><b>✍ Viết chữ Hán</b><small>${(l.writing||[]).length} từ · dùng chung kho của bài</small></button>
+          <button class="lesson-tool ${(l.writing||[]).length?'ready':''}" type="button" onclick="this.closest('.lesson-admin-body').querySelector('.vocab-editor').open=true"><b>✍ Viết chữ Hán</b><small>${(l.writing||[]).length} từ · ${is50plus?'dùng kho Random 50+':'dùng chung kho của bài'}</small></button>
           <button class="lesson-tool ${l.grammar?'ready':''} openLinkedGrammar" data-course="${esc(courseId)}" data-lesson="${esc(l.id)}"><b>📚 Ngữ pháp & Bài tập</b><small>${l.grammar?`${(l.grammar.questions||[]).length} câu hỏi`:'Chưa có nội dung'}</small></button>
           <button class="lesson-tool ${l.resources.length?'ready':''}" type="button" onclick="this.closest('.lesson-admin-body').querySelector('.resource-editor').open=true"><b>📄 Tài liệu</b><small>${l.resources.length} file/link · xem hoặc cho tải</small></button>
           <button class="lesson-tool pending" type="button" disabled><b>🤖 AI giao tiếp</b><small>Sẽ bổ sung sau, không cần đổi cấu trúc bài</small></button>
         </div>
-        <details class="inline-editor vocab-editor"><summary><b>🗂️ Kho từ vựng bài học</b> <span class="muted">— nhập một lần, dùng ở 3 nơi</span></summary><div>
+        <details class="inline-editor vocab-editor"><summary><b>${is50plus?'🎲 Kho Random 50+':'🗂️ Kho từ vựng bài học'}</b> <span class="muted">— ${is50plus?'chỉ dùng ở Game + Viết chữ':'nhập một lần, dùng ở 3 nơi'}</span></summary><div>
           <div class="grid2">
             <div><label>Tải file CSV/XLSX của riêng bài này</label><input class="lessonVocabFile" data-lesson="${esc(l.id)}" type="file" accept=".csv,.xlsx,.xls"></div>
             <div><label>Chế độ nhập</label><select class="lessonVocabMode" data-lesson="${esc(l.id)}"><option value="replace">Thay toàn bộ kho hiện tại</option><option value="append">Bổ sung và bỏ từ trùng</option></select></div>
@@ -1549,11 +1621,11 @@ async function loadLearningContent(){
           <textarea class="lessonVocabItems" data-lesson="${esc(l.id)}" placeholder="你好 | nǐ hǎo | xin chào">${esc(writingItemsText(l.writing))}</textarea>
           <div class="mini-title">Cho phép sử dụng kho từ tại</div>
           <div class="row vocab-usage" data-lesson="${esc(l.id)}">
-            <label style="display:flex;align-items:center;gap:7px"><input type="checkbox" value="reading" style="width:auto" ${l.vocab_usage?.reading!==false?'checked':''}> 📖 Luyện đọc nhanh</label>
+            <label style="display:flex;align-items:center;gap:7px"><input type="checkbox" value="reading" style="width:auto" ${is50plus?'disabled':(l.vocab_usage?.reading!==false?'checked':'')}> 📖 Luyện đọc nhanh${is50plus?' — giữ nguồn riêng':''}</label>
             <label style="display:flex;align-items:center;gap:7px"><input type="checkbox" value="games" style="width:auto" ${l.vocab_usage?.games!==false?'checked':''}> 🎮 Game phản xạ</label>
             <label style="display:flex;align-items:center;gap:7px"><input type="checkbox" value="writing" style="width:auto" ${l.vocab_usage?.writing!==false?'checked':''}> ✍ Viết chữ Hán</label>
           </div>
-          <div class="row" style="margin-top:10px"><button class="ghost previewLessonVocab" data-lesson="${esc(l.id)}">👁 Đọc file vào khung</button><button class="primary saveLessonVocab" data-lesson="${esc(l.id)}">Lưu kho và đồng bộ 3 chức năng</button></div>
+          <div class="row" style="margin-top:10px"><button class="ghost previewLessonVocab" data-lesson="${esc(l.id)}">👁 Đọc file vào khung</button><button class="primary saveLessonVocab" data-lesson="${esc(l.id)}">${is50plus?'Lưu Random cho Game + Viết chữ':'Lưu kho và đồng bộ 3 chức năng'}</button></div>
           <div class="status lessonVocabStatus" data-lesson="${esc(l.id)}">Kho hiện có ${(l.writing||[]).length} từ.</div>
         </div></details>
         <details class="inline-editor video-editor"><summary><b>▶ Nhập video bài giảng</b></summary><div>
@@ -1566,7 +1638,7 @@ async function loadLearningContent(){
           <div class="grid2" style="margin-top:10px"><input class="newResourceTitle" data-lesson="${esc(l.id)}" placeholder="Tên tài liệu từ đường link"><input class="newResourceUrl" data-lesson="${esc(l.id)}" placeholder="Link PDF/Word/Drive..."></div><div class="row" style="margin-top:8px"><select class="newResourceMode" data-lesson="${esc(l.id)}" style="max-width:150px"><option value="view">Chỉ xem</option><option value="download">Cho tải</option></select><button class="ghost addResource" data-lesson="${esc(l.id)}">＋ Thêm bằng link</button></div>
         </div></details>
         <details class="inline-editor game-editor"><summary><b>🎮 Chọn game xuất hiện trong bài</b></summary><div>
-          <p class="muted">Game tự lấy Hán tự và Pinyin từ phần Từ vựng – Viết chữ; nếu chưa có sẽ dùng câu Shadowing. Không cần nhập lại nghĩa Việt.</p>
+          <p class="muted">${is50plus?'Game chỉ lấy Hán tự và Pinyin từ kho Random 50+. Nếu chưa nhập Random, hệ thống sẽ báo thiếu và không lấy từ Luyện đọc sang.':'Game tự lấy Hán tự và Pinyin từ phần Từ vựng – Viết chữ; nếu chưa có sẽ dùng câu Shadowing. Không cần nhập lại nghĩa Việt.'}</p>
           <div class="row game-options" data-lesson="${esc(l.id)}">${[['bubble','🫧 Bong bóng'],['orchard','🥕 Đào cà rốt'],['mushroom','🍄 Rừng nấm'],['fishing','🎣 Câu cá'],['writing','✍️ Viết chữ']].map(([code,label])=>`<label style="display:flex;align-items:center;gap:7px"><input type="checkbox" value="${code}" style="width:auto" ${(l.games||[]).includes(code)?'checked':''}> ${label}</label>`).join('')}</div>
           <div class="row" style="margin-top:10px">
             <button class="primary saveLessonGames" data-lesson="${esc(l.id)}">Lưu game của bài</button>
@@ -1723,6 +1795,10 @@ $('downloadCodes').onclick=downloadCodes;
 $('refreshLearners').onclick=loadLearners;
 $('importBtn').onclick=doImport;
 $('templateBtn').onclick=template;
+$('previewRandom50').onclick=previewRandom50Import;
+$('runRandom50').onclick=runRandom50Import;
+$('random50File').onchange=()=>{random50Draft=null;$('runRandom50').disabled=true;$('random50Preview').hidden=true;$('random50Status').textContent='Đã chọn file. Bấm “Kiểm tra trước”.'};
+$('random50Course').onchange=()=>{random50Draft=null;$('runRandom50').disabled=true;$('random50Preview').hidden=true;$('random50Status').textContent='Đã đổi khóa. Bấm “Kiểm tra trước”.'};
 $('previewReadingImport').onclick=previewReadingImport;
 $('runReadingImport').onclick=runReadingImport;
 $('readingTemplateBtn').onclick=readingTemplate;
